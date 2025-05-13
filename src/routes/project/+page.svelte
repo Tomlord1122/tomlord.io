@@ -13,8 +13,14 @@
 
 	<main in:fly={{ y: 100, duration: 1000, delay: 600 }} 
 		class="main-content-area">
-	<!-- Ariticle list -->
-	No project yet.
+		<ul>
+			<li>
+				<p>
+					<a href="https://github.com/Tomlord1122/go-recipe">go-recipe</a>:
+				A TUI app that can store commands you frequently use.
+				</p>
+			</li>
+		</ul>
 	 
 	</main>
 </div>
