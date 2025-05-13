@@ -63,10 +63,10 @@
 			onclick={() => showCreatePostModal = true}
 			aria-label="Create New Post"
 			>
-			Blog Posts
+			tom.changelog
 			</button>
 		{:else}
-			Blog Posts
+		tom.changelog
 		{/if}
 	</h1>
 

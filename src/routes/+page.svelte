@@ -12,7 +12,7 @@
 	
 	<h1 
 		class="page-title">
-		tom.changelog
+		tom.home
 	</h1>
 
 
