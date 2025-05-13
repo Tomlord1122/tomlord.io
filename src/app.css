@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* This is a base style import for Tailwind, 
+   ensure this or similar setup is at the top of your global CSS file
+   if you are setting up Tailwind from scratch.
+   If you already have Tailwind configured, you might already have these. */
+
+
+/* Custom component classes */
+@layer components {
+  .page-title {
+    /* These are the common classes for your h1 tags */
+    @apply  shadow-gray-500 font-serif border-b border-gray-400 pb-2;
+  }
+
+  .main-content-area {
+    /* These are the common classes for your main tags */
+    /* We noticed 'gap-3' is used in project and photography, 
+       and 'gap-4' in blog. We'll use 'gap-3' here as a common base.
+       We can discuss how to handle variations later if needed! */
+    @apply flex flex-col gap-3 font-serif;
+  }
+}
+
+
