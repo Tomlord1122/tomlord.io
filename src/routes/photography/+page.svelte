@@ -6,6 +6,7 @@
 		{ src: '/photo/1.png', alt: 'Photo 1' },
 		{ src: '/photo/2.png', alt: 'Photo 2' },
 		{ src: '/photo/3.png', alt: 'Photo 3' },
+		{ src: '/photo/4.jpeg', alt: 'Photo 3' },
 	];
 </script>
 
