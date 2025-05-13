@@ -22,6 +22,9 @@
        We can discuss how to handle variations later if needed! */
     @apply flex flex-col gap-3 font-serif;
   }
+  .photo-grid {
+    @apply w-full h-full object-cover hover:scale-105 transition-transform duration-300 rounded-lg;
+  }
 }
 
 
