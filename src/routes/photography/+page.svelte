@@ -30,7 +30,7 @@
 					duration: 600 + (i % 2) * 200, 
 					delay: 300 + Math.floor(i / 2) * 300 
 				}}
-				class="aspect-square overflow-hidden rounded-lg shadow-md"
+				class="aspect-square overflow-hidden rounded-lg shadow-md z-10"
 			>
 				<img 
 					src={photo.src} 
