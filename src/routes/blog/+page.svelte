@@ -102,7 +102,7 @@
 		</div>
 	{/if}
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 600 }} 
+	<main in:fly={{ y: 100, duration: 1000, delay: 300 }} 
 		  class="main-content-area not-prose ">
 		
 		{#if filteredPosts && filteredPosts.length > 0} 
