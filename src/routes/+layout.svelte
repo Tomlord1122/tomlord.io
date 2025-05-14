@@ -13,6 +13,7 @@
 				<img  src="/app_icon.png" alt="Tomlord" class="w-15 h-15 rounded-2xl border-2 border-gray-300">
 			</a>
 			<div class="flex items-center gap-4  text-lg">
+				<a href="/" class="text-gray-700 hover:text-gray-900   ">Home</a>
 				<a href="/blog" class="text-gray-700 hover:text-gray-900   ">Blog</a>
 				<a href="/project" class="text-gray-700 hover:text-gray-900  ">Project</a>
 				<a href="/photography" class="text-gray-700 hover:text-gray-900 ">Photography</a>

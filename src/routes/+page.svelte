@@ -2,7 +2,6 @@
 	// This script block is where you can add JavaScript logic for your page if needed later.
 	// For now, we'll leave it empty as we're just adding static content.
 	import { fly } from 'svelte/transition';
-	let { data } = $props();
 
 </script>
 
