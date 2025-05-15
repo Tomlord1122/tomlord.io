@@ -49,7 +49,7 @@
 		<!-- About me -->
 		<p class="text-lg text-gray-700 mb-6">
 			Hi, it's Tomlord here.<br><br>
-			I am a software engineer who is passionate about distributed systems. FYI I am a Go lover.
+			I am a software engineer who is passionate about distributed systems. FYI I am a Golang lover.
 			In my free time, I also love to write frontend applications with Svelte.
 			<br><br>
 			This website contains some of my blog posts about my learning journey and topics of interest. I will share my projects and thoughts with you. Feel free to contact me via email.
