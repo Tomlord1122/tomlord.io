@@ -1,7 +1,12 @@
 <script lang="ts">
 	import '../app.css';
 	import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit'
+	import { dev } from '$app/environment';
+
 	let { children } = $props();
+	injectAnalytics({ mode: dev ? 'development' : 'production' });
+
 </script>
 
 <InteractiveBackground />

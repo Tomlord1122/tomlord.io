@@ -1,0 +1,74 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Overview
+
+This is a personal website/blog for Tomlord built with SvelteKit 5 and TailwindCSS. 
+
+## Key Files and Directories
+- [src/app.html](mdc:src/app.html) - The main HTML template
+- [src/routes/+page.svelte](mdc:src/routes/+page.svelte) - The home page
+- [src/routes/blog/+page.svelte](mdc:src/routes/blog/+page.svelte) - The blog listing page
+- [src/lib/components](mdc:src/lib/components) - Reusable UI components
+
+## Technologies
+- SvelteKit 5
+- TailwindCSS 4 (with typography plugin)
+- Markdown (for blog content)
+
+# SvelteKit Structure
+
+SvelteKit uses a file-based routing system:
+
+- [src/routes/+page.svelte](mdc:src/routes/+page.svelte) - Home page
+- [src/routes/+layout.svelte](mdc:src/routes/+layout.svelte) - Main layout template
+- [src/routes/blog/+page.svelte](mdc:src/routes/blog/+page.svelte) - Blog list page
+- [src/routes/project/](mdc:src/routes/project/) - Project directory
+- [src/routes/photography/](mdc:src/routes/photography/) - Photography section
+
+## Important Concepts
+- Each +page.svelte file corresponds to a route
+- [slug] directories represent dynamic routes
+- +page.server.ts files handle server-side logic
+
+# Components and Styling
+
+## Components
+- [src/lib/components/InteractiveBackground.svelte](mdc:src/lib/components/InteractiveBackground.svelte) - Interactive background effect
+- [src/lib/components/NewPostModal.svelte](mdc:src/lib/components/NewPostModal.svelte) - Modal for creating new posts
+
+## Styling
+- [src/app.css](mdc:src/app.css) - Global CSS styles
+- TailwindCSS is used for styling with utility classes
+- The Typography plugin is used for blog content styling
+
+
+# Svelte 5 Syntax Guidelines
+
+## Important Changes from Earlier Versions
+- In Svelte 5, import from '$app/stores' is deprecated, use '$app/state' instead
+- Event handlers use onclick instead of on:click syntax
+- Use the simplified reactive syntax with $ signals
+
+## Examples
+```svelte
+<script>
+  // Old: import { page } from '$app/stores'
+  import { page } from '$app/state'
+  
+  // Use $ for reactivity
+  let $count = 0
+  
+  // Event handler syntax
+  function increment() {
+    $count++
+  }
+</script>
+
+<button onclick={increment}>
+  Count: {$count}
+</button>
+```
+```
