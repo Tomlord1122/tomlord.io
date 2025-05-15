@@ -17,7 +17,7 @@
 			</h1>
 			<p 
 				class="text-gray-500 text-sm">
-				Posted on {new Date(date).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}
+				Posted on {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
 			</p>
 			{#if tags && tags.length > 0}
 				<div 

@@ -114,7 +114,9 @@
 						</a>
 						<div class="text-sm text-gray-500 flex">
 							<p class="my-0">
-							{new Date(post.date).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })} 
+							<!-- Modify the date to be in the format of "May 15, 2025" -->
+							 <!-- If we want to use Taiwan date do this: zh-TW, otherwise use en-US -->
+							{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} 
 							</p>
 							{#if post.tags && post.tags.length > 0}
 							<div class="flex flex-wrap gap-2 justify-items-center items-center ml-2">
