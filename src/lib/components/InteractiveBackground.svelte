@@ -3,16 +3,29 @@
 
 	let mouse = $state({ x: 0, y: 0 });
 
-	let dots = $state<{ id: number; x: number; y: number; size: number; color: string; originalX: number; originalY: number }[]>([]);
+	let dots = $state<{ 
+		id: number; 
+		x: number; 
+		y: number; 
+		size: number; 
+		color: string; 
+		originalX: number; 
+		originalY: number;
+		velocityX: number;  
+		velocityY: number;  
+		randomMoveTimer: number;
+	}[]>([]);
 
-	const NUM_DOTS = 75; // Total number of dots, you can adjust this number.
-	const GLOW_RADIUS = 100; // Radius of mouse influence where dots start to glow (in pixels).
-	const MAX_GLOW = 0.3; // Maximum glow intensity for dots (reduced from 1 to 0.5)
+	const NUM_DOTS = 75; // Total number of dots, you can adjust this number
+	const GLOW_RADIUS = 100; // Radius of mouse influence where dots start to glow (in pixels)
+	const MAX_GLOW = 0.3; // Maximum glow intensity for dots
 	const STAR_COLORS = ['#ffffff', '#323232'];
 	const MOUSE_PULL_FACTOR = 0.15; // How strongly stars are pulled toward the mouse
+	const RANDOM_MOVE_RANGE = 20; // Maximum distance for random movement
+	const RANDOM_MOVE_SPEED = 0.5; // Speed of random movement
 
 	$effect(() => {
-		// Ensure the following code only runs in browser environment, as the window object doesn't exist during server-side rendering.
+		// Ensure the following code only runs in browser environment
 		if (browser) {
 			// Initialize random positions for dots
 			const tempDots = [];
@@ -26,7 +39,10 @@
 					originalX: x, // Store original position to return to
 					originalY: y, // Store original position to return to
 					size: Math.random() * 0.85 + 0.5, // Random size between 0.5 and 2
-					color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)] // Random color from the array
+					color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], // Random color
+					velocityX: 0, // Initial velocity X
+					velocityY: 0, // Initial velocity Y
+					randomMoveTimer: Math.random() * 1000 // Random timer for movement changes
 				});
 			}
 			dots = tempDots; // Assign the generated dots array to the $state variable dots
@@ -78,52 +94,92 @@
 						originalX: x,
 						originalY: y,
 						size: Math.random() * 1.5 + 0.5,
-						color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)]
+						color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+						velocityX: 0,
+						velocityY: 0,
+						randomMoveTimer: Math.random() * 1000
 					});
 				}
 				dots = newDots;
 			};
 
-			// Add 'mousemove' event listener to window, calling handleMouseMove when mouse moves
+			// Create animation frame handler for random movement
+			const updateRandomMovement = () => {
+				// Update each dot's position with random movement
+				dots = dots.map(dot => {
+					// Decrease timer and generate new random velocities when timer reaches zero
+					dot.randomMoveTimer -= 1;
+					
+					if (dot.randomMoveTimer <= 0) {
+						// Set new random velocity
+						dot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+						dot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+						// Reset timer with random duration
+						dot.randomMoveTimer = Math.random() * 200 + 50;
+					}
+					
+					// Apply velocity to position
+					let newX = dot.x + dot.velocityX;
+					let newY = dot.y + dot.velocityY;
+					
+					// Keep stars within range of their original position
+					const distanceFromOrigin = Math.sqrt(
+						(newX - dot.originalX) ** 2 + 
+						(newY - dot.originalY) ** 2
+					);
+					
+					if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
+						// If too far, move back toward original position
+						newX = dot.x + (dot.originalX - dot.x) * 0.05;
+						newY = dot.y + (dot.originalY - dot.y) * 0.05;
+					}
+					
+					return {
+						...dot,
+						x: newX,
+						y: newY
+					};
+				});
+				
+				// Continue animation loop
+				animationFrameId = requestAnimationFrame(updateRandomMovement);
+			};
+			
+			// Start animation loop
+			let animationFrameId = requestAnimationFrame(updateRandomMovement);
+
+			// Add event listeners
 			window.addEventListener('mousemove', handleMouseMove);
-			// Add 'resize' event listener to window, calling handleResize when window size changes
 			window.addEventListener('resize', handleResize);
 
-			// $effect cleanup function: remove event listeners when component is destroyed or $effect re-runs, to prevent memory leaks.
+			// Cleanup function: remove event listeners and cancel animation frame
 			return () => {
 				window.removeEventListener('mousemove', handleMouseMove);
 				window.removeEventListener('resize', handleResize);
+				cancelAnimationFrame(animationFrameId);
 			};
 		}
 	});
 
 	// Function to calculate dot glow intensity
-	// Input: dot coordinates (dotX, dotY), mouse coordinates (mouseX, mouseY)
-	// Output: glow intensity (value between 0 and MAX_GLOW)
 	function calculateGlow(dotX: number, dotY: number, mouseX: number, mouseY: number): number {
-		// Calculate the straight-line distance between mouse and dot (using Pythagorean theorem)
+		// Calculate the straight-line distance between mouse and dot
 		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
 
 		// If distance is less than the predefined GLOW_RADIUS
 		if (distance < GLOW_RADIUS) {
-			// Glow intensity is inversely proportional to distance: closer means stronger glow.
-			// (1 - distance / GLOW_RADIUS) calculates a ratio from 0 to 1, where 1 is at distance 0, and 0 is at distance GLOW_RADIUS.
+			// Glow intensity is inversely proportional to distance
 			return MAX_GLOW * (1 - distance / GLOW_RADIUS);
 		}
-		// If distance is greater than glow radius, glow intensity is 0.
+		// If distance is greater than glow radius, glow intensity is 0
 		return 0;
 	}
 </script>
 
 <!-- HTML Template Section -->
-<!-- This is the interactive background container, it fills the entire screen -->
 <div class="interactive-background">
-	<!-- Svelte's {#each ...} syntax to iterate through each dot object in the dots array -->
-	<!-- (dot.id) is the key, helping Svelte efficiently update the list -->
 	{#each dots as dot (dot.id)}
-		<!-- {@const ...} is used to declare a constant in the template, here we calculate the current glow intensity for each dot -->
 		{@const glowIntensity = calculateGlow(dot.x, dot.y, mouse.x, mouse.y)}
-		<!-- Render a single dot div element -->
 		<div
 			class="star"
 			style="
@@ -145,7 +201,7 @@
 <!-- CSS Styles Section -->
 <style>
 	.interactive-background {
-		position: fixed; /* Fixed position, doesn't scroll with the scrollbar */
+		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100vw; 
@@ -157,13 +213,10 @@
 	}
 
 	.star {
-		position: absolute; /* Absolute positioning, relative to the interactive-background container */
-		border-radius: 50%; /* Make stars circular */
-		/* CSS transition effects for smooth changes in opacity, size, and shadow */
+		position: absolute;
+		border-radius: 50%;
 		transition: opacity 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
-		/* will-change is a performance hint, telling the browser these properties will change, allowing for optimizations */
 		will-change: opacity, transform, box-shadow, left, top;
-		/* Create a twinkling effect with animation */
 		animation: twinkle 5s infinite alternate;
 	}
 	
