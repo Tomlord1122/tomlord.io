@@ -21,8 +21,8 @@
 	const MAX_GLOW = 0.3; // Maximum glow intensity for dots
 	const STAR_COLORS = ['#ffffff', '#323232'];
 	const MOUSE_PULL_FACTOR = 0.15; // How strongly stars are pulled toward the mouse
-	const RANDOM_MOVE_RANGE = 20; // Maximum distance for random movement
-	const RANDOM_MOVE_SPEED = 0.5; // Speed of random movement
+	const RANDOM_MOVE_RANGE = 10; // Maximum distance for random movement
+	const RANDOM_MOVE_SPEED = 0.25; // Speed of random movement
 
 	$effect(() => {
 		// Ensure the following code only runs in browser environment
