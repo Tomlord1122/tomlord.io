@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	
-	// 假设这是你的照片数据
 	const photos = [
 		{ src: '/photo/1.png', alt: 'Photo 1' },
 		{ src: '/photo/2.png', alt: 'Photo 2' },
@@ -24,7 +23,7 @@
 		class="main-content-area ">
 	<!-- Ariticle list -->
 	 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 not-prose">
-		{#each photos as photo, i}
+		{#each photos.slice().reverse() as photo, i}
 			<div 
 				in:fly={{ 
 					y: 50, 
