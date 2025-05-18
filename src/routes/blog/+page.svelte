@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
-	import { browser, dev } from '$app/environment';
+	import { browser } from '$app/environment';
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
@@ -149,6 +149,7 @@
 						{#each allTags as tag}
 							{@const isSelected = selectedTags.includes(tag)}
 							<button 
+								type="button"
 								onclick={() => toggleTag(tag)}
 								class={`px-3 py-1 text-xs rounded-full border 
 										${isSelected 
@@ -162,6 +163,7 @@
 					</div>
 					{#if selectedTags.length > 0}
 						<button 
+							type="button"
 							onclick={() => selectedTags = []}
 							class="mt-4 text-sm text-gray-600 hover:text-gray-800 hover:underline"
 						>
@@ -217,10 +219,11 @@
 	
 </div>
 
-{#if showCreatePostModal && dev}
+{#if showCreatePostModal && isDev}
 	<NewPostModal 
 		bind:show={showCreatePostModal} 
 		bind:allCurrentTags={allTags} 
+		availableImages={data.availablePhotos || []}
 		oncreated={handlePostCreationSuccess}
 		oncancel={handlePostCreationCancel}
 	/>

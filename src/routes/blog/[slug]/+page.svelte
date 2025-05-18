@@ -34,7 +34,7 @@
 		<div 
 			in:fly={{ y: 50, duration: 600, delay: 200 }}
 			class="prose prose-base max-w-none font-serif"> 
-			<Component />
+			<Component class="img-center"/>
 
 		</div>
 	</article>

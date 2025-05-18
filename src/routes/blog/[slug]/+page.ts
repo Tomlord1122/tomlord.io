@@ -1,15 +1,6 @@
 import type { PageLoad } from "./$types.js";
 import { error } from "@sveltejs/kit";
-
-interface Post {
-  title: string;
-  date: string;
-  tags?: string[];
-  content: any; // or more precisely SvelteComponent type, if easily available
-  duration: string;
-  lang: string;
-  slug: string;
-}
+import type { Post } from "$lib/types/types.ts";
 
 export const load: PageLoad = async ({
   params,

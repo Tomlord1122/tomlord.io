@@ -7,14 +7,17 @@
 	// 'allCurrentTags' is the list of all tags currently used in your blog, now also two-way bindable
 	// 'oncreated' is a callback for when a post is successfully created
 	// 'oncancel' is a callback for when the modal is closed without creating a post
+	// 'availableImages' is a new prop for available image paths
 	let { 
 		show = $bindable(false), 
 		allCurrentTags = $bindable([]),
+		availableImages = [], // New prop for available image paths
 		oncreated = () => {}, // Default to an empty function
 		oncancel = () => {}    // Default to an empty function
 	} = $props<{
 		show: boolean;
 		allCurrentTags: string[];
+		availableImages?: string[]; // Optional array of image paths
 		oncreated: () => void; // Callback for successful post creation
 		oncancel: () => void;  // Callback for cancellation
 	}>();
@@ -173,11 +176,23 @@ ${content}`;
 		}
 	});
 
+	// Function to copy image markdown to clipboard
+	async function copyImageMarkdown(imagePath: string) {
+		const markdown = `![](${imagePath})`;
+		try {
+			await navigator.clipboard.writeText(markdown);
+			alert(`Copied to clipboard: ${markdown}`);
+		} catch (err) {
+			console.error('Failed to copy text: ', err);
+			alert('Failed to copy markdown. You can manually copy: ' + markdown);
+		}
+	}
+
 </script>
 
 {#if show}
 	<div class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-auto">
-		<div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+		<div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-4xl  max-h-[90vh] flex flex-col">
 			<div class="flex justify-between items-center mb-6">
 				<h2 class="text-2xl font-semibold text-gray-800">Create New Post</h2>
 				<button 
@@ -193,45 +208,42 @@ ${content}`;
 
 			<div class="flex-grow overflow-y-auto pr-2"> 
 				<form onsubmit={() => { /* handleCreatePost is called by button, prevent default form submission if any */ }} class="space-y-4">
-					<div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-						<div class="md:col-span-3">
-							<label for="post-title-input" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-							<input 
-								type="text" 
-								id="post-title-input"
-								bind:value={title} 
-								class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-								required
-							/>
+					<section class="flex justify-between">
+						<div class="gap-3 w-1/2 mr-2">
+								<label for="post-title-input" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+								<input 
+									type="text" 
+									id="post-title-input"
+									bind:value={title} 
+									class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+									required
+								/>
+	
 						</div>
-
-						<div class="md:col-span-2">
-							<p class="block text-sm font-medium text-gray-700 mb-1">Date</p>
-							<p class="p-2 bg-gray-100 rounded-md text-gray-700">{formattedDate}</p>
+						
+						<div class="w-1/2">
+							<label for="post-slug-input" class="block text-sm font-medium text-gray-700 mb-1">URL Slug (for the post URL)</label>
+							<div class="flex items-center">
+								<span class="text-gray-500 p-2 bg-gray-100 rounded-l-md border border-r-0 border-gray-300">/blog/</span>
+								<input 
+									type="text" 
+									id="post-slug-input"
+									bind:value={slug} 
+									placeholder="your-post-url"
+									class="flex-grow p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+									required
+								/>
+							</div>
+							<p class="text-xs text-gray-500 mt-1">
+								{#if lang === 'zh-tw'}
+									對於中文標題，請手動輸入英文網址 (Chinese titles need manual English slugs)
+								{:else}
+									Will be auto-generated from title for English posts
+								{/if}
+							</p>
 						</div>
-					</div>
-					
-					<div>
-						<label for="post-slug-input" class="block text-sm font-medium text-gray-700 mb-1">URL Slug (for the post URL)</label>
-						<div class="flex items-center">
-							<span class="text-gray-500 p-2 bg-gray-100 rounded-l-md border border-r-0 border-gray-300">/blog/</span>
-							<input 
-								type="text" 
-								id="post-slug-input"
-								bind:value={slug} 
-								placeholder="your-post-url"
-								class="flex-grow p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-								required
-							/>
-						</div>
-						<p class="text-xs text-gray-500 mt-1">
-							{#if lang === 'zh-tw'}
-								對於中文標題，請手動輸入英文網址 (Chinese titles need manual English slugs)
-							{:else}
-								Will be auto-generated from title for English posts
-							{/if}
-						</p>
-					</div>
+					</section>
+				
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 						<div>
@@ -296,6 +308,29 @@ ${content}`;
 						{/if}
 					</div>
 					
+					<!-- Section to display available images -->
+					{#if availableImages && availableImages.length > 0}
+						<div class="mt-4 pt-4 border-t border-gray-200">
+							<h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
+							<div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
+								{#each availableImages.slice().reverse() as imagePath (imagePath)}
+									<div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
+										<img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
+										<p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>
+										<button 
+											type="button"
+											onclick={() => copyImageMarkdown(imagePath)}
+											class="mt-1 w-full text-center px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-[10px] leading-tight"
+										>
+											Copy MD
+										</button>
+									</div>
+								{/each}
+							</div>
+							<p class="text-xs text-gray-500 mt-1">Click "Copy MD" to get the Markdown for an image.</p>
+						</div>
+					{/if}
+
 					<div class="mt-3">
 						<div class="flex justify-between items-center mb-1">
 							<label for="post-content" class="block text-sm font-medium text-gray-700">
@@ -322,7 +357,7 @@ ${content}`;
 								id="post-content"
 								bind:value={content} 
 								rows="15"
-								class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+								class="w-full  p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
 								placeholder="Write your blog post content here using Markdown..."
 							></textarea>
 						{/if}
