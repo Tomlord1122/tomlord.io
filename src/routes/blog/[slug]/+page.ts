@@ -6,6 +6,8 @@ interface Post {
 	date: string;
 	tags?: string[];
 	content: any; // or more precisely SvelteComponent type, if easily available
+	duration: string;
+	lang: string;
 	slug: string;
 }
 
@@ -24,6 +26,8 @@ export const load: PageLoad = async ({ params }: { params: { slug: string } }) =
 					tags: metadata.tags || [],
 					content: postModule.default, 
 					slug: slug,
+					duration: metadata.duration,
+					lang: metadata.lang,
 				}
 			};
 		} else {

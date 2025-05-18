@@ -1,8 +1,9 @@
 ---
-title: 'the integration of knowing and doing'
+title: 'The integration of knowing and doing'
 date: '2025-05-14'
 slug: 'the-integration-of-knowing-and-doing'
-description: ''
+lang: zh-tw
+duration: 2min
 tags: ['Life']
 ---
 

@@ -6,6 +6,7 @@ interface PostMetadata {
 	slug: string;
 	description?: string;
 	tags?: string[];
+	lang?: string;
 }
 
 export const load: PageServerLoad = async () => {
@@ -23,6 +24,7 @@ export const load: PageServerLoad = async () => {
 					slug: metadata.slug,
 					description: metadata.description || '',
 					tags: metadata.tags || [],
+					lang: metadata.lang,
 				});
 			}
 		}

@@ -4,7 +4,7 @@
 	// export let data; // 從 load 函數接收資料 (data.post)
 	let {data} = $props(); // Using $props() instead of export let data
 
-	const { title, date, tags, content } = data.post;
+	const { title, date, tags, content, duration, lang } = data.post;
 	const Component = $derived(content);
 </script>
 
@@ -18,6 +18,9 @@
 			<p 
 				class="text-gray-500 text-sm">
 				Posted on {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+			</p>
+			<p class="text-gray-500 text-sm">
+				Reading time: {duration} 
 			</p>
 			{#if tags && tags.length > 0}
 				<div 

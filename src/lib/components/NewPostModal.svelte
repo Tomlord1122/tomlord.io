@@ -4,18 +4,39 @@
 
 	// Props for the modal
 	// 'show' is two-way bindable to control visibility from the parent
-	// 'allCurrentTags' is the list of all tags currently used in your blog
-	let { show = $bindable(false), allCurrentTags } = $props<{
+	// 'allCurrentTags' is the list of all tags currently used in your blog, now also two-way bindable
+	// 'oncreated' is a callback for when a post is successfully created
+	// 'oncancel' is a callback for when the modal is closed without creating a post
+	let { 
+		show = $bindable(false), 
+		allCurrentTags = $bindable([]),
+		oncreated = () => {}, // Default to an empty function
+		oncancel = () => {}    // Default to an empty function
+	} = $props<{
 		show: boolean;
 		allCurrentTags: string[];
+		oncreated: () => void; // Callback for successful post creation
+		oncancel: () => void;  // Callback for cancellation
 	}>();
 
+	let lang = $state('en');
+	let duration = $state(1); // Store as a number, default to 1
+	$inspect(duration);
 	// State for the new post data
 	let title = $state('');
 	let content = $state('');
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
 	let showPreview = $state(false); // Controls whether to show preview or editor
+ 
+	// Effect to automatically calculate reading duration based on content
+	$effect(() => {
+		const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
+		// Calculate duration: 1 minute per 100 words, round up
+		const calculatedDuration = Math.ceil(words / 100);
+		// Set duration, ensuring it's at least 1 minute
+		duration = Math.max(1, calculatedDuration);
+	});
 
 	// Get current date and format it
 	const currentDate = new Date();
@@ -47,7 +68,8 @@
 title: '${title}'
 date: '${new Date().toISOString().split('T')[0]}'
 slug: '${slug}'
-description: ''
+lang: '${lang}'
+duration: '${duration}min'
 tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
 ---
 
@@ -68,6 +90,7 @@ ${content}`;
 
 			if (response.ok) {
 				alert('Post created successfully!');
+				oncreated(); // Call the oncreated callback
 				// Reset form and close modal
 				title = '';
 				content = '';
@@ -98,19 +121,20 @@ ${content}`;
 	// Function to add a new tag from the input field
 	function addNewTag() {
 		const newTag = newTagInput.trim();
-		if (newTag && !postTags.includes(newTag) && !allCurrentTags.includes(newTag)) {
-			// Add to the post's tags and also to the list of all available tags for future use
-			// In a real app, allCurrentTags might be managed differently (e.g., derived from a global store or API)
-			postTags = [...postTags, newTag];
-			// We might want to update `allCurrentTags` in the parent if this new tag should be globally available immediately.
-			// For now, we'll just add it to the current post.
-		} else if (newTag && (postTags.includes(newTag) || allCurrentTags.includes(newTag))) {
-			// If it's an existing global tag and not selected, select it for the post
+		if (newTag) { // Make sure the new tag is not just empty spaces
+			// Add to the post's specific tags if it's not already there
 			if (!postTags.includes(newTag)) {
 				postTags = [...postTags, newTag];
 			}
+
+			// Now, let's check if this tag is new to our global list of 'allCurrentTags'
+			// If it is, we add it. Because 'allCurrentTags' is bound to the parent's 'allTags' state,
+			// this change will immediately reflect in the parent component.
+			if (!allCurrentTags.includes(newTag)) {
+				allCurrentTags = [...allCurrentTags, newTag].sort(); // Add and keep the list sorted
+			}
 		}
-		newTagInput = ''; // Clear the input
+		newTagInput = ''; // Clear the input field
 	}
 
 	// Function to toggle between preview and editor
@@ -136,11 +160,19 @@ ${content}`;
 		<div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
 			<div class="flex justify-between items-center mb-6">
 				<h2 class="text-2xl font-semibold text-gray-800">Create New Post</h2>
-				<button onclick={closeModal} class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+				<button 
+					onclick={() => {
+						oncancel(); // Call the oncancel callback
+						show = false;   // Then close the modal
+					}} 
+					class="text-gray-500 hover:text-gray-700 text-2xl"
+				>
+					&times;
+				</button>
 			</div>
 
 			<div class="flex-grow overflow-y-auto pr-2"> 
-				<form onsubmit={() => {}} class="space-y-4">
+				<form onsubmit={() => { /* handleCreatePost is called by button, prevent default form submission if any */ }} class="space-y-4">
 					<div class="grid grid-cols-1 md:grid-cols-5 gap-3">
 						<div class="md:col-span-3">
 							<label for="post-title-input" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -159,18 +191,32 @@ ${content}`;
 						</div>
 					</div>
 
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						<div>
+							<label for="post-lang" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+							<select 
+								id="post-lang"
+								bind:value={lang}
+								class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+							>
+								<option value="en">English</option>
+								<option value="zh-tw">Traditional Chinese</option>
+							</select>
+						</div>
+					</div>
+
 					<div class="space-y-2">
 						<div>
 							<p class="block text-sm font-medium text-gray-700 mb-1">Tags</p>
 							<div class="flex flex-wrap gap-2 mb-1">
-								{#each allCurrentTags as tag}
+								{#each allCurrentTags as tag} 
 									{@const isSelected = postTags.includes(tag)}
 									<button 
 										type="button"
 										onclick={() => togglePostTag(tag)}
 										class={`px-3 py-1 text-xs rounded-full border 
 												${isSelected 
-													? 'bg-blue-500 text-white border-blue-600' 
+													? 'bg-gray-500 text-white border-gray-600' 
 													: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
 												} transition-colors duration-150`}
 									>
@@ -243,7 +289,10 @@ ${content}`;
 					<div class="sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
 						<button 
 							type="button" 
-							onclick={closeModal}
+							onclick={() => {
+								oncancel(); // Call the oncancel callback
+								show = false;   // Then close the modal
+							}}
 							class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 border border-gray-300"
 						>
 							Cancel

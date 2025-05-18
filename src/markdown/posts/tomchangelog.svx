@@ -2,7 +2,8 @@
 title: 'tom.changelog'
 date: '2025-05-13'
 slug: 'tomchangelog'
-description: ''
+lang: zh-tw
+duration: 2min
 tags: ['Life']
 ---
 
