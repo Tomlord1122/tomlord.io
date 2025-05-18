@@ -2,7 +2,7 @@
 title: 'Second Anniversary'
 date: '2025-05-13'
 slug: 'second-anniversary'
-lang: en
+lang: zh-tw
 duration: 2min
 tags: ['Love', 'Life']
 ---
