@@ -123,52 +123,54 @@
 		{:else}
 		tom.changelog
 		{/if}
+		
 	</h1>
+
+	<div class="mb-4 not-prose font-serif">
+		<div class="flex gap-2 mb-4">
+			<label class="flex items-center gap-2 cursor-pointer">
+				<input 
+					type="checkbox" 
+					checked={language === "en"} 
+					onclick={() => {language === "en"? language = "": language = "en"}} 
+					class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
+				/>
+				<span class="text-sm text-gray-500">English Only</span>
+			</label>
+		</div>
+	</div>
 
 
 		<!-- Tag selection area -->
-		<div class="mb-4 not-prose font-serif">
-			<div class="flex gap-2 mb-4">
-				<label class="flex items-center gap-2 cursor-pointer">
-					<input 
-						type="checkbox" 
-						checked={language === "en"} 
-						onclick={() => {language === "en"? language = "": language = "en"}} 
-						class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
-					/>
-					<span class="text-sm text-gray-500">English Only</span>
-				</label>
-			</div>
-		</div>
-	
-		{#if allTags.length > 0}
-			<div class="mb-8 not-prose font-serif">
-				<h3 class="text-lg mb-2 text-gray-700">Filter by Tags:</h3>
-				<div class="flex flex-wrap gap-2">
-					{#each allTags as tag}
-						{@const isSelected = selectedTags.includes(tag)}
+			{#if allTags.length > 0}
+				<div class="mb-8 not-prose font-serif">
+					<h3 class="text-lg mb-2 text-gray-700">Filter by Tags:</h3>
+					<div class="flex flex-wrap gap-2">
+						{#each allTags as tag}
+							{@const isSelected = selectedTags.includes(tag)}
+							<button 
+								onclick={() => toggleTag(tag)}
+								class={`px-3 py-1 text-xs rounded-full border 
+										${isSelected 
+											? 'bg-gray-200 text-gray-600 border-gray-300' 
+											: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+										} transition-colors duration-150`}
+							>
+								{tag}
+							</button>
+						{/each}
+					</div>
+					{#if selectedTags.length > 0}
 						<button 
-							onclick={() => toggleTag(tag)}
-							class={`px-3 py-1 text-xs rounded-full border 
-									${isSelected 
-										? 'bg-gray-200 text-gray-600 border-gray-300' 
-										: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-									} transition-colors duration-150`}
+							onclick={() => selectedTags = []}
+							class="mt-4 text-sm text-gray-600 hover:text-gray-800 hover:underline"
 						>
-							{tag}
+							Clear all tags
 						</button>
-					{/each}
+					{/if}
 				</div>
-				{#if selectedTags.length > 0}
-					<button 
-						onclick={() => selectedTags = []}
-						class="mt-4 text-sm text-gray-600 hover:text-gray-800 hover:underline"
-					>
-						Clear all tags
-					</button>
-				{/if}
-			</div>
-		{/if}
+			{/if}
+	
 
 	<main in:fly={{ y: 100, duration: 1000, delay: 300 }} 
 		  class="main-content-area not-prose ">
