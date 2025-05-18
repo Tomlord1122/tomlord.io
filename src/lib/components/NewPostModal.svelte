@@ -24,6 +24,7 @@
 	$inspect(duration);
 	// State for the new post data
 	let title = $state('');
+	let slug = $state(''); // Separate state for customizable slug
 	let content = $state('');
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
@@ -36,6 +37,19 @@
 		const calculatedDuration = Math.ceil(words / 100);
 		// Set duration, ensuring it's at least 1 minute
 		duration = Math.max(1, calculatedDuration);
+	});
+	
+	// Effect to generate a slug from title - but only if slug is empty
+	// This allows for manual override while still providing a reasonable default
+	$effect(() => {
+		if (title && !slug) {
+			// For English titles, we can generate a reasonable slug
+			if (/^[A-Za-z0-9\s!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]+$/.test(title)) {
+				slug = title.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+			}
+			// For non-English titles (like Chinese), we won't auto-generate
+			// and the user will need to manually set a slug
+		}
 	});
 
 	// Get current date and format it
@@ -60,14 +74,19 @@
 			alert('Please add some content to your post.');
 			return;
 		}
-
-		const slug = title.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+		if (!slug.trim()) {
+			alert('Please enter a URL slug for your post.');
+			return;
+		}
+		
+		// Use the custom slug, but still sanitize it
+		const finalSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 		
 		// Create the markdown content with frontmatter
 		const frontmatter = `---
 title: '${title}'
 date: '${new Date().toISOString().split('T')[0]}'
-slug: '${slug}'
+slug: '${finalSlug}'
 lang: '${lang}'
 duration: '${duration}min'
 tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
@@ -83,7 +102,7 @@ ${content}`;
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					filename: `${slug}.svx`,
+					filename: `${finalSlug}.svx`,
 					content: frontmatter
 				})
 			});
@@ -93,6 +112,7 @@ ${content}`;
 				oncreated(); // Call the oncreated callback
 				// Reset form and close modal
 				title = '';
+				slug = '';
 				content = '';
 				postTags = [];
 				newTagInput = '';
@@ -189,6 +209,28 @@ ${content}`;
 							<p class="block text-sm font-medium text-gray-700 mb-1">Date</p>
 							<p class="p-2 bg-gray-100 rounded-md text-gray-700">{formattedDate}</p>
 						</div>
+					</div>
+					
+					<div>
+						<label for="post-slug-input" class="block text-sm font-medium text-gray-700 mb-1">URL Slug (for the post URL)</label>
+						<div class="flex items-center">
+							<span class="text-gray-500 p-2 bg-gray-100 rounded-l-md border border-r-0 border-gray-300">/blog/</span>
+							<input 
+								type="text" 
+								id="post-slug-input"
+								bind:value={slug} 
+								placeholder="your-post-url"
+								class="flex-grow p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+								required
+							/>
+						</div>
+						<p class="text-xs text-gray-500 mt-1">
+							{#if lang === 'zh-tw'}
+								對於中文標題，請手動輸入英文網址 (Chinese titles need manual English slugs)
+							{:else}
+								Will be auto-generated from title for English posts
+							{/if}
+						</p>
 					</div>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
