@@ -13,4 +13,6 @@ tags: ['Life']
 
 對了，現在這個網站是靜態的，我想我會持續開發，然後讓這個網站運行得更流暢，一起期待吧！
 
-![facebook](/photo/5.jpeg) 
+<div class="flex justify-center">
+  <img src="/photo/5.jpeg" alt="5.jpeg" class="h-1/2 w-1/2 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+</div>
