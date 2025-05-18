@@ -67,7 +67,7 @@
 	<main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area">
 	 {#if data.photos && data.photos.length > 0}
 		 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 not-prose">
-			{#each data.photos as photo, i (photo.src)} <!-- Added key for #each -->
+			{#each data.photos.slice().reverse() as photo, i (photo.src)} <!-- Added key for #each -->
 				<div 
 					in:fly={{
 						y: 50, 
