@@ -24,7 +24,7 @@
 	}[] = [];
 
 	// Constants
-	const NUM_DOTS = browser && window.innerWidth < 768 ? 0 : 50; // Fewer dots on mobile
+	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 50; // Fewer dots on mobile
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.3;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
@@ -50,7 +50,7 @@
 	function initializeDots() {
 		checkMobile(); // Update mobile status
 		const newDots = [];
-		const dotCount = isMobile ? 5 : NUM_DOTS; // Even fewer dots on confirmed mobile
+		const dotCount = isMobile ? 0 : NUM_DOTS; // Even fewer dots on confirmed mobile
 		
 		for (let i = 0; i < dotCount; i++) {
 			const x = Math.random() * window.innerWidth;
@@ -63,7 +63,7 @@
 				originalY: y,
 				targetX: x, // Initialize target position
 				targetY: y, // Initialize target position
-				size: Math.random() * (isMobile ? 1.0 : 1.5) + 0.5, // Smaller dots on mobile
+				size: Math.random() * 1.5 + 0.5, // Smaller dots on mobile
 				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
 				velocityX: 0,
 				velocityY: 0,
@@ -98,7 +98,7 @@
 		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
 		if (distance < GLOW_RADIUS) {
 			// Reduce glow effect on mobile
-			const maxGlow = isMobile ? MAX_GLOW * 0.7 : MAX_GLOW;
+			const maxGlow = MAX_GLOW;
 			return maxGlow * (1 - distance / GLOW_RADIUS) ** 2;
 		}
 		return 0;
@@ -122,9 +122,9 @@
 
 			// Random movement - less frequent on mobile
 			if (newDot.randomMoveTimer <= 0) {
-				newDot.velocityX = (Math.random() - 0.5) * (isMobile ? RANDOM_MOVE_SPEED * 0.5 : RANDOM_MOVE_SPEED);
-				newDot.velocityY = (Math.random() - 0.5) * (isMobile ? RANDOM_MOVE_SPEED * 0.5 : RANDOM_MOVE_SPEED);
-				newDot.randomMoveTimer = Math.random() * (isMobile ? 300 : 200) + (isMobile ? 100 : 50);
+				newDot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+				newDot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+				newDot.randomMoveTimer = Math.random() * 200 + 50;
 			}
 
 			// Calculate target position (random movement)
@@ -135,16 +135,16 @@
 			const distanceFromOrigin = Math.sqrt(
 				(targetX - newDot.originalX) ** 2 + (targetY - newDot.originalY) ** 2
 			);
-			if (distanceFromOrigin > (isMobile ? RANDOM_MOVE_RANGE * 0.5 : RANDOM_MOVE_RANGE)) {
+			if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
 				targetX = newDot.originalX;
 				targetY = newDot.originalY;
 			}
 
 			// Mouse pull force - reduced on mobile
 			const distance = Math.sqrt((newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2);
-			if (distance < GLOW_RADIUS * (isMobile ? 1.0 : 1.5)) {
-				const pull = (1 - distance / (GLOW_RADIUS * (isMobile ? 1.0 : 1.5))) * 
-					(isMobile ? MOUSE_PULL_FACTOR * 0.5 : MOUSE_PULL_FACTOR);
+			if (distance < GLOW_RADIUS) {
+				const pull = (1 - distance / GLOW_RADIUS) * 
+					MOUSE_PULL_FACTOR;
 				const dx = mouse.x - newDot.originalX;
 				const dy = mouse.y - newDot.originalY;
 				targetX = newDot.originalX + dx * pull;
@@ -157,17 +157,17 @@
 			// Use easing to update actual position
 			newDot.targetX = targetX;
 			newDot.targetY = targetY;
-			newDot.x = lerp(newDot.x, newDot.targetX, isMobile ? EASING_FACTOR * 0.7 : EASING_FACTOR);
-			newDot.y = lerp(newDot.y, newDot.targetY, isMobile ? EASING_FACTOR * 0.7 : EASING_FACTOR);
+			newDot.x = lerp(newDot.x, newDot.targetX, EASING_FACTOR);
+			newDot.y = lerp(newDot.y, newDot.targetY, EASING_FACTOR);
 
 			// Draw star
 			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
 			if (ctx){
 				ctx.beginPath();
-				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * (isMobile ? 0.8 : 1.2)), 0, Math.PI * 2);
+				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
 				ctx.fillStyle = newDot.color;
-				ctx.globalAlpha = (isMobile ? 0.1 : 0.15) + glowIntensity * (isMobile ? 0.3 : 0.5);
-				ctx.shadowBlur = (isMobile ? 2 : 3) + glowIntensity * (isMobile ? 8 : 15);
+				ctx.globalAlpha = 0.15 + glowIntensity * 0.5;
+				ctx.shadowBlur = 3 + glowIntensity * 15;
 				ctx.shadowColor = newDot.color;
 				ctx.fill();
 				ctx.globalAlpha = 1;
