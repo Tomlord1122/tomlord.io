@@ -9,9 +9,7 @@
 </script>
 
 <svelte:head>
-	<title>{title} | Tomlord's Blog</title>
 	<meta name="twitter:title" content={title} />
-
 </svelte:head>
 
 <div class="max-w-3xl mx-auto px-4 py-8">

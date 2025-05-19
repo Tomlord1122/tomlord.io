@@ -110,8 +110,6 @@
 
 <svelte:head>
 	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
-	<meta name="twitter:image" content="%sveltekit.assets%/app_icon.png" />
-	<meta name="twitter:image:src" content="%sveltekit.assets%/app_icon.png" />
 </svelte:head>
 
 <!-- This is the main container for your page content -->
