@@ -24,7 +24,7 @@
 	}[] = [];
 
 	// Constants
-	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 50; // Fewer dots on mobile
+	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 100; // Fewer dots on mobile
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.3;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
