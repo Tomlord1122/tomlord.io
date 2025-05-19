@@ -57,6 +57,7 @@
 	<meta name="twitter:description" content="View Tomlord's photography portfolio showcasing a collection of beautiful images." />
 	<meta property="og:title" content="Photography | Tomlord's Blog" />
 	<meta property="og:description" content="View Tomlord's photography portfolio showcasing a collection of beautiful images." />
+	<meta property="og:image"/>
 </svelte:head>
 
 <!-- This is the main container for your page content -->
