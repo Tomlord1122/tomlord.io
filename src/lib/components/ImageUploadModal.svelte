@@ -95,6 +95,8 @@
         currentErrorMessages += (currentErrorMessages ? "\n" : "") + `Error with ${file.name}: ${err.message}`;
         errorOccurred = true;
       }
+
+
     }
     
     // Update status only once after the loop
@@ -121,6 +123,7 @@
     } else if (successfulUploadPaths.length === 0 && filesToUpload.length > 0) {
       overallProgressMessage = `No images were uploaded successfully.`;
     }
+    resetState();
   }
 
   function closeModal() {
@@ -136,10 +139,10 @@
     // Reset all state with new values instead of mutations
     selectedFiles = [];
     previewUrls = [];
-    statusMessage = null;
-    statusIsError = false;
+    // statusMessage = null;
+    // statusIsError = false;
     isLoading = false;
-    overallProgressMessage = null;
+    // overallProgressMessage = null;
   }
 
 </script>
