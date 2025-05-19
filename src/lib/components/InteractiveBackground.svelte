@@ -50,7 +50,7 @@
 	function initializeDots() {
 		checkMobile(); // Update mobile status
 		const newDots = [];
-		const dotCount = isMobile ? Math.min(20, NUM_DOTS) : NUM_DOTS; // Even fewer dots on confirmed mobile
+		const dotCount = isMobile ? 0 : NUM_DOTS; // Even fewer dots on confirmed mobile
 		
 		for (let i = 0; i < dotCount; i++) {
 			const x = Math.random() * window.innerWidth;
