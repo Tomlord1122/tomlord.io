@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	// 滑鼠位置（非反應性，因為只在動畫循環中使用）
+	// Mouse/touch position (non-reactive)
 	let mouse = { x: 0, y: 0 };
 
-	// 星星數據（非反應性）
+	// Star data (non-reactive)
 	let dots: {
 		id: number;
 		x: number;
 		y: number;
 		originalX: number;
 		originalY: number;
+		targetX: number; // Added: target position
+		targetY: number; // Added: target position
 		size: number;
 		color: string;
 		velocityX: number;
@@ -18,20 +20,21 @@
 		randomMoveTimer: number;
 	}[] = [];
 
-	// 常數
+	// Constants
 	const NUM_DOTS = 100;
-	const GLOW_RADIUS = 200;
-	const MAX_GLOW = 1;
+	const GLOW_RADIUS = 100;
+	const MAX_GLOW = 0.3;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
-	const MOUSE_PULL_FACTOR = 0.35;
+	const MOUSE_PULL_FACTOR = 0.25;
 	const RANDOM_MOVE_RANGE = 10;
 	const RANDOM_MOVE_SPEED = 0.25;
+	const EASING_FACTOR = 0.2; // Added: easing factor, controls movement smoothness
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D | null = null;
 	let animationFrameId: number | null = null;
 
-	// 初始化星星
+	// Initialize stars
 	function initializeDots() {
 		const newDots = [];
 		for (let i = 0; i < NUM_DOTS; i++) {
@@ -43,7 +46,9 @@
 				y,
 				originalX: x,
 				originalY: y,
-				size: Math.random() * 1.75 + 0.5,
+				targetX: x, // Initialize target position
+				targetY: y, // Initialize target position
+				size: Math.random() * 2.5 + 0.5,
 				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
 				velocityX: 0,
 				velocityY: 0,
@@ -53,13 +58,22 @@
 		dots = newDots;
 	}
 
-	// 處理滑鼠移動
+	// Handle mouse movement
 	function handleMouseMove(event: MouseEvent) {
 		mouse.x = event.clientX;
 		mouse.y = event.clientY;
 	}
 
-	// 處理視窗大小改變
+	// Handle touch movement
+	function handleTouchMove(event: TouchEvent) {
+		event.preventDefault(); // Prevent scrolling
+		if (event.touches.length > 0) {
+			mouse.x = event.touches[0].clientX;
+			mouse.y = event.touches[0].clientY;
+		}
+	}
+
+	// Handle window resize
 	function handleResize() {
 		if (canvas) {
 			canvas.width = window.innerWidth;
@@ -68,82 +82,92 @@
 		}
 	}
 
-	// 計算發光強度（使用非線性插值）
+	// Calculate glow intensity (using non-linear interpolation)
 	function calculateGlow(dotX: number, dotY: number, mouseX: number, mouseY: number): number {
 		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
 		if (distance < GLOW_RADIUS) {
-			// 使用平方反比來使發光更平滑
 			return MAX_GLOW * (1 - distance / GLOW_RADIUS) ** 2;
 		}
 		return 0;
 	}
 
-	// 更新星星位置和動畫
+	// Linear interpolation function
+	function lerp(start: number, end: number, factor: number): number {
+		return start + (end - start) * factor;
+	}
+
+	// Update star positions and animation
 	function updateDots() {
 		if (!ctx) return;
 
-		// 清空畫布
+		// Clear canvas
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		dots = dots.map(dot => {
 			const newDot = { ...dot };
 			newDot.randomMoveTimer -= 1;
 
-			// 隨機移動
+			// Random movement
 			if (newDot.randomMoveTimer <= 0) {
 				newDot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
 				newDot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
 				newDot.randomMoveTimer = Math.random() * 200 + 50;
 			}
 
-			let newX = newDot.x + newDot.velocityX;
-			let newY = newDot.y + newDot.velocityY;
+			// Calculate target position (random movement)
+			let targetX = newDot.x + newDot.velocityX;
+			let targetY = newDot.y + newDot.velocityY;
 
-			// 限制隨機移動範圍
+			// Limit random movement range
 			const distanceFromOrigin = Math.sqrt(
-				(newX - newDot.originalX) ** 2 + (newY - newDot.originalY) ** 2
+				(targetX - newDot.originalX) ** 2 + (targetY - newDot.originalY) ** 2
 			);
 			if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
-				newX = newDot.x + (newDot.originalX - newDot.x) * 0.05;
-				newY = newDot.y + (newDot.originalY - newDot.y) * 0.05;
+				targetX = newDot.originalX;
+				targetY = newDot.originalY;
 			}
 
-			// 滑鼠拉力
+			// Mouse pull force
 			const distance = Math.sqrt((newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2);
 			if (distance < GLOW_RADIUS * 1.5) {
 				const pull = (1 - distance / (GLOW_RADIUS * 1.5)) * MOUSE_PULL_FACTOR;
 				const dx = mouse.x - newDot.originalX;
 				const dy = mouse.y - newDot.originalY;
-				newX = newDot.originalX + dx * pull;
-				newY = newDot.originalY + dy * pull;
+				targetX = newDot.originalX + dx * pull;
+				targetY = newDot.originalY + dy * pull;
 			} else {
-				newX = newDot.x + (newDot.originalX - newDot.x) * 0.02;
-				newY = newDot.y + (newDot.originalY - newDot.y) * 0.02;
+				targetX = newDot.originalX;
+				targetY = newDot.originalY;
 			}
 
-			newDot.x = newX;
-			newDot.y = newY;
+			// Use easing to update actual position
+			newDot.targetX = targetX;
+			newDot.targetY = targetY;
+			newDot.x = lerp(newDot.x, newDot.targetX, EASING_FACTOR);
+			newDot.y = lerp(newDot.y, newDot.targetY, EASING_FACTOR);
 
-			// 繪製星星
+			// Draw star
 			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
-			if (ctx) {
-			ctx.beginPath();
-			ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
-			ctx.fillStyle = newDot.color;
-			ctx.globalAlpha = 0.15 + glowIntensity * 0.5;
-			ctx.shadowBlur = 3 + glowIntensity * 15;
-			ctx.shadowColor = newDot.color;
-			ctx.fill();
-			ctx.globalAlpha = 1;
-			ctx.shadowBlur = 0;
+			if (ctx){
+				ctx.beginPath();
+				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
+				ctx.fillStyle = newDot.color;
+				ctx.globalAlpha = 0.15 + glowIntensity * 0.5;
+				ctx.shadowBlur = 3 + glowIntensity * 15;
+				ctx.shadowColor = newDot.color;
+				ctx.fill();
+				ctx.globalAlpha = 1;
+				ctx.shadowBlur = 0;
+
 			}
+
 			return newDot;
 		});
 
 		animationFrameId = requestAnimationFrame(updateDots);
 	}
 
-	// 初始化 Canvas 和事件
+	// Initialize Canvas and events
 	$effect(() => {
 		if (browser && canvas) {
 			ctx = canvas.getContext('2d');
@@ -152,11 +176,13 @@
 
 			initializeDots();
 			window.addEventListener('mousemove', handleMouseMove);
+			window.addEventListener('touchmove', handleTouchMove, { passive: false });
 			window.addEventListener('resize', handleResize);
 			animationFrameId = requestAnimationFrame(updateDots);
 
 			return () => {
 				window.removeEventListener('mousemove', handleMouseMove);
+				window.removeEventListener('touchmove', handleTouchMove);
 				window.removeEventListener('resize', handleResize);
 				if (animationFrameId) {
 					cancelAnimationFrame(animationFrameId);
