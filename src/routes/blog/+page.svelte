@@ -108,6 +108,14 @@
 
 </script>
 
+<svelte:head>
+	<title>Blog | Tomlord's Blog</title>
+	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
+	<meta name="twitter:description" content="Read the latest posts from Tomlord's blog covering tech, projects, and more." />
+	<meta property="og:title" content="Blog | Tomlord's Blog" />
+	<meta property="og:description" content="Read the latest posts from Tomlord's blog covering tech, projects, and more." />
+</svelte:head>
+
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto">
 	

@@ -8,6 +8,14 @@
 	const Component = $derived(content);
 </script>
 
+<svelte:head>
+	<title>{title} | Tomlord's Blog</title>
+	<meta name="twitter:title" content={title} />
+	<meta name="twitter:description" content={`${title} - Posted on ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`} />
+	<meta property="og:title" content={title} />
+	<meta property="og:description" content={`${title} - Posted on ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`} />
+</svelte:head>
+
 <div class="max-w-3xl mx-auto px-4 py-8">
 	<article>
 		<header class="mb-8">

@@ -5,6 +5,13 @@
 
 </script>
 
+<svelte:head>
+	<title>Home | Tomlord's Blog</title>
+	<meta name="twitter:title" content="Tomlord's Blog | Software Engineer" />
+	<meta name="twitter:description" content="Hi, it's Tomlord here. I am a software engineer who is passionate about distributed systems, Golang, and Svelte." />
+	<meta property="og:title" content="Tomlord's Blog | Software Engineer" />
+	<meta property="og:description" content="Hi, it's Tomlord here. I am a software engineer who is passionate about distributed systems, Golang, and Svelte." />
+</svelte:head>
 
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base  mx-auto">
