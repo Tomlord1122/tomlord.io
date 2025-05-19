@@ -6,12 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Home | Tomlord's Blog</title>
 	<meta name="twitter:title" content="Home | Tomlord's Blog" />
-	<meta name="twitter:description" content="Hi, it's Tomlord here. I am a software engineer who is passionate about distributed systems, Golang, and Svelte." />
-	<meta property="og:title" content="Home | Tomlord's Blog" />
-	<meta property="og:description" content="Hi, it's Tomlord here. I am a software engineer who is passionate about distributed systems, Golang, and Svelte." />
-	<meta property="og:image"/>
 </svelte:head>
 
 <!-- This is the main container for your page content -->

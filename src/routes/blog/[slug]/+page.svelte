@@ -11,10 +11,6 @@
 <svelte:head>
 	<title>{title} | Tomlord's Blog</title>
 	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={`${title} - Posted on ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`} />
-	<meta property="og:title" content={title} />
-	<meta property="og:description" content={`${title} - Posted on ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`} />
-	<meta property="og:image"/>
 
 </svelte:head>
 
