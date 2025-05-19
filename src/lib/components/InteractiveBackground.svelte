@@ -48,7 +48,7 @@
 				originalY: y,
 				targetX: x, // Initialize target position
 				targetY: y, // Initialize target position
-				size: Math.random() * 2.5 + 0.5,
+				size: Math.random() * 1.5 + 0.5,
 				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
 				velocityX: 0,
 				velocityY: 0,
