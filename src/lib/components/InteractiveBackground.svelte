@@ -21,7 +21,7 @@
 	}[] = [];
 
 	// Constants
-	const NUM_DOTS = 100;
+	const NUM_DOTS = 50;
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.3;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
@@ -62,15 +62,6 @@
 	function handleMouseMove(event: MouseEvent) {
 		mouse.x = event.clientX;
 		mouse.y = event.clientY;
-	}
-
-	// Handle touch movement
-	function handleTouchMove(event: TouchEvent) {
-		event.preventDefault(); // Prevent scrolling
-		if (event.touches.length > 0) {
-			mouse.x = event.touches[0].clientX;
-			mouse.y = event.touches[0].clientY;
-		}
 	}
 
 	// Handle window resize
@@ -176,13 +167,11 @@
 
 			initializeDots();
 			window.addEventListener('mousemove', handleMouseMove);
-			window.addEventListener('touchmove', handleTouchMove, { passive: false });
 			window.addEventListener('resize', handleResize);
 			animationFrameId = requestAnimationFrame(updateDots);
 
 			return () => {
 				window.removeEventListener('mousemove', handleMouseMove);
-				window.removeEventListener('touchmove', handleTouchMove);
 				window.removeEventListener('resize', handleResize);
 				if (animationFrameId) {
 					cancelAnimationFrame(animationFrameId);
