@@ -5,9 +5,6 @@
 
 </script>
 
-<svelte:head>
-	<meta name="twitter:title" content="Home | Tomlord's Blog" />
-</svelte:head>
 
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base  mx-auto">
