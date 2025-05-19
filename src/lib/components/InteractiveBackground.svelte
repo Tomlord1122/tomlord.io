@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	let mouse = $state({ x: 0, y: 0 });
+	let mouse = $state.raw({ x: 0, y: 0 });
 
-	let dots = $state<{ 
+	// Use raw state to prevent deep reactivity
+	let dots = $state.raw<{ 
 		id: number; 
 		x: number; 
 		y: number; 
@@ -16,7 +17,7 @@
 		randomMoveTimer: number;
 	}[]>([]);
 
-	const NUM_DOTS = 75; // Total number of dots, you can adjust this number
+	const NUM_DOTS = 25; // Total number of dots, you can adjust this number
 	const GLOW_RADIUS = 100; // Radius of mouse influence where dots start to glow (in pixels)
 	const MAX_GLOW = 0.3; // Maximum glow intensity for dots
 	const STAR_COLORS = ['#ffffff', '#323232'];
@@ -24,8 +25,99 @@
 	const RANDOM_MOVE_RANGE = 10; // Maximum distance for random movement
 	const RANDOM_MOVE_SPEED = 0.25; // Speed of random movement
 
+	let animationFrameId: number; // Declare animationFrameId here
+
+	// Use a non-reactive variable for animation updates
+	let _dotsInternal: typeof dots = [];
+
+	// Define the mouse movement event handler
+	function handleMouseMove(event: MouseEvent) {
+		mouse = { x: event.clientX, y: event.clientY };
+		
+		// Update internal state first without triggering reactivity
+		_dotsInternal = _dotsInternal.map(dot => {
+			const distance = Math.sqrt((dot.originalX - mouse.x) ** 2 + (dot.originalY - mouse.y) ** 2);
+			
+			const newDot = {...dot};
+			if (distance < GLOW_RADIUS * 1.5) {
+				const pull = (1 - distance / (GLOW_RADIUS * 1.5)) * MOUSE_PULL_FACTOR;
+				const dx = mouse.x - newDot.originalX;
+				const dy = mouse.y - newDot.originalY;
+				
+				newDot.x = newDot.originalX + dx * pull;
+				newDot.y = newDot.originalY + dy * pull;
+			} else {
+				newDot.x = newDot.x + (newDot.originalX - newDot.x) * 0.02;
+				newDot.y = newDot.y + (newDot.originalY - newDot.y) * 0.02;
+			}
+			return newDot;
+		});
+		
+		// Then update reactive state once
+		dots = [..._dotsInternal];
+	}
+
+	// Define the window resize event handler
+	function handleResize() {
+		const newDotsArray = [];
+		for (let i = 0; i < NUM_DOTS; i++) {
+			const x = Math.random() * window.innerWidth;
+			const y = Math.random() * window.innerHeight;
+			newDotsArray.push({
+				id: i,
+				x: x,
+				y: y,
+				originalX: x,
+				originalY: y,
+				size: Math.random() * 1.5 + 0.5,
+				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+				velocityX: 0,
+				velocityY: 0,
+				randomMoveTimer: Math.random() * 1000
+			});
+		}
+		_dotsInternal = newDotsArray;
+		dots = [..._dotsInternal];
+	}
+
+	// Create animation frame handler for random movement
+	function updateRandomMovement() {
+		// Work with the non-reactive internal state
+		_dotsInternal = _dotsInternal.map(dot => {
+			const newDot = {...dot};
+			newDot.randomMoveTimer -= 1;
+			
+			if (newDot.randomMoveTimer <= 0) {
+				newDot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+				newDot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
+				newDot.randomMoveTimer = Math.random() * 200 + 50;
+			}
+			
+			let newX = newDot.x + newDot.velocityX;
+			let newY = newDot.y + newDot.velocityY;
+			
+			const distanceFromOrigin = Math.sqrt(
+				(newX - newDot.originalX) ** 2 + 
+				(newY - newDot.originalY) ** 2
+			);
+			
+			if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
+				newX = newDot.x + (newDot.originalX - newDot.x) * 0.05;
+				newY = newDot.y + (newDot.originalY - newDot.y) * 0.05;
+			}
+			
+			newDot.x = newX;
+			newDot.y = newY;
+			return newDot;
+		});
+		
+		// Update the reactive state only once per frame
+		dots = [..._dotsInternal];
+		
+		animationFrameId = requestAnimationFrame(updateRandomMovement);
+	}
+
 	$effect(() => {
-		// Ensure the following code only runs in browser environment
 		if (browser) {
 			// Initialize random positions for dots
 			const tempDots = [];
@@ -33,130 +125,37 @@
 				const x = Math.random() * window.innerWidth;
 				const y = Math.random() * window.innerHeight;
 				tempDots.push({
-					id: i, // Unique identifier for each dot
-					x: x, // Random x coordinate within window width
-					y: y, // Random y coordinate within window height
-					originalX: x, // Store original position to return to
-					originalY: y, // Store original position to return to
-					size: Math.random() * 0.85 + 0.5, // Random size between 0.5 and 2
-					color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)], // Random color
-					velocityX: 0, // Initial velocity X
-					velocityY: 0, // Initial velocity Y
-					randomMoveTimer: Math.random() * 1000 // Random timer for movement changes
+					id: i,
+					x: x,
+					y: y,
+					originalX: x,
+					originalY: y,
+					size: Math.random() * 0.85 + 0.5,
+					color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+					velocityX: 0,
+					velocityY: 0,
+					randomMoveTimer: Math.random() * 1000
 				});
 			}
-			dots = tempDots; // Assign the generated dots array to the $state variable dots
-
-			// Define the mouse movement event handler
-			const handleMouseMove = (event: MouseEvent) => {
-				mouse.x = event.clientX; // Update mouse x coordinate
-				mouse.y = event.clientY; // Update mouse y coordinate
-				
-				// Update dot positions based on mouse position
-				dots = dots.map(dot => {
-					const distance = Math.sqrt((dot.originalX - mouse.x) ** 2 + (dot.originalY - mouse.y) ** 2);
-					
-					if (distance < GLOW_RADIUS * 1.5) {
-						// Calculate pull factor based on distance
-						const pull = (1 - distance / (GLOW_RADIUS * 1.5)) * MOUSE_PULL_FACTOR;
-						
-						// Calculate new position with slight pull toward mouse
-						const dx = mouse.x - dot.originalX;
-						const dy = mouse.y - dot.originalY;
-						
-						return {
-							...dot,
-							x: dot.originalX + dx * pull,
-							y: dot.originalY + dy * pull
-						};
-					}
-					
-					// If far from mouse, gradually return to original position
-					return {
-						...dot,
-						x: dot.x + (dot.originalX - dot.x) * 0.02,
-						y: dot.y + (dot.originalY - dot.y) * 0.02
-					};
-				});
-			};
-
-			// Define the window resize event handler
-			const handleResize = () => {
-				// When window size changes, redistribute dots randomly
-				const newDots = [];
-				for (let i = 0; i < NUM_DOTS; i++) {
-					const x = Math.random() * window.innerWidth;
-					const y = Math.random() * window.innerHeight;
-					newDots.push({
-						id: i,
-						x: x,
-						y: y,
-						originalX: x,
-						originalY: y,
-						size: Math.random() * 1.5 + 0.5,
-						color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-						velocityX: 0,
-						velocityY: 0,
-						randomMoveTimer: Math.random() * 1000
-					});
-				}
-				dots = newDots;
-			};
-
-			// Create animation frame handler for random movement
-			const updateRandomMovement = () => {
-				// Update each dot's position with random movement
-				dots = dots.map(dot => {
-					// Decrease timer and generate new random velocities when timer reaches zero
-					dot.randomMoveTimer -= 1;
-					
-					if (dot.randomMoveTimer <= 0) {
-						// Set new random velocity
-						dot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
-						dot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
-						// Reset timer with random duration
-						dot.randomMoveTimer = Math.random() * 200 + 50;
-					}
-					
-					// Apply velocity to position
-					let newX = dot.x + dot.velocityX;
-					let newY = dot.y + dot.velocityY;
-					
-					// Keep stars within range of their original position
-					const distanceFromOrigin = Math.sqrt(
-						(newX - dot.originalX) ** 2 + 
-						(newY - dot.originalY) ** 2
-					);
-					
-					if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
-						// If too far, move back toward original position
-						newX = dot.x + (dot.originalX - dot.x) * 0.05;
-						newY = dot.y + (dot.originalY - dot.y) * 0.05;
-					}
-					
-					return {
-						...dot,
-						x: newX,
-						y: newY
-					};
-				});
-				
-				// Continue animation loop
-				animationFrameId = requestAnimationFrame(updateRandomMovement);
-			};
 			
-			// Start animation loop
-			let animationFrameId = requestAnimationFrame(updateRandomMovement);
+			// Set both internal and reactive states
+			_dotsInternal = tempDots;
+			dots = [...tempDots];
 
 			// Add event listeners
 			window.addEventListener('mousemove', handleMouseMove);
 			window.addEventListener('resize', handleResize);
 
-			// Cleanup function: remove event listeners and cancel animation frame
+			// Start animation loop
+			animationFrameId = requestAnimationFrame(updateRandomMovement);
+
+			// Cleanup function
 			return () => {
 				window.removeEventListener('mousemove', handleMouseMove);
 				window.removeEventListener('resize', handleResize);
-				cancelAnimationFrame(animationFrameId);
+				if (animationFrameId) {
+					cancelAnimationFrame(animationFrameId);
+				}
 			};
 		}
 	});

@@ -23,8 +23,6 @@
 	}>();
 
 	let lang = $state('en');
-	let duration = $state(1); // Store as a number, default to 1
-	$inspect(duration);
 	// State for the new post data
 	let title = $state('');
 	let slug = $state(''); // Separate state for customizable slug
@@ -33,15 +31,14 @@
 	let newTagInput = $state(''); // For typing a new tag
 	let showPreview = $state(false); // Controls whether to show preview or editor
  
-	// Effect to automatically calculate reading duration based on content
-	$effect(() => {
+	// Use $derived to automatically calculate reading duration based on content
+	let duration = $derived(() => {
 		const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
 		// Calculate duration: 1 minute per 100 words, round up
 		const calculatedDuration = Math.ceil(words / 100);
-		// Set duration, ensuring it's at least 1 minute
-		duration = Math.max(1, calculatedDuration);
+		// Ensure it's at least 1 minute
+		return Math.max(1, calculatedDuration);
 	});
-	
 
 	// Get current date and format it
 	const currentDate = new Date();

@@ -4,42 +4,52 @@
   // Props for the modal
   let { 
     show = $bindable(), 
-    onUploadSuccess = (filePaths: string[]) => {}, // Expects an array of successful paths
+    onUploadSuccess = (filePaths: string[]) => {}, 
     oncancel = () => {} 
   } = $props<{
     show?: boolean,
-    onUploadSuccess?: (filePaths: string[]) => void, // Updated prop signature
+    onUploadSuccess?: (filePaths: string[]) => void,
     oncancel?: () => void
   }>();
 
-  // --- Start of ImageUploader Logic (Modified for Multiple Files) ---
-  let selectedFiles = $state<File[]>([]); // Changed from selectedFile
-  let previewUrls = $state<string[]>([]);  // Changed from previewUrl
+  // Use raw state for arrays to prevent deep reactivity
+  let selectedFiles = $state.raw<File[]>([]);
+  let previewUrls = $state.raw<string[]>([]);
   let isLoading = $state(false);
   let statusMessage = $state<string | null>(null);
   let statusIsError = $state(false);
-  let overallProgressMessage = $state<string | null>(null); // For "Uploading X of Y"
+  let overallProgressMessage = $state<string | null>(null);
 
   function handleFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      selectedFiles = Array.from(input.files); // Convert FileList to Array
+      // Clean up old preview URLs first
+      const oldUrls = [...previewUrls];
+      oldUrls.forEach(url => URL.revokeObjectURL(url));
       
-      // Revoke old preview URLs to free up memory
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-      previewUrls = selectedFiles.map(file => URL.createObjectURL(file));
+      // Create new arrays instead of mutating
+      const newFiles = Array.from(input.files);
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
       
-      statusMessage = null; // Clear previous status
+      // Replace state (not mutate)
+      selectedFiles = newFiles;
+      previewUrls = newUrls;
+      
+      statusMessage = null;
       statusIsError = false;
       overallProgressMessage = null;
     } else {
+      // Clean up preview URLs
+      const oldUrls = [...previewUrls];
+      oldUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Reset with new arrays
       selectedFiles = [];
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
       previewUrls = [];
     }
   }
 
-  async function uploadImages() { // Renamed from uploadImage
+  async function uploadImages() {
     if (selectedFiles.length === 0) {
       statusMessage = 'Please select one or more images first.';
       statusIsError = true;
@@ -47,16 +57,20 @@
     }
 
     isLoading = true;
-    statusMessage = null; // Clear single status message
+    statusMessage = null;
     statusIsError = false;
     overallProgressMessage = `Preparing to upload ${selectedFiles.length} image(s)...`;
     
     const successfulUploadPaths: string[] = [];
     let errorOccurred = false;
+    let currentErrorMessages = "";
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      overallProgressMessage = `Uploading image ${i + 1} of ${selectedFiles.length} ('${file.name}')...`;
+    // Use local copies to prevent reactivity issues during iteration
+    const filesToUpload = [...selectedFiles];
+    
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      overallProgressMessage = `Uploading image ${i + 1} of ${filesToUpload.length} ('${file.name}')...`;
       
       const formData = new FormData();
       formData.append('imageFile', file);
@@ -78,58 +92,55 @@
         }
       } catch (err: any) {
         console.error(`Upload error for ${file.name}:`, err);
-        statusMessage = (statusMessage ? statusMessage + "\n" : "") + `Error with ${file.name}: ${err.message}`;
-        statusIsError = true;
+        currentErrorMessages += (currentErrorMessages ? "\n" : "") + `Error with ${file.name}: ${err.message}`;
         errorOccurred = true;
-        // Optionally, decide if you want to stop on first error or continue
-        // For now, it continues with other files.
       }
+    }
+    
+    // Update status only once after the loop
+    if (currentErrorMessages) {
+      statusMessage = currentErrorMessages;
+      statusIsError = true;
     }
 
     isLoading = false;
 
     if (successfulUploadPaths.length > 0) {
-      onUploadSuccess(successfulUploadPaths); // Call with all successful paths
+      // Create a new array to pass to the callback
+      const pathsToReturn = [...successfulUploadPaths];
+      onUploadSuccess(pathsToReturn);
     }
 
     if (errorOccurred) {
       overallProgressMessage = `Finished. Some images failed to upload. Check messages below.`;
-      // statusMessage will contain concatenated errors
-    } else if (successfulUploadPaths.length === selectedFiles.length) {
+    } else if (successfulUploadPaths.length === filesToUpload.length) {
       overallProgressMessage = `${successfulUploadPaths.length} image(s) uploaded successfully!`;
-      statusMessage = null; // Clear individual error messages if all were successful
-    } else if (successfulUploadPaths.length > 0 && successfulUploadPaths.length < selectedFiles.length) {
-      overallProgressMessage = `Finished. ${successfulUploadPaths.length} of ${selectedFiles.length} images uploaded. Some failed.`;
-    } else if (successfulUploadPaths.length === 0 && selectedFiles.length > 0) {
+      statusMessage = null;
+    } else if (successfulUploadPaths.length > 0 && successfulUploadPaths.length < filesToUpload.length) {
+      overallProgressMessage = `Finished. ${successfulUploadPaths.length} of ${filesToUpload.length} images uploaded. Some failed.`;
+    } else if (successfulUploadPaths.length === 0 && filesToUpload.length > 0) {
       overallProgressMessage = `No images were uploaded successfully.`;
     }
-    
-    // Do not automatically close the modal if there were errors, so user can see them.
-    // The parent component's onUploadSuccess can decide to close if successfulUploadPaths.length > 0
-    if (!errorOccurred && successfulUploadPaths.length === selectedFiles.length) {
-      // Only auto-close if all were successful and no errors
-      // The parent's onUploadSuccess is already called. The parent might close the modal.
-      // Or, we can explicitly close it: show = false; (But onUploadSuccess will trigger that in parent)
-    }
   }
-  // --- End of ImageUploader Logic ---
 
   function closeModal() {
     oncancel(); 
     show = false; 
   }
 
-  $effect(() => {
-    if (!show) {
-      selectedFiles = [];
-      previewUrls.forEach(url => URL.revokeObjectURL(url)); // Important: Clean up Object URLs
-      previewUrls = [];
-      statusMessage = null;
-      statusIsError = false;
-      isLoading = false;
-      overallProgressMessage = null;
-    }
-  });
+  function resetState() {
+    // Copy URLs to local array before iterating
+    const urlsToRevoke = [...previewUrls];
+    urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
+    
+    // Reset all state with new values instead of mutations
+    selectedFiles = [];
+    previewUrls = [];
+    statusMessage = null;
+    statusIsError = false;
+    isLoading = false;
+    overallProgressMessage = null;
+  }
 
 </script>
 
@@ -174,7 +185,7 @@
       {#if previewUrls.length > 0}
         <p class="text-sm text-gray-600 mb-1">Preview ({previewUrls.length} selected):</p>
         <div class="mb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 border rounded" in:fly={{ y: 20, duration: 300 }}>
-          {#each previewUrls as url, i (selectedFiles[i]?.name || i)} <!-- Keying by file name or index -->
+          {#each previewUrls as url, i (i)}
             <div class="aspect-square overflow-hidden relative group">
               <img src={url} alt={`Preview ${selectedFiles[i]?.name || i + 1}`} class="w-full h-full object-cover rounded border border-gray-200" />
               <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 truncate">
@@ -201,12 +212,12 @@
         {/if}
       </button>
     
-      {#if overallProgressMessage && !isLoading} <!-- Show overall progress when not loading -->
+      {#if overallProgressMessage && !isLoading}
         <p class="mt-3 text-sm text-center {statusIsError ? 'text-orange-600' : 'text-green-600'}">
           {overallProgressMessage}
         </p>
       {/if}
-      {#if statusMessage && (isLoading || statusIsError)} <!-- Show detailed status/errors -->
+      {#if statusMessage && (isLoading || statusIsError)}
         <p 
           class="mt-3 text-sm text-center whitespace-pre-line {statusIsError ? 'text-red-600' : 'text-gray-600'}"
           in:fly={{ y: 10, duration: 200 }}
@@ -214,8 +225,7 @@
           {statusMessage}
         </p>
       {/if}
-    </div> 
-    <!-- --- End of ImageUploader Markup --- -->
+    </div>
 
   </div>
 {/if}
