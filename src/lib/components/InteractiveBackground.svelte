@@ -1,244 +1,184 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	let mouse = $state.raw({ x: 0, y: 0 });
+	// 滑鼠位置（非反應性，因為只在動畫循環中使用）
+	let mouse = { x: 0, y: 0 };
 
-	// Use raw state to prevent deep reactivity
-	let dots = $state.raw<{ 
-		id: number; 
-		x: number; 
-		y: number; 
-		size: number; 
-		color: string; 
-		originalX: number; 
+	// 星星數據（非反應性）
+	let dots: {
+		id: number;
+		x: number;
+		y: number;
+		originalX: number;
 		originalY: number;
-		velocityX: number;  
-		velocityY: number;  
+		size: number;
+		color: string;
+		velocityX: number;
+		velocityY: number;
 		randomMoveTimer: number;
-	}[]>([]);
+	}[] = [];
 
-	const NUM_DOTS = 25; // Total number of dots, you can adjust this number
-	const GLOW_RADIUS = 100; // Radius of mouse influence where dots start to glow (in pixels)
-	const MAX_GLOW = 0.3; // Maximum glow intensity for dots
-	const STAR_COLORS = ['#ffffff', '#323232'];
-	const MOUSE_PULL_FACTOR = 0.15; // How strongly stars are pulled toward the mouse
-	const RANDOM_MOVE_RANGE = 10; // Maximum distance for random movement
-	const RANDOM_MOVE_SPEED = 0.25; // Speed of random movement
+	// 常數
+	const NUM_DOTS = 100;
+	const GLOW_RADIUS = 200;
+	const MAX_GLOW = 1;
+	const STAR_COLORS = ['#D7A9D7', '#323232'];
+	const MOUSE_PULL_FACTOR = 0.35;
+	const RANDOM_MOVE_RANGE = 10;
+	const RANDOM_MOVE_SPEED = 0.25;
 
-	let animationFrameId: number; // Declare animationFrameId here
+	let canvas: HTMLCanvasElement;
+	let ctx: CanvasRenderingContext2D | null = null;
+	let animationFrameId: number | null = null;
 
-	// Use a non-reactive variable for animation updates
-	let _dotsInternal: typeof dots = [];
-
-	// Define the mouse movement event handler
-	function handleMouseMove(event: MouseEvent) {
-		mouse = { x: event.clientX, y: event.clientY };
-		
-		// Update internal state first without triggering reactivity
-		_dotsInternal = _dotsInternal.map(dot => {
-			const distance = Math.sqrt((dot.originalX - mouse.x) ** 2 + (dot.originalY - mouse.y) ** 2);
-			
-			const newDot = {...dot};
-			if (distance < GLOW_RADIUS * 1.5) {
-				const pull = (1 - distance / (GLOW_RADIUS * 1.5)) * MOUSE_PULL_FACTOR;
-				const dx = mouse.x - newDot.originalX;
-				const dy = mouse.y - newDot.originalY;
-				
-				newDot.x = newDot.originalX + dx * pull;
-				newDot.y = newDot.originalY + dy * pull;
-			} else {
-				newDot.x = newDot.x + (newDot.originalX - newDot.x) * 0.02;
-				newDot.y = newDot.y + (newDot.originalY - newDot.y) * 0.02;
-			}
-			return newDot;
-		});
-		
-		// Then update reactive state once
-		dots = [..._dotsInternal];
-	}
-
-	// Define the window resize event handler
-	function handleResize() {
-		const newDotsArray = [];
+	// 初始化星星
+	function initializeDots() {
+		const newDots = [];
 		for (let i = 0; i < NUM_DOTS; i++) {
 			const x = Math.random() * window.innerWidth;
 			const y = Math.random() * window.innerHeight;
-			newDotsArray.push({
+			newDots.push({
 				id: i,
-				x: x,
-				y: y,
+				x,
+				y,
 				originalX: x,
 				originalY: y,
-				size: Math.random() * 1.5 + 0.5,
+				size: Math.random() * 1.75 + 0.5,
 				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
 				velocityX: 0,
 				velocityY: 0,
 				randomMoveTimer: Math.random() * 1000
 			});
 		}
-		_dotsInternal = newDotsArray;
-		dots = [..._dotsInternal];
+		dots = newDots;
 	}
 
-	// Create animation frame handler for random movement
-	function updateRandomMovement() {
-		// Work with the non-reactive internal state
-		_dotsInternal = _dotsInternal.map(dot => {
-			const newDot = {...dot};
+	// 處理滑鼠移動
+	function handleMouseMove(event: MouseEvent) {
+		mouse.x = event.clientX;
+		mouse.y = event.clientY;
+	}
+
+	// 處理視窗大小改變
+	function handleResize() {
+		if (canvas) {
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
+			initializeDots();
+		}
+	}
+
+	// 計算發光強度（使用非線性插值）
+	function calculateGlow(dotX: number, dotY: number, mouseX: number, mouseY: number): number {
+		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
+		if (distance < GLOW_RADIUS) {
+			// 使用平方反比來使發光更平滑
+			return MAX_GLOW * (1 - distance / GLOW_RADIUS) ** 2;
+		}
+		return 0;
+	}
+
+	// 更新星星位置和動畫
+	function updateDots() {
+		if (!ctx) return;
+
+		// 清空畫布
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		dots = dots.map(dot => {
+			const newDot = { ...dot };
 			newDot.randomMoveTimer -= 1;
-			
+
+			// 隨機移動
 			if (newDot.randomMoveTimer <= 0) {
 				newDot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
 				newDot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
 				newDot.randomMoveTimer = Math.random() * 200 + 50;
 			}
-			
+
 			let newX = newDot.x + newDot.velocityX;
 			let newY = newDot.y + newDot.velocityY;
-			
+
+			// 限制隨機移動範圍
 			const distanceFromOrigin = Math.sqrt(
-				(newX - newDot.originalX) ** 2 + 
-				(newY - newDot.originalY) ** 2
+				(newX - newDot.originalX) ** 2 + (newY - newDot.originalY) ** 2
 			);
-			
 			if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
 				newX = newDot.x + (newDot.originalX - newDot.x) * 0.05;
 				newY = newDot.y + (newDot.originalY - newDot.y) * 0.05;
 			}
-			
+
+			// 滑鼠拉力
+			const distance = Math.sqrt((newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2);
+			if (distance < GLOW_RADIUS * 1.5) {
+				const pull = (1 - distance / (GLOW_RADIUS * 1.5)) * MOUSE_PULL_FACTOR;
+				const dx = mouse.x - newDot.originalX;
+				const dy = mouse.y - newDot.originalY;
+				newX = newDot.originalX + dx * pull;
+				newY = newDot.originalY + dy * pull;
+			} else {
+				newX = newDot.x + (newDot.originalX - newDot.x) * 0.02;
+				newY = newDot.y + (newDot.originalY - newDot.y) * 0.02;
+			}
+
 			newDot.x = newX;
 			newDot.y = newY;
+
+			// 繪製星星
+			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
+			if (ctx) {
+			ctx.beginPath();
+			ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
+			ctx.fillStyle = newDot.color;
+			ctx.globalAlpha = 0.15 + glowIntensity * 0.5;
+			ctx.shadowBlur = 3 + glowIntensity * 15;
+			ctx.shadowColor = newDot.color;
+			ctx.fill();
+			ctx.globalAlpha = 1;
+			ctx.shadowBlur = 0;
+			}
 			return newDot;
 		});
-		
-		// Update the reactive state only once per frame
-		dots = [..._dotsInternal];
-		
-		animationFrameId = requestAnimationFrame(updateRandomMovement);
+
+		animationFrameId = requestAnimationFrame(updateDots);
 	}
 
+	// 初始化 Canvas 和事件
 	$effect(() => {
-		if (browser) {
-			// Initialize random positions for dots
-			const tempDots = [];
-			for (let i = 0; i < NUM_DOTS; i++) {
-				const x = Math.random() * window.innerWidth;
-				const y = Math.random() * window.innerHeight;
-				tempDots.push({
-					id: i,
-					x: x,
-					y: y,
-					originalX: x,
-					originalY: y,
-					size: Math.random() * 0.85 + 0.5,
-					color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-					velocityX: 0,
-					velocityY: 0,
-					randomMoveTimer: Math.random() * 1000
-				});
-			}
-			
-			// Set both internal and reactive states
-			_dotsInternal = tempDots;
-			dots = [...tempDots];
+		if (browser && canvas) {
+			ctx = canvas.getContext('2d');
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
 
-			// Add event listeners
+			initializeDots();
 			window.addEventListener('mousemove', handleMouseMove);
 			window.addEventListener('resize', handleResize);
+			animationFrameId = requestAnimationFrame(updateDots);
 
-			// Start animation loop
-			animationFrameId = requestAnimationFrame(updateRandomMovement);
-
-			// Cleanup function
 			return () => {
 				window.removeEventListener('mousemove', handleMouseMove);
 				window.removeEventListener('resize', handleResize);
 				if (animationFrameId) {
 					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
 				}
+				ctx = null;
 			};
 		}
 	});
-
-	// Function to calculate dot glow intensity
-	function calculateGlow(dotX: number, dotY: number, mouseX: number, mouseY: number): number {
-		// Calculate the straight-line distance between mouse and dot
-		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
-
-		// If distance is less than the predefined GLOW_RADIUS
-		if (distance < GLOW_RADIUS) {
-			// Glow intensity is inversely proportional to distance
-			return MAX_GLOW * (1 - distance / GLOW_RADIUS);
-		}
-		// If distance is greater than glow radius, glow intensity is 0
-		return 0;
-	}
 </script>
 
-<!-- HTML Template Section -->
-<div class="interactive-background">
-	{#each dots as dot (dot.id)}
-		{@const glowIntensity = calculateGlow(dot.x, dot.y, mouse.x, mouse.y)}
-		<div
-			class="star"
-			style="
-				left: {dot.x}px;
-				top: {dot.y}px;
-				width: {dot.size}px;
-				height: {dot.size}px;
-				background-color: {dot.color};
-				opacity: {0.15 + glowIntensity * 0.5};
-				transform: scale({1 + glowIntensity * 1.2}) rotate({glowIntensity * 180}deg);
-				box-shadow: 0 0 {3 + glowIntensity * 15}px {2 + glowIntensity * 7}px {dot.color};
-			"
-		>
-			<div class="star-inner" style="background-color: {dot.color};"></div>
-		</div>
-	{/each}
-</div>
+<canvas class="interactive-background" bind:this={canvas}></canvas>
 
-<!-- CSS Styles Section -->
 <style>
 	.interactive-background {
 		position: fixed;
 		top: 0;
 		left: 0;
-		width: 100vw; 
-		height: 100vh; 
-		overflow: hidden;
-		z-index: 0; 
-		background-color: rgba(0, 0, 0, 0.01); 
+		width: 100vw;
+		height: 100vh;
+		background-color: rgba(0, 0, 0, 0.01);
 		pointer-events: none;
-	}
-
-	.star {
-		position: absolute;
-		border-radius: 50%;
-		transition: opacity 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
-		will-change: opacity, transform, box-shadow, left, top;
-		animation: twinkle 5s infinite alternate;
-	}
-	
-	.star-inner {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		border-radius: 50%;
-		filter: blur(0.5px);
-	}
-	
-	@keyframes twinkle {
-		0% {
-			opacity: 0.15;
-			transform: scale(0.8);
-		}
-		50% {
-			opacity: 0.3;
-			transform: scale(1);
-		}
-		100% {
-			opacity: 0.2;
-			transform: scale(0.9);
-		}
+		z-index: 0;
 	}
 </style>
