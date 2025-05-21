@@ -10,8 +10,8 @@
 </script>
 
 <InteractiveBackground />
-<div class="min-h-screen bg-gradient-to-b from-[#EDEDED] to-[#EEEEEE] flex flex-col font-sans">
-	<nav class="bg-gradient-to-r from-[#EDEDED] to-[#EEEEEE] p-4 ">
+<div class="min-h-screen bg-[#EDEDED] flex flex-col font-sans">
+	<nav class="p-4 ">
 		<div class="container mx-auto flex justify-between items-center">
 			
  			<a href="/" class="transition-all duration-300 hover:scale-110">

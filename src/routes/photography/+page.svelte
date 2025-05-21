@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
+	import { fly, fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
@@ -82,11 +82,6 @@
 		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
 		   {#each data.photos.slice().reverse() as photo, i (photo.src)} <!-- Added key for #each -->
 			   <button 
-				   in:fly={{
-					   y: 50, 
-					   duration: 600 + (i % 2) * 200, 
-					   delay: 300 + Math.floor(i / 2) * 300 
-				   }}
 				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer"
 				   onclick={() => openFullSizeImage(photo.src)}
 			
@@ -113,7 +108,8 @@
 		onkeydown={(e) => e.key === 'Escape' && closeFullSizeImage()}
 		role="dialog"
 		tabindex="0"
-		in:fly={{ duration: 300 }}
+		in:fade={{ duration: 200 }}
+		
 	>
 		<div class="max-w-full max-h-full overflow-auto">
 			<img 

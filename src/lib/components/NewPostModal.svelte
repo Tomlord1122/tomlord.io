@@ -164,7 +164,7 @@ ${content}`;
 	// Function to copy image markdown to clipboard
 	async function copyImageMarkdown(imagePath: string) {
 		const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="h-1/2 w-1/2 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="z-20 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
 </div>`;
 		try {
 			await navigator.clipboard.writeText(markdown);
