@@ -12,7 +12,8 @@ export const load: PageServerLoad = async () => {
     // Import images from the new location within src/lib
     // Use `import: 'default'` to get the processed URL of the image
     const imageAssetModules = import.meta.glob(
-      "/src/lib/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
+      // "/src/lib/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
+      "/static/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
       {
         eager: true,
         import: 'default', // This is key to get the URL string

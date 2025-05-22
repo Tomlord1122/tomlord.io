@@ -5,7 +5,7 @@ import path from "node:path";
 import { dev } from "$app/environment";
 import sharp from 'sharp'; // Import sharp
 
-const uploadDir = path.join(process.cwd(), "src", "lib", "photography_assets");
+const uploadDir = path.join(process.cwd(), "static", "photography_assets");
 
 async function ensureUploadDir() {
   try {

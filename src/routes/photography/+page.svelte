@@ -103,7 +103,7 @@
 	{/if}
 </div>
 
-<main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area mt-10">
+<main in:fly={{ y: 100, duration: 1000, delay: 100 }} class="main-content-area mt-10">
 	{#if displayedPhotos && displayedPhotos.length > 0}
 		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
 		   <!-- {#each data.photos.slice().reverse() as photo, i (photo.src)} -->

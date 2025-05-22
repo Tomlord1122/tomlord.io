@@ -10,7 +10,7 @@ tags: ['Love', 'Life']
 ### 此時此刻的我們
 
 <div class="flex justify-center">
-  <img src="/src/lib/photography_assets/10.webp" alt="10.webp" class="z-20 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+  <img src="/photography_assets/10.webp" alt="10.webp" class="z-20 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
 </div>
 
 這週五就是我與女朋友凱媞的二週年紀念日，或許在別人眼中兩年轉瞬即逝，但我想這還是一個值得紀念的日子，從交往至今發生了很多事情，很難想像這只是我的碩士生涯，很難想像兩年可以一起經歷很多事情。

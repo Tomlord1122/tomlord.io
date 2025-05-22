@@ -164,7 +164,7 @@ ${content}`;
 	// Function to copy image markdown to clipboard
 	async function copyImageMarkdown(imagePath: string) {
 		const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="z-20 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="z-10 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
 </div>`;
 		try {
 			await navigator.clipboard.writeText(markdown);
@@ -194,7 +194,7 @@ ${content}`;
 			</div>
 
 			<div class="flex-grow overflow-y-auto pr-2"> 
-				<form onsubmit={() => { /* handleCreatePost is called by button, prevent default form submission if any */ }} class="space-y-4">
+				<form onsubmit={() => { /* handleCreatePost is called by button, prevent default form submission if any */ }} class="space-y-4 z-20">
 					<section class="flex justify-between">
 						<div class="gap-3 w-1/2 mr-2">
 								<label for="post-title-input" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -328,7 +328,7 @@ ${content}`;
 						
 						{#if showPreview}
 							<div 
-								class="prose prose-sm sm:prose-base max-w-none p-3 border border-gray-300 rounded-md bg-gray-50 overflow-y-auto"
+								class="prose z-20 prose-sm sm:prose-base max-w-none p-3 border border-gray-300 rounded-md bg-gray-50 overflow-y-auto"
 								style="min-height: calc(20em + 40px);"
 							>
 								{@html markdownPreview}
@@ -338,13 +338,13 @@ ${content}`;
 								id="post-content"
 								bind:value={content} 
 								rows="15"
-								class="w-full  p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+								class="w-full z-20 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
 								placeholder="Write your blog post content here using Markdown..."
 							></textarea>
 						{/if}
 					</div>
 
-					<div class="sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
+					<div class="z-20 sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
 						<button 
 							type="button" 
 							onclick={() => {
