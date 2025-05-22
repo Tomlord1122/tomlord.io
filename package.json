@@ -61,6 +61,7 @@
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.20.0",
     "vite": "^6.2.6",
+    "vite-imagetools": "^7.1.0",
     "vitest": "^3.0.0"
   },
   "keywords": [
@@ -73,6 +74,7 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
-    "marked": "^15.0.11"
+    "marked": "^15.0.11",
+    "sharp": "^0.34.2"
   }
 }

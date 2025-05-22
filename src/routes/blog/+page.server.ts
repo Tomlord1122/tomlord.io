@@ -32,7 +32,7 @@ export const load: PageServerLoad = async () => {
   let availablePhotos: string[] = [];
   try {
     const imageModules = import.meta.glob(
-      "/static/photo/**/*.{png,jpg,jpeg,gif,webp}",
+      "/src/lib/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
       {
         eager: true,
         // 不再使用 import: 'default'
@@ -40,12 +40,6 @@ export const load: PageServerLoad = async () => {
     );
 
     availablePhotos = Object.keys(imageModules)
-      .map((relativePath) => {
-        // 將 '/static/photo/image.jpg' 轉換為 '/photo/image.jpg'
-        return relativePath.startsWith("/static/")
-          ? relativePath.substring("/static".length)
-          : relativePath;
-      })
       .sort((a, b) => {
         // 排序邏輯保持不變
         const numA = parseInt(a.match(/\/(\d+)\.\w+$/)?.[1] || "0");

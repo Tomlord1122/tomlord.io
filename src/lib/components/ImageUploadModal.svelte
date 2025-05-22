@@ -87,8 +87,8 @@
           throw new Error(result.message || `Error uploading ${file.name}: ${response.status}`);
         }
 
-        if (result.filePath) {
-          successfulUploadPaths.push(result.filePath);
+        if (result.fileName) {
+          successfulUploadPaths.push(result.fileName);
         }
       } catch (err: any) {
         console.error(`Upload error for ${file.name}:`, err);
@@ -108,9 +108,7 @@
     isLoading = false;
 
     if (successfulUploadPaths.length > 0) {
-      // Create a new array to pass to the callback
-      const pathsToReturn = [...successfulUploadPaths];
-      onUploadSuccess(pathsToReturn);
+      onUploadSuccess(successfulUploadPaths);
     }
 
     if (errorOccurred) {

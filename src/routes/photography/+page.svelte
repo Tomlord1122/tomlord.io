@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
+	import { quintOut } from 'svelte/easing'; // For a smooth animation
 
 	// Get photos data from +page.server.ts load function
 	let { data } = $props();
@@ -25,6 +26,24 @@
 
 	// Track loaded state for each image
 	let loadedImages = $state<Record<string, boolean>>({});
+
+	// ---- New State for "Load More" ----
+	const PHOTOS_TO_LOAD_AT_ONCE = 10; // Number of photos to load each time
+	let visiblePhotosCount = $state(PHOTOS_TO_LOAD_AT_ONCE); // Initially show 10 photos
+
+	// ---- Derived state for displayed photos ----
+	// We want to show newest photos first, so we reverse the original array
+	// and then slice it based on how many are visible.
+	let displayedPhotos = $derived(data.photos ? data.photos.slice(0, visiblePhotosCount) : []);
+
+	// ---- Function to load more photos ----
+	function loadMorePhotos() {
+		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
+		// Ensure we don't try to show more photos than available
+		if (data.photos && visiblePhotosCount > data.photos.length) {
+			visiblePhotosCount = data.photos.length;
+		}
+	}
 
 	// Function to handle image load completion
 	function handleImageLoaded(src: string) {
@@ -86,10 +105,10 @@
 </div>
 
 <main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area mt-10">
-	{#if data.photos && data.photos.length > 0}
+	{#if displayedPhotos && displayedPhotos.length > 0}
 		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
 		   <!-- {#each data.photos.slice().reverse() as photo, i (photo.src)} -->
-		   {#each data.photos as photo, i (photo.src)}
+		   {#each displayedPhotos as photo, i (photo.src)}
 			   <button 
 				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
 				   onclick={() => openFullSizeImage(photo.src)}
@@ -113,6 +132,19 @@
 		</div>
 	{:else if !data.error}
 		<p class="text-gray-600">No photos to display yet. Upload some if you're on localhost!</p>
+	{/if}
+
+	<!-- "Load More" Button -->
+	{#if data.photos && displayedPhotos.length < data.photos.length}
+		<div class="text-center mt-8 mb-8">
+			<button 
+				onclick={loadMorePhotos}
+				class="px-6 py-3 bg-gray-800 text-white rounded-lg shadow-md hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+				in:fly={{ y: 20, duration: 500, delay: 200, easing: quintOut }}
+			>
+				Load More Photos ({displayedPhotos.length} / {data.photos.length})
+			</button>
+		</div>
 	{/if}
 </main>
 
