@@ -32,8 +32,7 @@
 	let visiblePhotosCount = $state(PHOTOS_TO_LOAD_AT_ONCE); // Initially show 10 photos
 
 	// ---- Derived state for displayed photos ----
-	// We want to show newest photos first, so we reverse the original array
-	// and then slice it based on how many are visible.
+	// Reversing to show newest photos first. Remove .slice().reverse() if you want oldest first.
 	let displayedPhotos = $derived(data.photos ? data.photos.slice(0, visiblePhotosCount) : []);
 
 	// ---- Function to load more photos ----
@@ -139,7 +138,7 @@
 		<div class="text-center mt-8 mb-8">
 			<button 
 				onclick={loadMorePhotos}
-				class="px-6 py-3 bg-gray-800 text-white rounded-lg shadow-md hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+				class="relative overflow-hidden px-6 py-3 rounded-lg transition-all duration-300 animate-pulse"
 				in:fly={{ y: 20, duration: 500, delay: 200, easing: quintOut }}
 			>
 				Load More Photos ({displayedPhotos.length} / {data.photos.length})
@@ -158,7 +157,7 @@
 		tabindex="0"
 		in:fade={{ duration: 200 }}
 	>
-		<div class="max-w-full max-h-full overflow-auto">
+		<div class="max-w-full max-h-full overflow-auto modal-scroll-content">
 			<!-- Loading indicator for full-size image -->
 			{#if !loadedImages[currentFullSizeImage + '-full']}
 				<div class="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>

@@ -26,7 +26,3 @@
   }
 }
 
-
-.animate-pulse-slow {
-  animation: pulse-slow 2.5s infinite ease-in-out;
-}

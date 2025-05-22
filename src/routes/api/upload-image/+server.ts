@@ -56,13 +56,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // Convert to WebP using sharp and then save
     const webpBuffer = await sharp(buffer)
+      .rotate()
       .webp({ quality: 80 }) // Adjust quality as needed (0-100)
       .toBuffer();
 
     await fs.writeFile(filePath, webpBuffer); // Save the WebP buffer
 
-    console.log(`File uploaded and converted to WebP successfully: ${filePath}`);
-    return json(
+    console.log(`File uploaded, auto-rotated, and converted to WebP successfully: ${filePath}`);
+    return json( 
       {
         message: "File uploaded and converted to WebP successfully!",
         fileName: newFileName, // Send back the new .webp filename
