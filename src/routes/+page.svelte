@@ -15,7 +15,7 @@
 	</h1>
 
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 300 }} 
+	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} 
 		class="main-content-area">
 		<div class="flex gap-2 flex-wrap">
 			<a href="mailto:r12944044@csie.ntu.edu.tw" class="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900">

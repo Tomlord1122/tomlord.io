@@ -15,7 +15,7 @@
 		tom.project
 	</h1>
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 300 }} 
+	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} 
 		class="main-content-area">
 		<ul>
 			<li>
