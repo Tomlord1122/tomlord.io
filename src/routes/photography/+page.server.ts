@@ -30,10 +30,15 @@ export const load: PageServerLoad = async () => {
         };
       })
       .sort((a, b) => {
+        // Extract numbers from filenames like 1.png, 2.jpeg, etc.
         const numA = parseInt(a.src.match(/\/(\d+)\.\w+$/)?.[1] || "0");
         const numB = parseInt(b.src.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-        if (numA !== numB) return numA - numB;
-        return a.src.localeCompare(b.src);
+        
+        // Sort numerically in reverse order (2.png comes before 1.png)
+        if (numA !== numB) return numB - numA;
+        
+        // If numbers are the same or not present, fall back to reverse alphabetical sorting
+        return b.src.localeCompare(a.src);
       });
 
     return {

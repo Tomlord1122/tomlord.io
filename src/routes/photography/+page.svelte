@@ -88,7 +88,8 @@
 <main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area mt-10">
 	{#if data.photos && data.photos.length > 0}
 		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
-		   {#each data.photos.slice().reverse() as photo, i (photo.src)}
+		   <!-- {#each data.photos.slice().reverse() as photo, i (photo.src)} -->
+		   {#each data.photos as photo, i (photo.src)}
 			   <button 
 				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
 				   onclick={() => openFullSizeImage(photo.src)}
@@ -103,7 +104,7 @@
 				   <img 
 					   src={photo.src} 
 					   alt={photo.alt} 
-					   class="photo-grid {loadedImages[photo.src] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300"
+					   class="photo-grid {loadedImages[photo.src] ? 'opacity-100' : 'opacity-0'} hover:scale-105 transition-all duration-300"
 					   loading="lazy"
 					   onload={() => handleImageLoaded(photo.src)}
 				   />
