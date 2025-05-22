@@ -23,6 +23,14 @@
 	let showFullSizeImage = $state(false);
 	let currentFullSizeImage = $state('');
 
+	// Track loaded state for each image
+	let loadedImages = $state<Record<string, boolean>>({});
+
+	// Function to handle image load completion
+	function handleImageLoaded(src: string) {
+		loadedImages[src] = true;
+	}
+
 	// Function to open the full-size image modal
 	function openFullSizeImage(imageSrc: string) {
 		currentFullSizeImage = imageSrc;
@@ -77,20 +85,27 @@
 	{/if}
 </div>
 
-<main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area  mt-10">
+<main in:fly={{ y: 100, duration: 1000, delay: 300 }} class="main-content-area mt-10">
 	{#if data.photos && data.photos.length > 0}
 		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
-		   {#each data.photos.slice().reverse() as photo, i (photo.src)} <!-- Added key for #each -->
+		   {#each data.photos.slice().reverse() as photo, i (photo.src)}
 			   <button 
-				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer"
+				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
 				   onclick={() => openFullSizeImage(photo.src)}
-			
 			   >
+				   <!-- Loading skeleton -->
+				   {#if !loadedImages[photo.src]}
+					   <div class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+						   <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+					   </div>
+				   {/if}
+				   
 				   <img 
 					   src={photo.src} 
 					   alt={photo.alt} 
-					   class="photo-grid transition-transform hover:scale-105 duration-300"
+					   class="photo-grid {loadedImages[photo.src] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300"
 					   loading="lazy"
+					   onload={() => handleImageLoaded(photo.src)}
 				   />
 			   </button>
 		   {/each}
@@ -109,13 +124,18 @@
 		role="dialog"
 		tabindex="0"
 		in:fade={{ duration: 200 }}
-		
 	>
 		<div class="max-w-full max-h-full overflow-auto">
+			<!-- Loading indicator for full-size image -->
+			{#if !loadedImages[currentFullSizeImage + '-full']}
+				<div class="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+			{/if}
+			
 			<img 
 				src={currentFullSizeImage} 
 				alt="Full size view" 
-				class="max-w-full max-h-[90vh] object-contain"
+				class="max-w-full max-h-[90vh] object-contain {loadedImages[currentFullSizeImage + '-full'] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300"
+				onload={() => handleImageLoaded(currentFullSizeImage + '-full')}
 			/>
 		</div>
 		<button 
