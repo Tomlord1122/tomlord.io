@@ -24,11 +24,11 @@
 	}[] = [];
 
 	// Constants
-	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 100; // Fewer dots on mobile
+	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 150; // Fewer dots on mobile
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.3;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
-	const MOUSE_PULL_FACTOR = 0.25;
+	const MOUSE_PULL_FACTOR = 0.35;
 	const RANDOM_MOVE_RANGE = browser && window.innerWidth < 768 ? 5 : 10; // Less movement on mobile
 	const RANDOM_MOVE_SPEED = browser && window.innerWidth < 768 ? 0.1 : 0.25; // Slower on mobile
 	const EASING_FACTOR = 0.2; // Added: easing factor, controls movement smoothness
