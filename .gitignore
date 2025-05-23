@@ -8,7 +8,7 @@ node_modules
 /.svelte-kit
 /build
 /dist
-
+/.cursor
 # OS
 .DS_Store
 Thumbs.db

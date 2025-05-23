@@ -1,37 +1,38 @@
 import type { LayoutServerLoad } from './$types.js';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 
 export const load: LayoutServerLoad = async () => {
-  // Load available photos once at the layout level
+  // Load available photos using import.meta.glob for production compatibility
   let availablePhotos: string[] = [];
   
   try {
-    // Read files from the static directory
-    const staticPhotosDir = path.join(process.cwd(), 'static', 'photography_assets');
-    
-    let files: string[] = [];
-    try {
-      files = await fs.readdir(staticPhotosDir);
-    } catch (err) {
-      console.warn('Could not read photography assets directory:', err);
-      files = [];
-    }
+    // 使用 eager: true 確保生產環境相容性
+    // 這只會載入 URL 路徑，不是實際的圖片檔案
+    const photoModules = import.meta.glob('/static/photography_assets/*', {
+      eager: true,
+      query: '?url',
+      import: 'default'
+    });
 
-    // Filter for image files and create URLs
+    // Extract the URLs and filter for image files
     const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-    availablePhotos = files
-      .filter(file => {
-        const ext = path.extname(file).toLowerCase();
+    availablePhotos = Object.keys(photoModules)
+      .filter(path => {
+        const ext = path.substring(path.lastIndexOf('.')).toLowerCase();
         return imageExtensions.includes(ext);
       })
-      .map(filename => `/photography_assets/${filename}`)
+      .map(path => {
+        // Convert from /static/photography_assets/filename.ext to /photography_assets/filename.ext
+        return path.replace('/static', '');
+      })
       .sort((a, b) => {
+        // Sort numerically by filename number
         const numA = parseInt(a.match(/\/(\d+)\.\w+$/)?.[1] || "0");
         const numB = parseInt(b.match(/\/(\d+)\.\w+$/)?.[1] || "0");
         if (numA !== numB) return numA - numB;
         return a.localeCompare(b);
       });
+
+    console.log(`Loaded ${availablePhotos.length} photography assets:`, availablePhotos);
   } catch (err) {
     console.error("Error loading photos in layout:", err);
     // If error occurs, availablePhotos will remain empty array

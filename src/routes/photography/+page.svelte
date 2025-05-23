@@ -2,6 +2,7 @@
 	import { fly, fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
+	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
 	import { quintOut } from 'svelte/easing'; // For a smooth animation
 
@@ -15,16 +16,13 @@
 			return {
 				src: photoUrl,
 				alt: `Photo ${filename}`,
-				originalPath: `/static/photography_assets/${filename}`,
+				filename
 			};
 		}).sort((a, b) => {
 			// Sort numerically in reverse order (newest first)
-			const numA = parseInt(a.originalPath.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-			const numB = parseInt(b.originalPath.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-			
-			if (numA !== numB) return numB - numA;
-			
-			return b.originalPath.localeCompare(a.originalPath);
+			const numA = parseInt(a.filename.match(/^(\d+)\./)?.[1] || "0");
+			const numB = parseInt(b.filename.match(/^(\d+)\./)?.[1] || "0");
+			return numB - numA; // 新的在前
 		}) : []
 	);
 
@@ -44,29 +42,28 @@
 	let showFullSizeImage = $state(false);
 	let currentFullSizeImage = $state('');
 
-	// Track loaded state for each image
-	let loadedImages = $state<Record<string, boolean>>({});
-
-	// ---- New State for "Load More" ----
-	const PHOTOS_TO_LOAD_AT_ONCE = 10; // Number of photos to load each time
-	let visiblePhotosCount = $state(PHOTOS_TO_LOAD_AT_ONCE); // Initially show 10 photos
+	// ---- Load More 分頁載入狀態 ----
+	const PHOTOS_TO_LOAD_AT_ONCE = 10; // 每次載入 10 張照片
+	let visiblePhotosCount = $state(PHOTOS_TO_LOAD_AT_ONCE);
+	let isLoadingMore = $state(false);
 
 	// ---- Derived state for displayed photos ----
-	// Reversing to show newest photos first. Remove .slice().reverse() if you want oldest first.
 	let displayedPhotos = $derived(photos ? photos.slice(0, visiblePhotosCount) : []);
 
 	// ---- Function to load more photos ----
-	function loadMorePhotos() {
+	async function loadMorePhotos() {
+		isLoadingMore = true;
+		
+		// 模擬載入延遲，讓使用者感受到載入過程
+		await new Promise(resolve => setTimeout(resolve, 200));
+		
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
 		if (photos && visiblePhotosCount > photos.length) {
 			visiblePhotosCount = photos.length;
 		}
-	}
-
-	// Function to handle image load completion
-	function handleImageLoaded(src: string) {
-		loadedImages[src] = true;
+		
+		isLoadingMore = false;
 	}
 
 	// Function to open the full-size image modal
@@ -81,9 +78,8 @@
 	}
 
 	// Callback for successful upload from the modal
-	// Now expects an array of new image paths
 	function handleModalUploadSuccess(newImagePaths: string[]) {
-		console.log(`${newImagePaths.length} new image(s) uploaded via modal:`, newImagePaths);
+		console.log(`${newImagePaths.length} new image(s) uploaded`);
 		if (newImagePaths.length > 0) {
 			invalidateAll(); // Refresh data if at least one image was successful
 		}
@@ -92,7 +88,6 @@
 	// Callback for when the modal is cancelled
 	function handleModalCancel() {
 		console.log('Image upload modal cancelled.');
-		// The modal will close itself due to bind:show
 	}
 
 </script>
@@ -121,40 +116,36 @@
 
 <main in:fly={{ y: 100, duration: 1000, delay: 100 }} class="main-content-area mt-10">
 	{#if displayedPhotos && displayedPhotos.length > 0}
-		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 ">
-		   <!-- {#each data.photos.slice().reverse() as photo, i (photo.src)} -->
+		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
 		   {#each displayedPhotos as photo, i (photo.src)}
-			   <button 
-				   class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
+			   <ResponsiveImage 
+				   src={photo.src}
+				   alt={photo.alt}
+				   loading={i < 6 ? "eager" : "lazy"}
 				   onclick={() => openFullSizeImage(photo.src)}
-			   >
-				   <!-- Loading skeleton -->
-				   {#if !loadedImages[photo.src]}
-					   <div class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
-						   <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-					   </div>
-				   {/if}
-				   
-				   <img 
-					   src={photo.src} 
-					   alt={photo.alt} 
-					   class="photo-grid {loadedImages[photo.src] ? 'opacity-100' : 'opacity-0'} hover:scale-105 transition-all duration-300"
-					   loading="lazy"
-					   onload={() => handleImageLoaded(photo.src)}
-				   />
-			   </button>
+			   />
 		   {/each}
 		</div>
+		
+		<!-- 載入更多照片的狀態指示 -->
+		{#if isLoadingMore}
+			<div class="text-center mt-8 mb-8" in:fade={{ duration: 200 }}>
+				<div class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100">
+					<div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+					<span class="text-gray-600">Loading more photos...</span>
+				</div>
+			</div>
+		{/if}
 	{:else}
 		<p class="text-gray-600">No photos to display yet. Upload some if you're on localhost!</p>
 	{/if}
 
 	<!-- "Load More" Button -->
-	{#if photos && displayedPhotos.length < photos.length}
+	{#if photos && displayedPhotos.length < photos.length && !isLoadingMore}
 		<div class="text-center mt-8 mb-8">
 			<button 
 				onclick={loadMorePhotos}
-				class="relative overflow-hidden px-6 py-3 rounded-lg transition-all duration-300 animate-pulse"
+				class="relative overflow-hidden px-6 py-3 rounded-lg animate-pulse"
 				in:fly={{ y: 20, duration: 500, delay: 200, easing: quintOut }}
 			>
 				Load More Photos ({displayedPhotos.length} / {photos.length})
@@ -173,17 +164,12 @@
 		tabindex="0"
 		in:fade={{ duration: 200 }}
 	>
-		<div class="max-w-full max-h-full overflow-auto modal-scroll-content">
-			<!-- Loading indicator for full-size image -->
-			{#if !loadedImages[currentFullSizeImage + '-full']}
-				<div class="w-20 h-20 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
-			{/if}
-			
+		<div class="max-w-full max-h-full overflow-auto">
 			<img 
-				src={currentFullSizeImage} 
+				src={currentFullSizeImage}
 				alt="Full size view" 
-				class="max-w-full max-h-[90vh] object-contain {loadedImages[currentFullSizeImage + '-full'] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300"
-				onload={() => handleImageLoaded(currentFullSizeImage + '-full')}
+				class="max-w-full max-h-[90vh] object-contain"
+				loading="eager"
 			/>
 		</div>
 		<button 

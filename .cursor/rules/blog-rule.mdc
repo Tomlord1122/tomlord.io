@@ -44,6 +44,30 @@ SvelteKit uses a file-based routing system:
 - TailwindCSS is used for styling with utility classes
 - The Typography plugin is used for blog content styling
 
+# Photography Asset Management
+
+## Production-Compatible Asset Loading
+Photography assets are loaded using `import.meta.glob` in [src/routes/+layout.server.ts](mdc:src/routes/+layout.server.ts) for production compatibility:
+
+```typescript
+const photoModules = import.meta.glob('/static/photography_assets/*', {
+  eager: true,
+  query: '?url',
+  import: 'default'
+});
+```
+
+This approach:
+- Works in both development and production environments
+- Loads assets at build time rather than runtime
+- Avoids file system access issues in cloud deployments
+- Automatically discovers all image files in the photography_assets directory
+
+## Asset Structure
+- Photography assets are stored in [static/photography_assets/](mdc:static/photography_assets)
+- Images are automatically discovered and sorted numerically
+- Supported formats: .png, .jpg, .jpeg, .gif, .webp
+- Files should be named with numerical prefixes (e.g., 1.webp, 2.webp, etc.)
 
 # Svelte 5 Syntax Guidelines
 
@@ -71,729 +95,7 @@ SvelteKit uses a file-based routing system:
   Count: {$count}
 </button>
 ```
-```
-
-<SYSTEM>This is the abridged developer documentation for Svelte and SvelteKit.</SYSTEM>
-
-# Svelte documentation
-
-## Svelte
-
-You **MUST** use the Svelte 5 API unless explicitly tasked to write Svelte 4 syntax. If you don't know about the API yet, below is the most important information about it. Other syntax not explicitly listed like `{#if ...}` blocks stay the same, so you can reuse your Svelte 4 knowledge for these.
-
-- to mark something a state you use the `$state` rune, e.g. instead of `let count = 0` you do `let count = $state(0)`
-- to mark something as a derivation you use the `$derived` rune, e.g. instead of `$: double = count * 2` you do `const double = $derived(count * 2)`
-- to create a side effect you use the `$effect` rune, e.g. instead of `$: console.log(double)`you do`$effect(() => console.log(double))`
-- to create component props you use the `$props` rune, e.g. instead of `export let foo = true; export let bar;` you do `let { foo = true, bar } = $props();`
-- when listening to dom events do not use colons as part of the event name anymore, e.g. instead of `<button on:click={...} />` you do `<button onclick={...} />`
-
-### What are runes?
-
-- Runes are built-in Svelte keywords (prefixed with `$`) that control the compiler. For example, you write `let message = $state('hello');` in a `.svelte` file.
-- Do **NOT** treat runes like regular functions or import them; instead, use them as language keywords.  
-  _In Svelte 4, this syntax did not exist—you relied on reactive declarations and stores; now runes are an integral part of the language._
-
-### $state
-
-- `$state` creates reactive variables that update the UI automatically. For example:
-  ```svelte
-  <script>
-    let count = $state(0);
-  </script>
-  <button onclick={() => count++}>Clicked: {count}</button>
-  ```
-- Do **NOT** complicate state management by wrapping it in custom objects; instead, update reactive variables directly.  
-  _In Svelte 4, you created state with let, e.g. `let count = 0;`, now use the $state rune, e.g. `let count = $state(0);`._
-- Arrays and objects become deeply reactive proxies. For example:
-  ```js
-  let todos = $state([{ done: false, text: 'add more todos' }]);
-  todos[0].done = !todos[0].done;
-  ```
-- Do **NOT** destructure reactive proxies (e.g., `let { done } = todos[0];`), as this breaks reactivity; instead, access properties directly.
-- Use `$state` in class fields for reactive properties. For example:
-  ```js
-  class Todo {
-  	done = $state(false);
-  	text = $state('');
-  	reset = () => {
-  		this.text = '';
-  		this.done = false;
-  	};
-  }
-  ```
-
-### $state.raw
-
-- `$state.raw` creates shallow state where mutations are not tracked. For example:
-
-```js
-let person = $state.raw({ name: 'Heraclitus', age: 49 });
-// Instead of mutating:
-// person.age += 1;  // NO effect
-person = { name: 'Heraclitus', age: 50 }; // Correct way to update
-```
-
-- Do **NOT** attempt to mutate properties on raw state; instead, reassign the entire object to trigger updates.
-
-### $state.snapshot
-
-- `$state.snapshot` produces a plain object copy of reactive state. For example:
-
-```svelte
-<script>
-  let counter = $state({ count: 0 });
-  function logSnapshot() {
-    console.log($state.snapshot(counter));
-  }
-</script>
-```
-
-- **ONLY** use this if you are told there's a problem with passing reactive proxies to external APIs.
-
-### Passing state into functions
-
-- Pass-by-Value Semantics: Use getter functions to ensure functions access the current value of reactive state. For example:
-  ```js
-  function add(getA, getB) {
-  	return () => getA() + getB();
-  }
-  let a = 1,
-  	b = 2;
-  let total = add(
-  	() => a,
-  	() => b
-  );
-  console.log(total());
-  ```
-- Do **NOT** assume that passing a reactive state variable directly maintains live updates; instead, pass getter functions.  
-  _In Svelte 4, you often used stores with subscribe methods; now prefer getter functions with `$state` / `$derived` instead._
-
-### $derived
-
-- `$derived` computes reactive values based on dependencies. For example:
-
-```svelte
-<script>
-  let count = $state(0);
-  let doubled = $derived(count * 2);
-</script>
-<button onclick={() => count++}>{doubled}</button>
-```
-
-- Do **NOT** introduce side effects in derived expressions; instead, keep them pure.  
-  _In Svelte 4 you used `$:` for this, e.g. `$: doubled = count * 2;`, now use the $derived rune instead, e.g `let doubled = $derived(count * 2);`._
-
-#### $derived.by
-
-- Use `$derived.by` for multi-line or complex logic. For example:
-
-```svelte
-<script>
-  let numbers = $state([1, 2, 3]);
-  let total = $derived.by(() => {
-    let sum = 0;
-    for (const n of numbers) sum += n;
-    return sum;
-  });
-</script>
-```
-
-- Do **NOT** force complex logic into a single expression; instead, use `$derived.by` to keep code clear.
-
-#### Overriding derived values
-
-- You can reassign a derived value for features like optimistic UI. It will go back to the `$derived` value once an update in its dependencies happen. For example:
-
-```svelte
-<script>
-  let post = $props().post;
-  let likes = $derived(post.likes);
-  async function onclick() {
-    likes += 1;
-    try { await post.like(); } catch { likes -= 1; }
-  }
-</script>
-```
-
-- Do **NOT** try to override derived state via effects; instead, reassign directly when needed.  
-  _In Svelte 4 you could use `$:` for that, e.g. `$: likes = post.likes; likes = 1`, now use the `$derived` instead, e.g. `let likes = $derived(post.likes); likes = 1;`._
-
-### $effect
-
-- `$effect` executes functions when reactive state changes. For example:
-
-```svelte
-<script>
-  let size = $state(50);
-  $effect(() => {
-    console.log('Size changed:', size);
-  });
-</script>
-```
-
-- Do **NOT** use `$effect` for state synchronization; instead, use it only for side effects like logging or DOM manipulation.  
-  _In Svelte 4, you used reactive statements (`$:`) for similar tasks, .e.g `$: console.log(size)`; now use the `$effect` rune instead, e.g. `$effect(() => console.log(size))` ._
-
-#### Understanding lifecycle (for $effect)
-
-- Effects run after the DOM updates and can return teardown functions. For example:
-
-```svelte
-<script>
-  let count = $state(0);
-  $effect(() => {
-    const interval = setInterval(() => { count += 1; }, 1000);
-    return () => clearInterval(interval);
-  });
-</script>
-```
-
-- **Directive:** Do **NOT** ignore cleanup; instead, always return a teardown function when needed.
-
-#### $effect.pre
-
-- `$effect.pre` works like `$effect` with the only difference that it runs before the DOM updates. For example:
-
-```svelte
-<script>
-  let div = $state();
-  $effect.pre(() => {
-    if (div) console.log('Running before DOM update');
-  });
-</script>
-```
-
-- Do **NOT** use `$effect.pre` for standard post-update tasks; instead, reserve it for pre-DOM manipulation like autoscrolling.
-
-#### $effect.tracking
-
-- `$effect.tracking` indicates if code is running inside a reactive context. For example:
-
-```svelte
-<script>
-  $effect(() => {
-    console.log('Inside effect, tracking:', $effect.tracking());
-  });
-</script>
-```
-
-- Do **NOT** misuse tracking information outside its intended debugging context; instead, use it to enhance reactive debugging.  
-  _In Svelte 4, no equivalent existed; now this feature offers greater insight into reactivity._
-
-#### $effect.root
-
-- `$effect.root` creates a non-tracked scope for nested effects with manual cleanup. For example:
-
-```svelte
-<script>
-  let count = $state(0);
-  const cleanup = $effect.root(() => {
-    $effect(() => {
-      console.log('Count is:', count);
-    });
-    return () => console.log('Root effect cleaned up');
-  });
-</script>
-```
-
-- Do **NOT** expect root effects to auto-cleanup; instead, manage their teardown manually.  
-  _In Svelte 4, manual cleanup required explicit lifecycle hooks; now `$effect.root` centralizes this control._
-
-### $props
-
-- Use `$props` to access component inputs. For example:
-
-```svelte
-<script>
-  let { adjective } = $props();
-</script>
-<p>This component is {adjective}</p>
-```
-
-- Do **NOT** mutate props directly; instead, use callbacks or bindable props to communicate changes.  
-  _In Svelte 4, props were declared with `export let foo`; now you use `$props` rune, e.g. `let { foo } = $props()`._
-- Declare fallback values via destructuring. For example:
-
-```js
-let { adjective = 'happy' } = $props();
-```
-
-- Rename props to avoid reserved keywords. For example:
-
-```js
-let { super: trouper } = $props();
-```
-
-- Use rest syntax to collect all remaining props. For example:
-
-```js
-let { a, b, ...others } = $props();
-```
-
-#### $props.id()
-
-- Generate a unique ID for the component instance. For example:
-
-```svelte
-<script>
-  const uid = $props.id();
-</script>
-<label for="{uid}-firstname">First Name:</label>
-<input id="{uid}-firstname" type="text" />
-```
-
-- Do **NOT** manually generate or guess IDs; instead, rely on `$props.id()` for consistency.
-
-### $bindable
-
-- Mark props as bindable to allow two-way data flow. For example, in `FancyInput.svelte`:
-
-```svelte
-<script>
-  let { value = $bindable() } = $props();
-</script>
-<input bind:value={value} />
-```
-
-- Do **NOT** overuse bindable props; instead, default to one-way data flow unless bi-directionality is truly needed.  
-  _In Svelte 4, all props were implicitly bindable; in Svelte 5 `$bindable` makes this explicit._
-
-### $host
-
-- Only available inside custom elements. Access the host element for custom event dispatching. For example:
-
-```svelte
-<script>
-  function dispatch(type) {
-    $host().dispatchEvent(new CustomEvent(type));
-  }
-</script>
-<button onclick={() => dispatch('increment')}>Increment</button>
-```
-
-- Do **NOT** use this unless you are explicitly tasked to create a custom element using Svelte components
-
-### {#snippet ...}
-
-- **Definition & Usage:**  
-  Snippets allow you to define reusable chunks of markup with parameters inside your component.  
-  _Example:_
-  ```svelte
-  {#snippet figure(image)}
-    <figure>
-      <img src={image.src} alt={image.caption} width={image.width} height={image.height} />
-      <figcaption>{image.caption}</figcaption>
-    </figure>
-  {/snippet}
-  ```
-- **Parameterization:**  
-  Snippets accept multiple parameters with optional defaults and destructuring, but rest parameters are not allowed.  
-  _Example with parameters:_
-  ```svelte
-  {#snippet name(param1, param2)}
-    <!-- snippet markup here -->
-  {/snippet}
-  ```
-
-### Snippet scope
-
-- **Lexical Visibility:**  
-  Snippets can be declared anywhere and reference variables from their outer lexical scope, including script or block-level declarations.  
-  _Example:_
-  ```svelte
-  <script>
-    let { message = "it's great to see you!" } = $props();
-  </script>
-  {#snippet hello(name)}
-    <p>hello {name}! {message}!</p>
-  {/snippet}
-  {@render hello('alice')}
-  ```
-- **Scope Limitations:**  
-  Snippets are only accessible within their lexical scope; siblings and child blocks share scope, but nested snippets cannot be rendered outside.  
-  _Usage caution:_ Do **NOT** attempt to render a snippet outside its declared scope.
-
-### Passing snippets to components
-
-- **As Props:**  
-  Within a template, snippets are first-class values that can be passed to components as props.  
-  _Example:_
-  ```svelte
-  <script>
-    import Table from './Table.svelte';
-    const fruits = [
-      { name: 'apples', qty: 5, price: 2 },
-      { name: 'bananas', qty: 10, price: 1 }
-    ];
-  </script>
-  {#snippet header()}
-    <th>fruit</th>
-    <th>qty</th>
-    <th>price</th>
-    <th>total</th>
-  {/snippet}
-  {#snippet row(d)}
-    <td>{d.name}</td>
-    <td>{d.qty}</td>
-    <td>{d.price}</td>
-    <td>{d.qty * d.price}</td>
-  {/snippet}
-  <Table data={fruits} {header} {row} />
-  ```
-- **Slot-like Behavior:**  
-  Snippets declared inside component tags become implicit props (akin to slots) for the component.  
-  _Svelte 4 used slots for this, e.g. `<Component><p slot="x" let:y>hi {y}</p></Component>`; now use snippets instead, e.g. `<Component>{#snippet x(y)}<p>hi {y}</p>{/snippet}</Component>`._
-- **Content Fallback:**  
-  Content not wrapped in a snippet declaration becomes the `children` snippet, rendering as fallback content.  
-  _Example:_
-  ```svelte
-  <!-- App.svelte -->
-  <Button>click me</Button>
-  <!-- Button.svelte -->
-  <script>
-    let { children } = $props();
-  </script>
-  <button>{@render children()}</button>
-  ```
-
-### Typing snippets
-
-- Snippets implement the `Snippet` interface, enabling strict type checking in TypeScript or JSDoc.  
-  _Example:_
-
-```svelte
-<script lang="ts">
-  import type { Snippet } from 'svelte';
-  interface Props {
-    data: any[];
-    children: Snippet;
-    row: Snippet<[any]>;
-  }
-  let { data, children, row }: Props = $props();
-</script>
-```
-
-### {@render ...}
-
-- Use the {@render ...} tag to invoke and render a snippet, passing parameters as needed.  
-  _Example:_
-  ```svelte
-  {#snippet sum(a, b)}
-    <p>{a} + {b} = {a + b}</p>
-  {/snippet}
-  {@render sum(1, 2)}
-  ```
-- Do **NOT** call snippets without parentheses when parameters are required; instead, always invoke the snippet correctly.  
-  _In Svelte 4, you used slots for this, e.g. `<slot name="sum" {a} {b} />`; now use `{@render}` instead, e.g. `{@render sum(a,b)}`._
-
-### <svelte:boundary>
-
-- Use error boundary tags to prevent rendering errors in a section from crashing the whole app.
-  _Example:_
-
-  ```svelte
-  <svelte:boundary onerror={(error, reset) => console.error(error)}>
-    <FlakyComponent />
-  </svelte:boundary>
-  ```
-
-- **Failed Snippet for Fallback UI:**  
-  Providing a `failed` snippet renders fallback content when an error occurs and supplies a `reset` function.  
-  _Example:_
-
-  ```svelte
-  <svelte:boundary>
-    <FlakyComponent />
-    {#snippet failed(error, reset)}
-      <button onclick={reset}>Oops! Try again</button>
-    {/snippet}
-  </svelte:boundary>
-  ```
-
-### class
-
-- Svelte 5 allows objects for conditional class assignment using truthy keys. It closely follows the `clsx` syntax  
-  _Example:_
-
-```svelte
-<script>
-  let { cool } = $props();
-</script>
-<div class={{ cool, lame: !cool }}>Content</div>
-```
-
-
-# SvelteKit documentation
-
-## Project types
-
-SvelteKit supports all rendering modes: SPA, SSR, SSG, and you can mix them within one project.
-
-## Setup
-
-Scaffold a new SvelteKit project using `npx sv create` then follow the instructions. Do NOT use `npm create svelte` anymore, this command is deprecated.
-
-A SvelteKit project needs a `package.json` with the following contents at minimum:
-
-```json
-{
-	"devDependencies": {
-		"@sveltejs/adapter-auto": "^6.0.0",
-		"@sveltejs/kit": "^2.0.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
-		"svelte": "^5.0.0",
-		"vite": "^6.0.0"
-	}
-}
-```
-
-Do NOT put any of the `devDependencies` listed above into `dependencies`, keep them all in `devDependencies`.
-
-It also needs a `vite.config.js` with the following at minimum:
-
-```js
-import { defineConfig } from 'vite';
-import { sveltekit } from '@sveltejs/kit/vite';
-
-export default defineConfig({
-	plugins: [sveltekit()]
-});
-```
-
-It also needs a `svelte.config.js` with the following at minimum:
-
-```js
-import adapter from '@sveltejs/adapter-auto';
-
-export default {
-	kit: {
-		adapter: adapter()
-	}
-};
-```
-
-## Project structure
-
-- **`src/` directory:**
-  - `lib/` for shared code (`$lib`), `lib/server/` for server‑only modules (`$lib/server`), `params/` for matchers, `routes/` for your pages/components, plus `app.html`, `error.html`, `hooks.client.js`, `hooks.server.js`, and `service-worker.js`.
-  - Do **NOT** import server‑only code into client files
-- **Top‑level assets & configs:**
-  - `static/` for public assets; `tests/` (if using Playwright); config files: `package.json` (with `@sveltejs/kit`, `svelte`, `vite` as devDeps), `svelte.config.js`, `tsconfig.json` (or `jsconfig.json`, extending `.svelte-kit/tsconfig.json`), and `vite.config.js`.
-  - Do **NOT** forget `"type": "module"` in `package.json` if using ESM.
-- **Build artifacts:**
-  - `.svelte-kit/` is auto‑generated and safe to ignore or delete; it will be recreated on `dev`/`build`.
-  - Do **NOT** commit `.svelte-kit/` to version control.
-
-## Routing
-
-- **Filesystem router:** `src/routes` maps directories to URL paths: Everything with a `+page.svelte` file inside it becomes a visitable URL, e.g. `src/routes/hello/+page.svelte` becomes `/hello`. `[param]` folders define dynamic segments. Do NOT use other file system router conventions, e.g. `src/routes/hello.svelte` does NOT become available als URL `/hello`
-- **Route files:** Prefix with `+`: all run server‑side; only non‑`+server` run client‑side; `+layout`/`+error` apply recursively.
-- **Best practice:** Do **not** hard‑code routes in code; instead rely on the filesystem convention.
-
-### +page.svelte
-
-- Defines UI for a route, SSR on first load and CSR thereafter
-- Do **not** fetch data inside the component; instead use a `+page.js` or `+page.server.js` `load` function; access its return value through `data` prop via `let { data } = $props()` (typed with `PageProps`).
-
-```svelte
-<script lang="ts">
-  import type { PageProps } from './$types';
-  let { data }: PageProps = $props();
-</script>
-<h1>{data.title}</h1>
-```
-
-### +page.js
-
-- Load data for pages via `export function load({ params })` (typed `PageLoad`), return value is put into `data` prop in component
-- Can export `prerender`, `ssr`, and `csr` consts here to influence how page is rendered.
-- Do **not** include private logic (DB or env vars), can **not** export `actions` from here; if needed, use `+page.server.js`.
-
-```js
-import type { PageLoad } from './$types';
-
-export const load: PageLoad = () => {
-  return {
-    title: 'Hello world!',
-  };
-}
-```
-
-### +page.server.js
-
-- `export async function load(...)` (typed `PageServerLoad`) to access databases or private env; return serializable data.
-- Can also export `actions` for `<form>` handling on the server.
-
-### +error.svelte
-
-- Add `+error.svelte` in a route folder to render an error page, can use `page.status` and `page.error.message` from `$app/state`.
-- SvelteKit walks up routes to find the closest boundary; falls back to `src/error.html` if none.
-
-### +layout.svelte
-
-- Place persistent elements (nav, footer) and include `{@render children()}` to render page content. Example:
-
-```svelte
-<script>
-    import { LayoutProps } from './$types';
-    let { children, data } = $props();
-</script>
-
-<p>Some Content that is shared for all pages below this layout</p>
-<!-- child layouts/page goes here -->
-{@render children()}
-```
-
-- Create subdirectory `+layout.svelte` to scope UI to nested routes, inheriting parent layouts.
-- Use layouts to avoid repeating common markup; do **not** duplicate UI in every `+page.svelte`.
-
-### +layout.js / +layout.server.js
-
-- In `+layout.js` or `+layout.server.js` export `load()` (typed `LayoutLoad`) to supply `data` to the layout and its children; set `prerender`, `ssr`, `csr`.
-- Use `+layout.server.js` (typed `LayoutServerLoad`) for server-only things like DB or env access.
-- Do **not** perform server‑only operations in `+layout.js`; use the server variant.
-
-```js
-import type { LayoutLoad } from './$types';
-
-export const load: LayoutLoad = () => {
-	return {
-		sections: [
-			{ slug: 'profile', title: 'Profile' },
-			{ slug: 'notifications', title: 'Notifications' }
-		]
-	};
-}
-```
-
-### +server.js (Endpoints)
-
-- Export HTTP handlers (`GET`, `POST`, etc.) in `+server.js` under `src/routes`; receive `RequestEvent`, return `Response` or use `json()`, `error()`, `redirect()` (exported from `@sveltejs/kit`).
-- export `fallback` to catch all other methods.
-
-```js
-import type { RequestHandler } from './$types';
-
-export const GET: RequestHandler = ({ url }) => {
-	return new Response('hello world');
-}
-```
-
-### $types
-
-- SvelteKit creates `$types.d.ts` with `PageProps`, `LayoutProps`, `RequestHandler`, `PageLoad`, etc., for type‑safe props and loaders.
-- Use them inside `+page.svelte`/`+page.server.js`/`+page.js`/`+layout.svelte`/`+layout.server.js`/`+layout.js` by importing from `./$types`
-
-### Other files
-
-- Any non‑`+` files in route folders are ignored by the router, use this to your advantage to colocate utilities or components.
-- For cross‑route imports, place modules under `src/lib` and import via `$lib`.
-
-## Loading data
-
-### Page data
-
-- `+page.js` exports a `load` (`PageLoad`) whose returned object is available in `+page.svelte` via `let { data } = $props()` (e.g. when you do `return { foo }` from `load` it is available within `let { data } = $props()` in `+page.svelte` as `data.foo`)
-- Universal loads run on SSR and CSR; private or DB‑backed loads belong in `+page.server.js` (`PageServerLoad`) and must return devalue‑serializable data.
-
-Example:
-
-```js
-// file: src/routes/foo/+page.js
-export async function load({ fetch }) {
-	const result = await fetch('/data/from/somewhere').then((r) => r.json());
-	return { result }; // return property "result"
-}
-```
-
-```svelte
-<!-- file: src/routes/foo/+page.svelte -->
-<script>
-  // "data" prop contains property "result"
-  let { data } = $props();
-</script>
-{data.result}
-```
-
-### Layout data
-
-- `+layout.js` or `+layout.server.js` exports a `load` (`LayoutLoad`/`LayoutServerLoad`)
-- Layout data flows downward: child layouts and pages see parent data in their `data` prop.
-- Data loading flow (interaction of load function and props) works the same as for `+page(.server).js/svelte`
-
-### page.data
-
-- The `page` object from `$app/state` gives access to all data from `load` functions via `page.data`, usable in any layout or page.
-- Ideal for things like `<svelte:head><title>{page.data.title}</title></svelte:head>`.
-- Types come from `App.PageData`
-- earlier Svelte versions used `$app/stores` for the same concepts, do NOT use `$app/stores` anymore unless prompted to do so
-
-### Universal vs. server loads
-
-- Universal (`+*.js`) run on server first, then in browser; server (`+*.server.js`) always run server‑side and can use secrets, cookies, DB, etc.
-- Both receive `params`, `route`, `url`, `fetch`, `setHeaders`, `parent`, `depends`; server loads additionally get `cookies`, `locals`, `platform`, `request`.
-- Use server loads for private data or non‑serializable items; universal loads for public APIs or returning complex values (like constructors).
-
-### Load function arguments
-
-- `url` is a `URL` object (no `hash` server‑side); `route.id` shows the route pattern; `params` map path segments to values.
-- Query parameters via `url.searchParams` trigger reruns when they change.
-- Use these to branch logic and fetch appropriate data in `load`.
-
-## Making Fetch Requests
-
-Use the provided `fetch` function for enhanced features:
-
-```js
-// src/routes/items/[id]/+page.js
-export async function load({ fetch, params }) {
-	const res = await fetch(`/api/items/${params.id}`);
-	const item = await res.json();
-	return { item };
-}
-```
-
-## Headers and Cookies
-
-Set response headers using `setHeaders`:
-
-```js
-export async function load({ fetch, setHeaders }) {
-	const response = await fetch(url);
-
-	setHeaders({
-		age: response.headers.get('age'),
-		'cache-control': response.headers.get('cache-control')
-	});
-
-	return response.json();
-}
-```
-
-Access cookies in server load functions using `cookies`:
-
-```js
-export async function load({ cookies }) {
-	const sessionid = cookies.get('sessionid');
-	return {
-		user: await db.getUser(sessionid)
-	};
-}
-```
-
-Do not set `set-cookie` via `setHeaders`; use `cookies.set()` instead.
-
-## Using Parent Data
-
-Access data from parent load functions:
-
-```js
 export async function load({ parent }) {
-	const { a } = await parent();
-	return { b: a + 1 };
-}
-```
-
 ## Errors and Redirects
 
 Redirect users using `redirect`:
@@ -888,7 +190,7 @@ export async function load({ untrack, url }) {
 
 ### Implications for authentication
 
-- Layout loads don’t automatically rerun on CSR; guards in `+layout.server.js` require child pages to await the parent.
+- Layout loads don't automatically rerun on CSR; guards in `+layout.server.js` require child pages to await the parent.
 - To avoid missed auth checks and waterfalls, use hooks like `handle` for global protection or per‑page server loads.
 
 ### Using getRequestEvent
@@ -936,7 +238,7 @@ Use it with a simple form:
 ### Validation errors
 
 - Return `fail(400, { field, error: true })` from an action to send back status and data; display via `form?.field` and repopulate inputs with `value={form?.field ?? ''}`.
-- Use `fail` instead of throwing so the nearest `+error.svelte` isn’t invoked and the user can correct their input.
+- Use `fail` instead of throwing so the nearest `+error.svelte` isn't invoked and the user can correct their input.
 - `fail` payload must be JSON‑serializable.
 
 ### Redirects
@@ -946,7 +248,7 @@ Use it with a simple form:
 
 ### Loading data after actions
 
-- After an action completes (unless redirected), SvelteKit reruns `load` functions and re‑renders the page, merging the action’s return value into `form`.
+- After an action completes (unless redirected), SvelteKit reruns `load` functions and re‑renders the page, merging the action's return value into `form`.
 - The `handle` hook runs once before the action; if you modify cookies in your action, you must also update `event.locals` there to keep `load` in sync.
 - Do NOT assume `locals` persists automatically; set `event.locals` inside your action when auth state changes.
 
@@ -978,7 +280,7 @@ Use it with a simple form:
 
 #### entries
 
-- In a dynamic route’s `+page(.server).js` or `+server.js`, export `export function entries(): Array<Record<string,string>>` (can be async) to list parameter sets for prerendering.
+- In a dynamic route's `+page(.server).js` or `+server.js`, export `export function entries(): Array<Record<string,string>>` (can be async) to list parameter sets for prerendering.
 - Overrides default crawling to ensure dynamic pages (e.g. `/blog/[slug]`) are generated.
 - Do NOT forget to pair `entries()` with `export const prerender = true`.
 
@@ -996,7 +298,7 @@ Use it with a simple form:
 
 - Avoid shared server variables—servers are stateless and shared across users. Authenticate via cookies and persist to a database instead of writing to in‑memory globals.
 - Keep `load` functions pure: no side‑effects or global store writes. Return data from `load` and pass it via `data` or `page.data`.
-- For shared client‑only state across components, use Svelte’s context API (`setContext`/`getContext`) or URL parameters for persistent filters; snapshots for ephemeral UI state tied to navigation history.
+- For shared client‑only state across components, use Svelte's context API (`setContext`/`getContext`) or URL parameters for persistent filters; snapshots for ephemeral UI state tied to navigation history.
 
 ## Building your app
 
@@ -1008,7 +310,7 @@ Use it with a simple form:
 
 - Adapters transform the built app into deployable assets for various platforms (Cloudflare, Netlify, Node, static, Vercel, plus community adapters).
 - Configure in `svelte.config.js` under `kit.adapter = adapter(opts)`, importing the adapter module and passing its options.
-- Some adapters expose a `platform` object (e.g. Cloudflare’s `env`); access it via `event.platform` in hooks and server routes.
+- Some adapters expose a `platform` object (e.g. Cloudflare's `env`); access it via `event.platform` in hooks and server routes.
 
 ## Single‑page apps
 
@@ -1020,7 +322,7 @@ Use it with a simple form:
 
 - Rest parameters (`[...file]`) capture an unknown number of segments (e.g. `src/routes/hello/[...path]` catches all routes under `/hello`) and expose them as a single string; use a catch‑all route `+error.svelte` to render nested custom 404 pages.
 - Optional parameters (`[[lang]]`) make a segment optional, e.g. for `[[lang]]/home` both `/home` and `/en/home` map to the same route; cannot follow a rest parameter.
-- Matchers in `src/params/type.js` let you constrain `[param=type]` (e.g. only “apple” or “orange”), falling back to other routes or a 404 if the test fails.
+- Matchers in `src/params/type.js` let you constrain `[param=type]` (e.g. only "apple" or "orange"), falling back to other routes or a 404 if the test fails.
 
 ### Advanced layouts
 
@@ -1069,11 +371,11 @@ The following are HTML attributes you can put on any HTML element.
 
 - Use `pushState(path, state)` or `replaceState('', state)` from `$app/navigation` to create history entries without full navigation; read/write `page.state` from `$app/state`.
 - Ideal for UI like modals: `if (page.state.showModal) <Modal/>` and dismiss with `history.back()`.
-- To embed a route’s page component without navigation, preload data with `preloadData(href)` then `pushState`, falling back to `goto`; note SSR and initial load have empty `page.state`, and shallow routing requires JS.
+- To embed a route's page component without navigation, preload data with `preloadData(href)` then `pushState`, falling back to `goto`; note SSR and initial load have empty `page.state`, and shallow routing requires JS.
 
 ## Images
 
-- Vite’s asset handling inlines small files, adds hashes, and lets you `import logo from '...png'` for use in `<img src={logo}>`.
+- Vite's asset handling inlines small files, adds hashes, and lets you `import logo from '...png'` for use in `<img src={logo}>`.
 - Install `@sveltejs/enhanced-img` and add `enhancedImages()` to your Vite config; use `<enhanced:img src="...jpg" alt="…"/>` to auto‑generate `<picture>` tags with AVIF/WebP, responsive `srcset`/`sizes`, and intrinsic dimensions.
 - For CMS or dynamic images, leverage a CDN with Svelte libraries like `@unpic/svelte`; always supply high‑resolution originals (2×), specify `sizes` for LCP images, set `fetchpriority="high"`, constrain layout via CSS to avoid CLS, and include meaningful `alt` text.
 
@@ -1418,3 +720,100 @@ Alias for `src/lib` folder, e.g.
 ```
 
 means that there's a component at `src/lib/Button.svelte`.
+- `/photography` - Photography gallery
+This rule covers development workflow, build processes, and deployment for the tomlord.io project.
+
+## Package Management
+
+### Using pnpm
+This project uses pnpm as the package manager:
+```bash
+pnpm install    # Install dependencies
+pnpm dev        # Start development server
+pnpm build      # Build for production
+pnpm preview    # Preview production build
+```
+
+### Key Dependencies
+From [package.json](mdc:package.json):
+- **SvelteKit 5**: `@sveltejs/kit@^2.16.0`
+- **Svelte 5**: `svelte@^5.0.0`
+- **TailwindCSS 4**: `tailwindcss@^4.0.0`
+- **MDSvex**: `mdsvex@^0.12.3` for markdown processing
+- **Marked**: `marked@^15.0.11` for additional markdown features
+
+## Configuration Files
+
+### Svelte Configuration
+[svelte.config.js](mdc:svelte.config.js) includes:
+- MDSvex preprocessing for markdown support
+- Auto adapter for deployment
+- Support for .svelte, .svx, and .md file extensions
+
+### Vite Configuration
+[vite.config.ts](mdc:vite.config.ts) includes:
+- SvelteKit plugin integration
+- Image optimization tools
+- Development server configuration
+
+### TailwindCSS Configuration
+[tailwind.config.ts](mdc:tailwind.config.ts) includes:
+- Typography plugin for blog content
+- Forms plugin for form styling
+- Custom color schemes and utilities
+
+## Development Workflow
+
+### File Structure
+```
+src/
+├── routes/           # SvelteKit routes
+├── lib/             # Shared utilities and components
+│   ├── components/  # Reusable UI components
+│   ├── types/       # TypeScript type definitions
+│   └── util/        # Utility functions
+├── markdown/        # Markdown content
+└── app.html         # HTML template
+```
+
+### Static Assets
+[static/](mdc:static) directory contains:
+- `app_icon.png` - Site logo/favicon
+- `photography_assets/` - Photography gallery images
+- Other static assets served directly
+
+## Build Process
+
+### Production Build
+```bash
+pnpm build
+```
+This runs:
+1. Vite build process
+2. SvelteKit adapter processing
+3. Asset optimization
+4. Static site generation (if configured)
+
+### Type Checking
+```bash
+pnpm check          # One-time type check
+pnpm check:watch    # Watch mode type checking
+```
+
+### Linting and Formatting
+```bash
+pnpm lint           # ESLint checking
+pnpm format         # Prettier formatting
+pnpm format:check   # Check formatting without changes
+```
+
+## Environment Setup
+
+### TypeScript Support
+- Full TypeScript support with [tsconfig.json](mdc:tsconfig.json)
+- Generated types in `.svelte-kit/types/`
+- Type-safe routing with `$types` imports
+
+### Analytics Integration
+- Vercel Analytics integrated via `@vercel/analytics/sveltekit`
+- Configured in root layout with development/production modes
