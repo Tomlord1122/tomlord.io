@@ -50,7 +50,7 @@
 
 
 <!-- This is the main container for your page content -->
-<div class="prose prose-sm sm:prose-base  mx-auto">
+<div class="prose prose-sm sm:prose-base mx-auto">
 	
 	<h1 
 		class="page-title">
@@ -71,7 +71,7 @@
 	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} 
 		class="main-content-area">
 		{#if pageContent}
-			<div class="prose prose-sm sm:prose-base max-w-none">
+			<div class="prose prose-sm sm:prose-lg max-w-none">
 				{@html htmlContent}
 			</div>
 		{:else}
