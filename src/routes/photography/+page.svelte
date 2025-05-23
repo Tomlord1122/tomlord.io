@@ -5,8 +5,28 @@
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
 	import { quintOut } from 'svelte/easing'; // For a smooth animation
 
-	// Get photos data from +page.server.ts load function
+	// Get data from both page and layout
 	let { data } = $props();
+
+	// Create photo objects from layout's availablePhotos
+	let photos = $derived(
+		data.availablePhotos ? data.availablePhotos.map((photoUrl: string) => {
+			const filename = photoUrl.substring(photoUrl.lastIndexOf("/") + 1);
+			return {
+				src: photoUrl,
+				alt: `Photo ${filename}`,
+				originalPath: `/static/photography_assets/${filename}`,
+			};
+		}).sort((a, b) => {
+			// Sort numerically in reverse order (newest first)
+			const numA = parseInt(a.originalPath.match(/\/(\d+)\.\w+$/)?.[1] || "0");
+			const numB = parseInt(b.originalPath.match(/\/(\d+)\.\w+$/)?.[1] || "0");
+			
+			if (numA !== numB) return numB - numA;
+			
+			return b.originalPath.localeCompare(a.originalPath);
+		}) : []
+	);
 
 	// isDev state to control visibility of the uploader trigger
 	let isDev = $state(false);
@@ -33,14 +53,14 @@
 
 	// ---- Derived state for displayed photos ----
 	// Reversing to show newest photos first. Remove .slice().reverse() if you want oldest first.
-	let displayedPhotos = $derived(data.photos ? data.photos.slice(0, visiblePhotosCount) : []);
+	let displayedPhotos = $derived(photos ? photos.slice(0, visiblePhotosCount) : []);
 
 	// ---- Function to load more photos ----
 	function loadMorePhotos() {
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
-		if (data.photos && visiblePhotosCount > data.photos.length) {
-			visiblePhotosCount = data.photos.length;
+		if (photos && visiblePhotosCount > photos.length) {
+			visiblePhotosCount = photos.length;
 		}
 	}
 
@@ -89,7 +109,7 @@
 			<!-- Button to open the image upload modal -->
 			<button 
 				onclick={() => showImageUploadModal = true} 
-				
+				class="hover:text-gray-600 transition-colors"
 			>
 				tom.photography
 			</button>
@@ -97,10 +117,6 @@
 			tom.photography
 		{/if}
 	</h1>
-
-	{#if data.error}
-		<p class="text-red-500 bg-red-100 border border-red-400 p-3 rounded-md">Error loading photos: {data.error}</p>
-	{/if}
 </div>
 
 <main in:fly={{ y: 100, duration: 1000, delay: 100 }} class="main-content-area mt-10">
@@ -129,19 +145,19 @@
 			   </button>
 		   {/each}
 		</div>
-	{:else if !data.error}
+	{:else}
 		<p class="text-gray-600">No photos to display yet. Upload some if you're on localhost!</p>
 	{/if}
 
 	<!-- "Load More" Button -->
-	{#if data.photos && displayedPhotos.length < data.photos.length}
+	{#if photos && displayedPhotos.length < photos.length}
 		<div class="text-center mt-8 mb-8">
 			<button 
 				onclick={loadMorePhotos}
 				class="relative overflow-hidden px-6 py-3 rounded-lg transition-all duration-300 animate-pulse"
 				in:fly={{ y: 20, duration: 500, delay: 200, easing: quintOut }}
 			>
-				Load More Photos ({displayedPhotos.length} / {data.photos.length})
+				Load More Photos ({displayedPhotos.length} / {photos.length})
 			</button>
 		</div>
 	{/if}

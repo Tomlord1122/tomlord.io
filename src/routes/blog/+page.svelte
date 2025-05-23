@@ -121,6 +121,7 @@
 			<button
 			onclick={openCreatePostModal}
 			aria-label="Create New Post"
+			class="hover:text-gray-600 transition-colors"
 			>
 			tom.changelog
 			</button>

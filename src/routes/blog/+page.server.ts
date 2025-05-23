@@ -1,7 +1,5 @@
 import type { PageServerLoad } from "./$types.js";
 import type { PostMetadata } from "$lib/types/types.ts";
-import fs from "node:fs/promises"; // Import fs promises
-import path from "node:path"; // Import path
 
 export const load: PageServerLoad = async () => {
   const posts: PostMetadata[] = [];
@@ -28,35 +26,7 @@ export const load: PageServerLoad = async () => {
 
   posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // --- Load available photos ---
-  let availablePhotos: string[] = [];
-  try {
-    const imageModules = import.meta.glob(
-      // "/src/lib/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
-      "/static/photography_assets/**/*.{png,jpg,jpeg,gif,webp}",
-      {
-        eager: true,
-        // 不再使用 import: 'default'
-      },
-    );
-
-    availablePhotos = Object.keys(imageModules)
-      .map(key => key.replace("/static/", "/"))
-      .sort((a, b) => {
-        // 排序邏輯保持不變
-        const numA = parseInt(a.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-        const numB = parseInt(b.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-        if (numA !== numB) return numA - numB;
-        return a.localeCompare(b);
-      });
-  } catch (err) {
-    console.error("Error loading photos for blog modal (keys method):", err);
-    // 如果發生錯誤，availablePhotos 將保持為空陣列
-  }
-  // --- End loading available photos ---
-
   return {
     posts,
-    availablePhotos,
   };
 };
