@@ -6,14 +6,12 @@
     alt, 
     class: className = "",
     loading = "lazy",
-    sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
     onclick = () => {}
   } = $props<{
     src: string;
     alt: string;
     class?: string;
     loading?: "lazy" | "eager";
-    sizes?: string;
     onclick?: () => void;
   }>();
 
@@ -69,7 +67,6 @@
     bind:this={imgElement}
     src={shouldLoad ? src : ''}
     {alt}
-    {sizes}
     class="photo-grid {isLoaded ? 'opacity-100' : 'opacity-0'} hover:scale-105 transition-all duration-300"
     onload={handleLoad}
     style="min-height: 200px;" 

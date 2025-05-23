@@ -8,7 +8,7 @@ export const load: LayoutServerLoad = async () => {
     // 使用 eager: true 確保生產環境相容性
     // 這只會載入 URL 路徑，不是實際的圖片檔案
     const photoModules = import.meta.glob('/static/photography_assets/*', {
-      eager: true,
+      eager: false,
       query: '?url',
       import: 'default'
     });
