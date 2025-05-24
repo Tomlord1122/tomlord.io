@@ -24,13 +24,13 @@ export const load: LayoutServerLoad = async () => {
         // Convert from /static/photography_assets/filename.ext to /photography_assets/filename.ext
         return path.replace('/static', '');
       })
-      .sort((a, b) => {
-        // Sort numerically by filename number
-        const numA = parseInt(a.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-        const numB = parseInt(b.match(/\/(\d+)\.\w+$/)?.[1] || "0");
-        if (numA !== numB) return numA - numB;
-        return a.localeCompare(b);
-      });
+      // .sort((a, b) => {
+      //   // Sort numerically by filename number
+      //   const numA = parseInt(a.match(/\/(\d+)\.\w+$/)?.[1] || "0");
+      //   const numB = parseInt(b.match(/\/(\d+)\.\w+$/)?.[1] || "0");
+      //   if (numA !== numB) return numA - numB;
+      //   return a.localeCompare(b);
+      // });
 
     console.log(`Loaded ${availablePhotos.length} photography assets:`, availablePhotos);
   } catch (err) {

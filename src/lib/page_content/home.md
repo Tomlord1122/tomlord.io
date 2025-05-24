@@ -34,7 +34,7 @@ I am a software engineer who is passionate about distributed systems. FYI I am a
 In my free time, I also love to write frontend applications with Svelte.
 
 This website contains some of my blog posts about my learning journey and topics of interest. I will share my projects and thoughts with you. Feel free to contact me via email.
-
+HiHI
 ### Experience
 - **HP Software Engineering Intern** *(Jul 2024 - Now)*
 - **MediaTek System Research Assistant** *(Jan 2024 - Jul 2025)*
