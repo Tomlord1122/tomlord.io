@@ -54,7 +54,6 @@
 	async function loadMorePhotos() {
 		isLoadingMore = true;
 		
-		// 模擬載入延遲，讓使用者感受到載入過程
 		await new Promise(resolve => setTimeout(resolve, 200));
 		
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;

@@ -187,7 +187,7 @@
 				{#each filteredPosts.filter(post => language === "en" ? post.lang === "en" : true) as post (post.slug)}
 					<li class="border-b border-gray-200 last:border-b-0 first:mb-1 pt-2" >
 						<a href="/blog/{post.slug}" class="underline underline-offset-4">
-							<h2 class="text-xl text-gray-700 hover:text-gray-900 mb-1">{post.title}</h2>
+							<h2 class="prose prose-sm sm:prose-lg  text-gray-700 hover:text-gray-900 mb-1">{post.title}</h2>
 						</a>
 						<div class="text-sm text-gray-500 flex">
 							<p class="my-0">
@@ -202,11 +202,7 @@
 								{/each}
 							</div>
 							{/if}
-						</div>
-						{#if post.description}
-							<p class="text-gray-500 mt-1">{post.description}</p>
-						{/if}
-						
+						</div>						
 					</li>
 				{/each}
 			</ul>
