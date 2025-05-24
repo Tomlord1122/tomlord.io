@@ -5,7 +5,7 @@ import path from "node:path";
 import { dev } from "$app/environment";
 
 // Define the content storage directory
-const contentDir = path.join(process.cwd(), "src", "lib", "page_content");
+const contentDir = path.join(process.cwd(), "src", "content");
 
 async function ensureContentDir() {
   try {

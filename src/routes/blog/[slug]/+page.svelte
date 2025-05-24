@@ -73,22 +73,25 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto px-4 py-8">
+
 	<article>
-		<header class="mb-8">
-			<h1 
-				class="text-4xl font-bold text-gray-900 mb-3 leading-tight font-serif">
-				{#if isDev}
-					<button
-						onclick={openEditModal}
-						aria-label="Edit Post"
-						class="hover:text-gray-600 transition-colors text-left"
-					>
+		<header class="mb-8 page-title">
+			<div class="prose prose-sm sm:prose-base">
+				<h1>
+					{#if isDev}
+						<button
+							onclick={openEditModal}
+							aria-label="Edit Post"
+							class="hover:text-gray-600 transition-colors text-left"
+						>
+							{title}
+						</button>
+					{:else}
 						{title}
-					</button>
-				{:else}
-					{title}
-				{/if}
-			</h1>
+					{/if}
+				</h1>
+			</div>
+			
 			<p 
 				class="text-gray-500 text-sm">
 				Posted on {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -107,7 +110,7 @@
 		</header>
 		<div 
 			in:fly={{ y: 50, duration: 600, delay: 200 }}
-			class="prose prose-sm sm:prose-lg max-w-none font-serif"> 
+			class="prose prose-sm sm:prose-base max-w-none font-serif"> 
 			<Component class="img-center"/>
 
 		</div>

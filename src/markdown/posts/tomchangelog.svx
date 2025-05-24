@@ -2,8 +2,8 @@
 title: 'tom.changelog'
 date: '2025-05-13'
 slug: 'tomchangelog'
-lang: zh-tw
-duration: 2min
+lang: 'zh-tw'
+duration: '2min'
 tags: ['Life']
 ---
 
@@ -12,4 +12,3 @@ tags: ['Life']
 最近 Instagram 的廣告越來越多了，而且有時候看到後面會不自覺地比較別人的生活，越看越沮喪，所以打算用一個自己的網站，分享生活的東西還有學習歷程。所以，嗨，不管是誰有路過這邊，很高興你發現我了！
 
 對了，現在這個網站是靜態的，我想我會持續開發，然後讓這個網站運行得更流暢，一起期待吧！
-

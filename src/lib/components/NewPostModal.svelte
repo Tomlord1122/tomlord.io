@@ -32,14 +32,22 @@
 	let showPreview = $state(false); // Controls whether to show preview or editor
  
 	// Use $derived to automatically calculate reading duration based on content
-	let duration = $derived(() => {
-		const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
-		// Calculate duration: 1 minute per 100 words, round up
-		const calculatedDuration = Math.ceil(words / 100);
-		// Ensure it's at least 1 minute
-		return Math.max(1, calculatedDuration);
-	});
-
+    let duration = $derived(() => {
+        const trimmedContent = content.trim();
+        if (trimmedContent === '') return 1;        
+        let words = 0;
+        
+        if (lang === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
+            words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
+        } else {
+            words = trimmedContent.split(/\s+/).filter(word => word.length > 0).length;
+        }
+        const wordsPerMinute = lang === 'zh-tw' ? 200 : 50; // 中文每分鐘200字，英文50字
+        const calculatedDuration = Math.ceil(words / wordsPerMinute);
+        
+        return Math.max(1, calculatedDuration);
+    });
+    $inspect(duration());
 	// Get current date and format it
 	const currentDate = new Date();
 	const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
@@ -76,7 +84,7 @@ title: '${title}'
 date: '${new Date().toISOString().split('T')[0]}'
 slug: '${finalSlug}'
 lang: '${lang}'
-duration: '${duration}min'
+duration: '${duration()}min'
 tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
 ---
 
