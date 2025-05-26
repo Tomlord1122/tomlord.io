@@ -9,6 +9,11 @@
 
 </script>
 
+<svelte:head>
+	<!-- RSS Feed Auto-Discovery -->
+	<link rel="alternate" type="application/rss+xml" title="Tom's Blog RSS Feed" href="/rss.xml" />
+</svelte:head>
+
 <InteractiveBackground />
 <div class="min-h-screen bg-[#EDEDED] flex flex-col font-sans">
 	<nav class="p-4 ">

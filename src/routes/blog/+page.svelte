@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
+	import RSSButton from '$lib/components/RSSButton.svelte';
 	import { browser } from '$app/environment';
 
 	// Props are now received using $props() in Svelte 5
@@ -116,7 +117,7 @@
 <div class="prose prose-sm sm:prose-base mx-auto">
 	
 	<h1 
-		class="page-title mb-0">
+		class="page-title mb-4">
 		{#if isDev}
 			<button
 			onclick={openCreatePostModal}
@@ -131,17 +132,27 @@
 		
 	</h1>
 
-	<div class="mb-4 not-prose font-serif">
-		<div class="flex gap-2 mb-4">
-			<label class="flex items-center gap-2 cursor-pointer">
-				<input 
-					type="checkbox" 
-					checked={language === "en"} 
-					onclick={() => {language === "en"? language = "": language = "en"}} 
-					class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
-				/>
-				<span class="text-sm text-gray-500">English Only</span>
-			</label>
+	<!-- Blog Controls: RSS and Language Filter -->
+	<div class="mb-6 not-prose font-serif">
+		<div class="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between">
+			<!-- RSS Subscribe Section -->
+			<div class="flex items-center gap-3">
+				<span class="text-sm text-gray-600">Subscribe:</span>
+				<RSSButton />
+			</div>
+			
+			<!-- Language Filter -->
+			<div class="flex gap-2">
+				<label class="flex items-center gap-2 cursor-pointer">
+					<input 
+						type="checkbox" 
+						checked={language === "en"} 
+						onclick={() => {language === "en"? language = "": language = "en"}} 
+						class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
+					/>
+					<span class="text-sm text-gray-500">English Only</span>
+				</label>
+			</div>
 		</div>
 	</div>
 
