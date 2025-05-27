@@ -27,5 +27,9 @@
   .photo-post {
     @apply z-20 w-[400px] lg:w-3/4 object-cover rounded-lg hover:scale-105 transition-all duration-300 shadow-md ;
   }
+
+  .nav-link {
+    @apply text-gray-700 hover:text-gray-900  transition-all duration-300 hover:scale-105;
+  }
 }
 

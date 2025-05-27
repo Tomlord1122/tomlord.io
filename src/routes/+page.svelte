@@ -14,37 +14,29 @@
 	let showEditModal = $state(false);
 	let pageContent = $state(data.pageContent);
 
-	// Check environment on client-side
 	$effect(() => {
 		if (browser) {
-			// Only localhost is considered development
 			isDev = window.location.hostname === 'localhost';
 		}
 	});
 
-	// Update pageContent when data changes (e.g., after editing)
 	$effect(() => {
 		pageContent = data.pageContent;
 	});
 
-	// Callback for successful save
 	function handlePageSaved() {
 		console.log('Home page content saved successfully.');
-		// Reload the page to get the updated content from the server
 		window.location.reload();
 	}
 
-	// Callback for modal cancellation
 	function handleEditCancel() {
 		console.log('Edit cancelled.');
 	}
 
-	// Function to open the edit modal
 	function openEditModal() {
 		showEditModal = true;
 	}
 
-	// Derived HTML content for rendering
 	let htmlContent = $derived(marked(pageContent || ''));
 </script>
 

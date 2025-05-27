@@ -47,7 +47,7 @@
 </script>
 
 <button 
-  class=" aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
+  class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
   {onclick}
 >
   <!-- Loading skeleton -->

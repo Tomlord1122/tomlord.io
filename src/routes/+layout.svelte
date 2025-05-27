@@ -18,10 +18,10 @@
 				<img  src="/app_icon.png" alt="Tomlord" class="w-15 h-15 rounded-2xl border-2 border-gray-300">
 			</a>
 			<div class="flex items-center gap-4  text-lg">
-				<a href="/" class="text-gray-700 hover:text-gray-900  transition-all duration-300 hover:scale-105">Home</a>
-				<a href="/blog" class="text-gray-700 hover:text-gray-900  transition-all duration-300 hover:scale-105">Blog</a>
-				<a href="/project" class="text-gray-700 hover:text-gray-900  transition-all duration-300 hover:scale-105">Project</a>
-				<a href="/photography" class="text-gray-700 hover:text-gray-900 transition-all duration-300 hover:scale-105">Photography</a>
+				<a href="/" class="nav-link">Home</a>
+				<a href="/blog" class="nav-link">Blog</a>
+				<a href="/project" class="nav-link">Project</a>
+				<a href="/photography" class="nav-link">Photography</a>
 			</div>
 		</div>
 	</nav>
