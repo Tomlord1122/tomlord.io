@@ -149,7 +149,7 @@
 <!-- Full-size image modal -->
 {#if showFullSizeImage}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-filter backdrop-blur-lg"
+		class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-filter backdrop-blur-lg"
 		onclick={closeFullSizeImage}
 		onkeydown={(e) => e.key === 'Escape' && closeFullSizeImage()}
 		role="dialog"
