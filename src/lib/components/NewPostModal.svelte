@@ -1,13 +1,7 @@
 <script lang="ts">
     import { marked } from 'marked';
-	import { tick } from 'svelte'; // To wait for DOM updates
+	import { calculateDuration, copyImageMarkdown } from '$lib/util/util.js';
 
-	// Props for the modal
-	// 'show' is two-way bindable to control visibility from the parent
-	// 'allCurrentTags' is the list of all tags currently used in your blog, now also two-way bindable
-	// 'oncreated' is a callback for when a post is successfully created
-	// 'oncancel' is a callback for when the modal is closed without creating a post
-	// 'availableImages' is a new prop for available image paths
 	let { 
 		show = $bindable(false), 
 		allCurrentTags = $bindable([]),
@@ -31,47 +25,17 @@
 	let newTagInput = $state(''); // For typing a new tag
 	let showPreview = $state(false); // Controls whether to show preview or editor
 
-	// 移除實時計算的 duration，改為函數
-	function calculateDuration(text: string, language: string): number {
-		const trimmedContent = text.trim();
-		if (trimmedContent === '') return 1;        
-		let words = 0;
-		
-		if (language === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
-			words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
-		} else {
-			words = trimmedContent.split(/\s+/).filter(word => word.length > 0).length;
-		}
-		const wordsPerMinute = language === 'zh-tw' ? 200 : 50;
-		const calculatedDuration = Math.ceil(words / wordsPerMinute);
-		
-		return Math.max(1, calculatedDuration);
-	}
+
 
 	let markdownPreview = $state('');
 
 	async function updatePreview() {
-    if (showPreview) {
         markdownPreview = await marked(content || '');
-    }
-}
+	}
 
 	// Get current date and format it
 	const currentDate = new Date();
 	const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
-
-	// 緩存排序後的圖片列表
-	let sortedImages = $derived(
-		!availableImages || availableImages.length === 0 ? [] :
-		availableImages.slice().sort((a: string, b: string) => {
-			const getNumber = (path: string) => {
-				const filename = path.split('/').pop();
-				const numberPart = filename?.split('.')[0];
-				return parseInt(numberPart || '0') || 0;
-			};
-			return getNumber(b) - getNumber(a);
-		})
-	);
 
 	// Function to close the modal
 	function closeModal() {
@@ -95,7 +59,6 @@
 		
 		const finalSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 		
-		// 只在創建文章時計算 duration
 		const duration = calculateDuration(content, lang);
 		
 		const frontmatter = `---
@@ -156,52 +119,22 @@ ${content}`;
 	// Function to add a new tag from the input field
 	function addNewTag() {
 		const newTag = newTagInput.trim();
-		if (newTag) { // Make sure the new tag is not just empty spaces
-			// Add to the post's specific tags if it's not already there
+		if (newTag) {
 			if (!postTags.includes(newTag)) {
 				postTags = [...postTags, newTag];
 			}
-
-			// Now, let's check if this tag is new to our global list of 'allCurrentTags'
-			// If it is, we add it. Because 'allCurrentTags' is bound to the parent's 'allTags' state,
-			// this change will immediately reflect in the parent component.
 			if (!allCurrentTags.includes(newTag)) {
-				allCurrentTags = [...allCurrentTags, newTag].sort(); // Add and keep the list sorted
+				allCurrentTags = [...allCurrentTags, newTag].sort();
 			}
 		}
-		newTagInput = ''; // Clear the input field
+		newTagInput = '';
 	}
 
 	// Function to toggle between preview and editor
 	function togglePreview() {
 		showPreview = !showPreview;
 		if (showPreview) {
-			updatePreview(); // 只在顯示預覽時才生成
-		}
-	}
-
-	// Focus the title input when the modal becomes visible
-	$effect(() => {
-		if (show) {
-			// Wait for the next DOM update cycle before trying to focus
-			tick().then(() => {
-				const titleEl = document.getElementById('post-title-input');
-				titleEl?.focus();
-			});
-		}
-	});
-
-	// Function to copy image markdown to clipboard
-	async function copyImageMarkdown(imagePath: string) {
-		const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
-</div>`;
-		try {
-			await navigator.clipboard.writeText(markdown);
-			alert(`Copied to clipboard: ${markdown}`);
-		} catch (err) {
-			console.error('Failed to copy text: ', err);
-			alert('Failed to copy markdown. You can manually copy: ' + markdown);
+			updatePreview();
 		}
 	}
 
@@ -320,11 +253,11 @@ ${content}`;
 					</div>
 					
 					<!-- Section to display available images -->
-					{#if sortedImages.length > 0}
+					{#if availableImages.length > 0}
 						<div class="mt-4 pt-4 border-t border-gray-200">
 							<h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
 							<div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
-								{#each sortedImages as imagePath (imagePath)}
+								{#each availableImages as imagePath (imagePath)}
 									<div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
 										<img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
 										<p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>

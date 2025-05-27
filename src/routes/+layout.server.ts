@@ -24,6 +24,14 @@ export const load: LayoutServerLoad = async () => {
         // Convert from /static/photography_assets/filename.ext to /photography_assets/filename.ext
         return path.replace('/static', '');
       })
+      .sort((a, b) => {
+        const getNumber = (path: string) => {
+          const filename = path.split('/').pop();
+          const numberPart = filename?.split('.')[0];
+          return parseInt(numberPart || '0') || 0;
+        };
+        return getNumber(b) - getNumber(a);
+      });
 
     console.log(`Loaded ${availablePhotos.length} photography assets:`, availablePhotos);
   } catch (err) {

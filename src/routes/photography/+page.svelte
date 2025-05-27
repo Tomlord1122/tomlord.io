@@ -18,11 +18,6 @@
 				alt: `Photo ${filename}`,
 				filename
 			};
-		}).sort((a, b) => {
-			// Sort numerically in reverse order (newest first)
-			const numA = parseInt(a.filename.match(/^(\d+)\./)?.[1] || "0");
-			const numB = parseInt(b.filename.match(/^(\d+)\./)?.[1] || "0");
-			return numB - numA; // 新的在前
 		}) : []
 	);
 

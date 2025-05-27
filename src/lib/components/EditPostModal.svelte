@@ -1,7 +1,6 @@
 <script lang="ts">
     import { marked } from 'marked';
-    import { tick } from 'svelte';
-
+    import { calculateDuration, copyImageMarkdown } from '$lib/util/util.js';
     // Props for the modal
     let { 
         show = $bindable(false), 
@@ -27,6 +26,7 @@
     let newTagInput = $state('');
     let showPreview = $state(false);
     let lang = $state('en');
+    let markdownPreview = $state(''); // Changed from $derived to $state
 
     // Initialize form data when modal opens
     $effect(() => {
@@ -36,51 +36,20 @@
             content = postData.content || '';
             postTags = [...(postData.tags || [])];
             lang = postData.lang || 'en';
-            showPreview = false;
+            showPreview = false; // Ensure preview is off initially
+            markdownPreview = ''; // Clear previous preview
             newTagInput = '';
-            
-            // Focus the title input after DOM update
-            tick().then(() => {
-                const titleEl = document.getElementById('edit-post-title-input');
-                titleEl?.focus();
-            });
         }
     });
 
-    // Use $derived to automatically calculate reading duration based on content
-    let duration = $derived(() => {
-        const trimmedContent = content.trim();
-        if (trimmedContent === '') return 1;        
-        let words = 0;
-        
-        if (lang === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
-            words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
-        } else {
-            words = trimmedContent.split(/\s+/).filter(word => word.length > 0).length;
-        }
-        const wordsPerMinute = lang === 'zh-tw' ? 200 : 50; // 中文每分鐘200字，英文50字
-        const calculatedDuration = Math.ceil(words / wordsPerMinute);
-        
-        return Math.max(1, calculatedDuration);
-    });
-    $inspect(duration());
-    // Reactive derived value for the HTML preview of the Markdown content
-    let markdownPreview = $derived(marked(content || ''));
 
-    // 使用 $derived 來緩存排序後的圖片列表
-    let sortedImages = $derived(() => {
-        if (!availableImages || availableImages.length === 0) return [];
-        
-        return availableImages.slice().sort((a: string, b: string) => {
-            // 提取檔名中的數字部分進行排序
-            const getNumber = (path: string) => {
-                const filename = path.split('/').pop(); // 取得檔名
-                const numberPart = filename?.split('.')[0]; // 取得副檔名前的部分
-                return parseInt(numberPart || '0') || 0; // 轉換為數字，如果失敗則返回0
-            };
-            return getNumber(b) - getNumber(a); // 降序排列 (最新的在前面)
-        });
-    });
+
+    // Async function to update markdown preview
+    async function updatePreview() {
+        if (showPreview) {
+            markdownPreview = await marked(content || '');
+        }
+    }
 
     // Function to close the modal
     function closeModal() {
@@ -89,6 +58,18 @@
 
     // Function to handle post update
     async function handleUpdatePost() {
+        // Log the postData to see what's being used
+        console.log('Attempting to update post. Current postData:', postData);
+        console.log('Original slug to be sent:', postData?.slug);
+        console.log('New slug to be sent:', slug);
+
+        // Ensure originalSlug is present and valid
+        if (!postData || typeof postData.slug !== 'string' || !postData.slug.trim()) {
+            alert('Developer Alert: Original slug is missing or invalid in postData. See console for details.');
+            console.error('EditPostModal Error: originalSlug is missing or invalid. postData.slug:', postData?.slug);
+            return;
+        }
+
         if (!title.trim()) {
             alert('Please enter a title for your post.');
             return;
@@ -97,7 +78,7 @@
             alert('Please add some content to your post.');
             return;
         }
-        if (!slug.trim()) {
+        if (!slug.trim()) { // This 'slug' is the new slug from the input
             alert('Please enter a URL slug for your post.');
             return;
         }
@@ -105,17 +86,28 @@
         // Use the custom slug, but still sanitize it
         const finalSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
         
+        // Calculate duration on demand
+        const durationValue = calculateDuration(content, lang);
+
         // Create the markdown content with frontmatter
         const frontmatter = `---
-title: '${title}'
-date: '${postData.date || new Date().toISOString().split('T')[0]}'
-slug: '${finalSlug}'
-lang: '${lang}'
-duration: '${duration()}min'
-tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
+    title: '${title}'
+    date: '${postData.date || new Date().toISOString().split('T')[0]}'
+    slug: '${finalSlug}'
+    lang: '${lang}'
+    duration: '${durationValue}min'
+    tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
 ---
 
 ${content}`;
+
+        // Log the actual payload being sent
+        const payload = {
+            originalSlug: postData.slug, // This is the crucial one
+            newSlug: finalSlug,
+            content: frontmatter
+        };
+        console.log('Payload being sent to /api/edit-post:', payload);
 
         try {
             const response = await fetch('/api/edit-post', {
@@ -123,11 +115,7 @@ ${content}`;
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    originalSlug: postData.slug,
-                    newSlug: finalSlug,
-                    content: frontmatter
-                })
+                body: JSON.stringify(payload) // Use the logged payload
             });
 
             if (response.ok) {
@@ -135,12 +123,12 @@ ${content}`;
                 onSaved(); // Call the onSaved callback
                 closeModal();
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Server error:', errorData);
-                alert(`Failed to update post: ${errorData.message || 'Unknown error'}`);
+                const errorData = await response.json().catch(() => ({ message: 'Unknown server error or non-JSON response' }));
+                console.error('Server error response:', response.status, errorData);
+                alert(`Failed to update post: ${errorData.message || response.statusText}`);
             }
         } catch (error) {
-            console.error('Error updating post:', error);
+            console.error('Error updating post (network or client-side issue):', error);
             alert('An error occurred while updating the post.');
         }
     }
@@ -175,19 +163,9 @@ ${content}`;
     // Function to toggle between preview and editor
     function togglePreview() {
         showPreview = !showPreview;
-    }
-
-    // Function to copy image markdown to clipboard
-    async function copyImageMarkdown(imagePath: string) {
-        const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
-</div>`;
-        try {
-            await navigator.clipboard.writeText(markdown);
-            alert(`Copied to clipboard: ${markdown}`);
-        } catch (err) {
-            console.error('Failed to copy text: ', err);
-            alert('Failed to copy markdown. You can manually copy: ' + markdown);
+        // If switching to preview, update it immediately
+        if (showPreview) {
+            updatePreview();
         }
     }
 
@@ -317,7 +295,7 @@ ${content}`;
                         <div class="mt-4 pt-4 border-t border-gray-200">
                             <h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
                             <div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
-                                {#each sortedImages() as imagePath}
+                                {#each availableImages as imagePath}
                                     <div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
                                         <img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
                                         <p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>
@@ -376,7 +354,7 @@ ${content}`;
                         {/if}
                     </div>
 
-                    <div class="sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
+                    <div class="z-20 sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
                         <button 
                             type="button" 
                             onclick={() => {
