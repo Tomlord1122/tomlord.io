@@ -21,14 +21,7 @@
 
 
 
-	let markdownPreview = $state('');
 
-	async function updatePreview() {
-        markdownPreview = await marked(content || '');
-	}
-
-	// Get current date and format it
-	const currentDate = new Date();
 	// Function to close the modal
 	function closeModal() {
 		show = false; // This updates the 'show' prop in the parent component
@@ -120,14 +113,6 @@ ${content}`;
 			}
 		}
 		newTagInput = '';
-	}
-
-	// Function to toggle between preview and editor
-	function togglePreview() {
-		showPreview = !showPreview;
-		if (showPreview) {
-			updatePreview();
-		}
 	}
 
 </script>
@@ -274,7 +259,7 @@ ${content}`;
 							</label>
 							<button 
 								type="button"
-								onclick={togglePreview}
+								onclick={() => showPreview = !showPreview}
 								class="px-3 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md hover:bg-blue-50"
 							>
 								{showPreview ? 'Edit Content' : 'Show Preview'}
@@ -286,7 +271,7 @@ ${content}`;
 								class="prose z-20 prose-sm sm:prose-base max-w-none p-3 border border-gray-300 rounded-md bg-gray-50 overflow-y-auto"
 								style="min-height: calc(20em + 40px);"
 							>
-								{@html markdownPreview}
+								{@html marked(content)}
 							</div>
 						{:else}
 							<textarea 

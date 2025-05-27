@@ -20,7 +20,6 @@
     let newTagInput = $state('');
     let showPreview = $state(false);
     let lang = $state('en');
-    let markdownPreview = $state(''); // Changed from $derived to $state
 
     // Initialize form data when modal opens
     $effect(() => {
@@ -31,24 +30,12 @@
             postTags = [...(postData.tags || [])];
             lang = postData.lang || 'en';
             showPreview = false; // Ensure preview is off initially
-            markdownPreview = ''; // Clear previous preview
             newTagInput = '';
         }
     });
 
 
 
-    // Async function to update markdown preview
-    async function updatePreview() {
-        if (showPreview) {
-            markdownPreview = await marked(content || '');
-        }
-    }
-
-    // Function to close the modal
-    function closeModal() {
-        show = false;
-    }
 
     // Function to handle post update
     async function handleUpdatePost() {
@@ -115,7 +102,7 @@ ${content}`;
             if (response.ok) {
                 alert('Post updated successfully!');
                 onSaved(); // Call the onSaved callback
-                closeModal();
+                show = false;
             } else {
                 const errorData = await response.json().catch(() => ({ message: 'Unknown server error or non-JSON response' }));
                 console.error('Server error response:', response.status, errorData);
@@ -152,15 +139,6 @@ ${content}`;
             }
         }
         newTagInput = '';
-    }
-
-    // Function to toggle between preview and editor
-    function togglePreview() {
-        showPreview = !showPreview;
-        // If switching to preview, update it immediately
-        if (showPreview) {
-            updatePreview();
-        }
     }
 
     // Function to reset form to original values
@@ -322,7 +300,7 @@ ${content}`;
                                 </button>
                                 <button 
                                     type="button"
-                                    onclick={togglePreview}
+                                    onclick={() => showPreview = !showPreview}
                                     class="px-3 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md hover:bg-blue-50"
                                 >
                                     {showPreview ? 'Edit Content' : 'Show Preview'}
@@ -335,7 +313,7 @@ ${content}`;
                                 class="prose prose-sm sm:prose-base max-w-none p-3 border border-gray-300 rounded-md bg-gray-50 overflow-y-auto"
                                 style="min-height: calc(20em + 40px);"
                             >
-                                {@html markdownPreview}
+                                {@html marked(content)}
                             </div>
                         {:else}
                             <textarea 
