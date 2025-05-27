@@ -4,7 +4,6 @@
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
-	import { quintOut } from 'svelte/easing'; // For a smooth animation
 
 	// Get data from both page and layout
 	let { data } = $props();
@@ -183,6 +182,6 @@
   <ImageUploadModal 
     bind:show={showImageUploadModal}
     onUploadSuccess={handleModalUploadSuccess}
-    oncancel={handleModalCancel}
+    onCancel={handleModalCancel}
   />
 {/if}

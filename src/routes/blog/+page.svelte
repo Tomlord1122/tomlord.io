@@ -6,15 +6,9 @@
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
 
-	// Reactive state for selected tags
 	let selectedTags = $state<string[]>([]);
-
-	// State to control the visibility of the new post modal
 	let showCreatePostModal = $state(false);
-
-	// Check if we're in development mode
 	let isDev = $state(false); 
-	// languate could be en or zh-tw
 	let language = $state<string>("");
 	// Check environment on client-side
 	$effect(() => {
@@ -24,28 +18,13 @@
 		}
 	});
 
-	// Initialize allTags from data.posts, but make it a $state so it can be modified
-	// We get the initial set of tags from your posts data
 	let initialTags = [...new Set(data.posts.flatMap(post => post.tags || []))].sort();
 	let allTags = $state(initialTags);
 
-	// This $effect is a special Svelte 5 feature. It runs code whenever its dependencies change.
-	// Here, it runs if 'data.posts' changes or if 'allTags' itself changes (though we guard against loops).
-	// Its job is to make sure 'allTags' stays up-to-date with any tags coming from 'data.posts'
-	// (e.g., if the page data is refreshed), while also preserving tags added dynamically via the modal.
-
 	$effect(() => {
-		// This effect keeps 'allTags' synchronized with 'data.posts' and any
-		// tags that were part of a successfully created post (via bind:allCurrentTags).
 		const tagsFromCurrentPosts = [...new Set(data.posts.flatMap(post => post.tags || []))];
-		
 		const combinedTagsSet = new Set(tagsFromCurrentPosts);
-		// Add all tags currently in 'allTags'. This ensures that if a new post was just created,
-		// its tags (which are in 'allTags' due to binding) are preserved even if 'data.posts'
-		// hasn't reloaded yet. If the modal was cancelled, 'handlePostCreationCancel' will have
-		// already cleaned 'allTags'.
 		allTags.forEach(tag => combinedTagsSet.add(tag));
-		
 		const mergedSortedTags = Array.from(combinedTagsSet).sort();
 
 		if (JSON.stringify(allTags) !== JSON.stringify(mergedSortedTags)) {
@@ -225,7 +204,7 @@
 		bind:show={showCreatePostModal} 
 		bind:allCurrentTags={allTags} 
 		availableImages={data.availablePhotos || []}
-		oncreated={handlePostCreationSuccess}
-		oncancel={handlePostCreationCancel}
+		onSaved={handlePostCreationSuccess}
+		onCancel={handlePostCreationCancel}
 	/>
 {/if}

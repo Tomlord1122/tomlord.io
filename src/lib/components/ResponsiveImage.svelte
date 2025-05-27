@@ -1,17 +1,13 @@
 <script lang="ts">
   import { browser } from '$app/environment';
+  import type { ResponsiveImageType } from '../types/image.js';
   
   let { 
     src, 
     alt, 
     loading = "lazy",
     onclick = () => {}
-  } = $props<{
-    src: string;
-    alt: string;
-    loading?: "lazy" | "eager";
-    onclick?: () => void;
-  }>();
+  } : ResponsiveImageType = $props();
 
   let isLoaded = $state(false);
   let isInView = $state(false);

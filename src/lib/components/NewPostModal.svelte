@@ -1,20 +1,14 @@
 <script lang="ts">
     import { marked } from 'marked';
-	import { calculateDuration, copyImageMarkdown } from '$lib/util/util.js';
-
+	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
+	import type { NewPostModalType } from '../types/post.js';
 	let { 
 		show = $bindable(false), 
 		allCurrentTags = $bindable([]),
 		availableImages = [], // New prop for available image paths
-		oncreated = () => {}, // Default to an empty function
-		oncancel = () => {}    // Default to an empty function
-	} = $props<{
-		show: boolean;
-		allCurrentTags: string[];
-		availableImages?: string[]; // Optional array of image paths
-		oncreated: () => void; // Callback for successful post creation
-		oncancel: () => void;  // Callback for cancellation
-	}>();
+		onSaved = () => {}, // Default to an empty function
+		onCancel = () => {}    // Default to an empty function
+	} : NewPostModalType = $props();
 
 	let lang = $state('en');
 	// State for the new post data
@@ -35,8 +29,6 @@
 
 	// Get current date and format it
 	const currentDate = new Date();
-	const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
-
 	// Function to close the modal
 	function closeModal() {
 		show = false; // This updates the 'show' prop in the parent component
@@ -74,7 +66,7 @@ ${content}`;
 
 		try {
 			// Updated API endpoint path to match your server endpoint
-			const response = await fetch('/api', {
+			const response = await fetch('/api/add-post', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -87,7 +79,7 @@ ${content}`;
 
 			if (response.ok) {
 				alert('Post created successfully!');
-				oncreated(); // Call the oncreated callback
+				onSaved(); // Call the oncreated callback
 				// Reset form and close modal
 				title = '';
 				slug = '';
@@ -147,7 +139,7 @@ ${content}`;
 				<h2 class="text-2xl font-semibold text-gray-800">Create New Post</h2>
 				<button 
 					onclick={() => {
-						oncancel(); // Call the oncancel callback
+						onCancel(); // Call the oncancel callback
 						show = false;   // Then close the modal
 					}} 
 					class="text-gray-500 hover:text-gray-700 text-2xl"
@@ -311,7 +303,7 @@ ${content}`;
 						<button 
 							type="button" 
 							onclick={() => {
-								oncancel(); // Call the oncancel callback
+								onCancel(); // Call the oncancel callback
 								show = false;   // Then close the modal
 							}}
 							class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 border border-gray-300"

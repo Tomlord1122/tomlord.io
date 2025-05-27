@@ -5,8 +5,6 @@ export const load: LayoutServerLoad = async () => {
   let availablePhotos: string[] = [];
   
   try {
-    // 使用 eager: true 確保生產環境相容性
-    // 這只會載入 URL 路徑，不是實際的圖片檔案
     const photoModules = import.meta.glob('/static/photography_assets/*', {
       eager: true,
       query: '?url',

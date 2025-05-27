@@ -1,16 +1,12 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-
+  import type { ImageUploadModalType } from '../types/image.js';
   // Props for the modal
   let { 
     show = $bindable(), 
     onUploadSuccess = (filePaths: string[]) => {}, 
-    oncancel = () => {} 
-  } = $props<{
-    show?: boolean,
-    onUploadSuccess?: (filePaths: string[]) => void,
-    oncancel?: () => void
-  }>();
+    onCancel = () => {} 
+  } : ImageUploadModalType = $props();
 
   // Use raw state for arrays to prevent deep reactivity
   let selectedFiles = $state.raw<File[]>([]);
@@ -125,7 +121,7 @@
   }
 
   function closeModal() {
-    oncancel(); 
+    onCancel(); 
     show = false; 
   }
 

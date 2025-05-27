@@ -1,7 +1,8 @@
 <script lang="ts">
     import { marked } from 'marked';
-    import { calculateDuration, copyImageMarkdown } from '$lib/util/util.js';
+    import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
     // Props for the modal
+    import type { EditPostModalType } from '../types/post.js';
     let { 
         show = $bindable(false), 
         postData = {},
@@ -9,14 +10,7 @@
         availableImages = [],
         onSaved = () => {}, // Callback for successful save
         onCancel = () => {}  // Callback for cancellation
-    } = $props<{
-        show: boolean;
-        postData: any;
-        allCurrentTags: string[];
-        availableImages?: string[];
-        onSaved: () => void;
-        onCancel: () => void;
-    }>();
+    } : EditPostModalType = $props();
 
     // State for the post data being edited
     let title = $state('');

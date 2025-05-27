@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types.js";
-import type { PostMetadata } from "$lib/types/types.ts";
+import type { PostMetadata } from "$lib/types/post.js";
 
 export const load: PageServerLoad = async () => {
   const posts: PostMetadata[] = [];

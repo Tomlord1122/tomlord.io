@@ -1,6 +1,6 @@
 import type { PageLoad } from "./$types.js";
 import { error } from "@sveltejs/kit";
-import type { Post } from "$lib/types/types.ts";
+import type { Post } from "$lib/types/post.js";
 
 export const load: PageLoad = async ({ params }) => {
   const { slug } = params;

@@ -1,8 +1,8 @@
 <script lang="ts">
     import { marked } from 'marked';
     import { tick } from 'svelte';
-
     // Props for the modal
+    import type { EditPageModalType } from '../types/page.js';
     let { 
         show = $bindable(false), 
         pageTitle = '',
@@ -10,14 +10,7 @@
         pageName = '', // 'home' or 'project' - used for API endpoint
         onSaved = () => {}, // Callback for successful save
         onCancel = () => {}  // Callback for cancellation
-    } = $props<{
-        show: boolean;
-        pageTitle: string;
-        initialContent: string;
-        pageName: string;
-        onSaved: () => void;
-        onCancel: () => void;
-    }>();
+    } : EditPageModalType = $props();
 
     // State for the content being edited
     let content = $state('');
