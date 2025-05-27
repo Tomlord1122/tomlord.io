@@ -4,13 +4,11 @@
   let { 
     src, 
     alt, 
-    class: className = "",
     loading = "lazy",
     onclick = () => {}
   } = $props<{
     src: string;
     alt: string;
-    class?: string;
     loading?: "lazy" | "eager";
     onclick?: () => void;
   }>();
@@ -53,12 +51,12 @@
 </script>
 
 <button 
-  class="aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative {className}"
+  class=" aspect-square overflow-hidden rounded-lg shadow-md z-10 cursor-pointer relative"
   {onclick}
 >
   <!-- Loading skeleton -->
   {#if !isLoaded}
-    <div class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+    <div class="absolute inset-0 flex items-center justify-center bg-gray-100 ">
       <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   {/if}
@@ -67,7 +65,7 @@
     bind:this={imgElement}
     src={shouldLoad ? src : ''}
     {alt}
-    class="photo-grid {isLoaded ? 'opacity-100' : 'opacity-0'} hover:scale-105 transition-all duration-300"
+    class="photo-grid"
     onload={handleLoad}
     style="min-height: 200px;" 
   />

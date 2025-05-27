@@ -67,6 +67,21 @@
     // Reactive derived value for the HTML preview of the Markdown content
     let markdownPreview = $derived(marked(content || ''));
 
+    // 使用 $derived 來緩存排序後的圖片列表
+    let sortedImages = $derived(() => {
+        if (!availableImages || availableImages.length === 0) return [];
+        
+        return availableImages.slice().sort((a: string, b: string) => {
+            // 提取檔名中的數字部分進行排序
+            const getNumber = (path: string) => {
+                const filename = path.split('/').pop(); // 取得檔名
+                const numberPart = filename?.split('.')[0]; // 取得副檔名前的部分
+                return parseInt(numberPart || '0') || 0; // 轉換為數字，如果失敗則返回0
+            };
+            return getNumber(b) - getNumber(a); // 降序排列 (最新的在前面)
+        });
+    });
+
     // Function to close the modal
     function closeModal() {
         show = false;
@@ -165,7 +180,7 @@ ${content}`;
     // Function to copy image markdown to clipboard
     async function copyImageMarkdown(imagePath: string) {
         const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="z-10 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
 </div>`;
         try {
             await navigator.clipboard.writeText(markdown);
@@ -302,7 +317,7 @@ ${content}`;
                         <div class="mt-4 pt-4 border-t border-gray-200">
                             <h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
                             <div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
-                                {#each availableImages.slice().reverse() as imagePath (imagePath)}
+                                {#each sortedImages() as imagePath}
                                     <div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
                                         <img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
                                         <p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>

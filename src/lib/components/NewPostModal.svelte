@@ -30,30 +30,48 @@
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
 	let showPreview = $state(false); // Controls whether to show preview or editor
- 
-	// Use $derived to automatically calculate reading duration based on content
-    let duration = $derived(() => {
-        const trimmedContent = content.trim();
-        if (trimmedContent === '') return 1;        
-        let words = 0;
-        
-        if (lang === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
-            words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
-        } else {
-            words = trimmedContent.split(/\s+/).filter(word => word.length > 0).length;
-        }
-        const wordsPerMinute = lang === 'zh-tw' ? 200 : 50; // 中文每分鐘200字，英文50字
-        const calculatedDuration = Math.ceil(words / wordsPerMinute);
-        
-        return Math.max(1, calculatedDuration);
-    });
-    $inspect(duration());
+
+	// 移除實時計算的 duration，改為函數
+	function calculateDuration(text: string, language: string): number {
+		const trimmedContent = text.trim();
+		if (trimmedContent === '') return 1;        
+		let words = 0;
+		
+		if (language === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
+			words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
+		} else {
+			words = trimmedContent.split(/\s+/).filter(word => word.length > 0).length;
+		}
+		const wordsPerMinute = language === 'zh-tw' ? 200 : 50;
+		const calculatedDuration = Math.ceil(words / wordsPerMinute);
+		
+		return Math.max(1, calculatedDuration);
+	}
+
+	let markdownPreview = $state('');
+
+	async function updatePreview() {
+    if (showPreview) {
+        markdownPreview = await marked(content || '');
+    }
+}
+
 	// Get current date and format it
 	const currentDate = new Date();
 	const formattedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
 
-	// Reactive derived value for the HTML preview of the Markdown content
-	let markdownPreview = $derived(marked(content || ''));
+	// 緩存排序後的圖片列表
+	let sortedImages = $derived(
+		!availableImages || availableImages.length === 0 ? [] :
+		availableImages.slice().sort((a: string, b: string) => {
+			const getNumber = (path: string) => {
+				const filename = path.split('/').pop();
+				const numberPart = filename?.split('.')[0];
+				return parseInt(numberPart || '0') || 0;
+			};
+			return getNumber(b) - getNumber(a);
+		})
+	);
 
 	// Function to close the modal
 	function closeModal() {
@@ -75,16 +93,17 @@
 			return;
 		}
 		
-		// Use the custom slug, but still sanitize it
 		const finalSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 		
-		// Create the markdown content with frontmatter
+		// 只在創建文章時計算 duration
+		const duration = calculateDuration(content, lang);
+		
 		const frontmatter = `---
 title: '${title}'
 date: '${new Date().toISOString().split('T')[0]}'
 slug: '${finalSlug}'
 lang: '${lang}'
-duration: '${duration()}min'
+duration: '${duration}min'
 tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
 ---
 
@@ -156,6 +175,9 @@ ${content}`;
 	// Function to toggle between preview and editor
 	function togglePreview() {
 		showPreview = !showPreview;
+		if (showPreview) {
+			updatePreview(); // 只在顯示預覽時才生成
+		}
 	}
 
 	// Focus the title input when the modal becomes visible
@@ -172,7 +194,7 @@ ${content}`;
 	// Function to copy image markdown to clipboard
 	async function copyImageMarkdown(imagePath: string) {
 		const markdown = `<div class="flex justify-center">
-  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="z-10 w-3/4 rounded-lg hover:scale-105 transition-all duration-300 shadow-md">
+  <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
 </div>`;
 		try {
 			await navigator.clipboard.writeText(markdown);
@@ -298,11 +320,11 @@ ${content}`;
 					</div>
 					
 					<!-- Section to display available images -->
-					{#if availableImages && availableImages.length > 0}
+					{#if sortedImages.length > 0}
 						<div class="mt-4 pt-4 border-t border-gray-200">
 							<h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
 							<div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
-								{#each availableImages.slice().reverse() as imagePath (imagePath)}
+								{#each sortedImages as imagePath (imagePath)}
 									<div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
 										<img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
 										<p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>

@@ -54,7 +54,7 @@
 	async function loadMorePhotos() {
 		isLoadingMore = true;
 		
-		await new Promise(resolve => setTimeout(resolve, 200));
+		// await new Promise(resolve => setTimeout(resolve, 200));
 		
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
@@ -145,7 +145,6 @@
 			<button 
 				onclick={loadMorePhotos}
 				class="relative overflow-hidden px-6 py-3 rounded-lg animate-pulse"
-				in:fly={{ y: 20, duration: 500, delay: 200, easing: quintOut }}
 			>
 				Load More Photos ({displayedPhotos.length} / {photos.length})
 			</button>
