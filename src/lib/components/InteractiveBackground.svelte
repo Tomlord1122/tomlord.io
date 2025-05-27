@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 
-	// Mouse/touch position (non-reactive)
+	// Mouse position (non-reactive)
 	let mouse = { x: 0, y: 0 };
 	
 	// Track if we're on mobile
@@ -14,24 +14,17 @@
 		y: number;
 		originalX: number;
 		originalY: number;
-		targetX: number; // Added: target position
-		targetY: number; // Added: target position
 		size: number;
 		color: string;
-		velocityX: number;
-		velocityY: number;
-		randomMoveTimer: number;
 	}[] = [];
 
 	// Constants
-	const NUM_DOTS = browser && window.innerWidth < 768 ? 25 : 150; // Fewer dots on mobile
+	const NUM_DOTS = 150;
 	const GLOW_RADIUS = 100;
-	const MAX_GLOW = 0.3;
+	const MAX_GLOW = 0.6;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
-	const MOUSE_PULL_FACTOR = 0.35;
-	const RANDOM_MOVE_RANGE = browser && window.innerWidth < 768 ? 5 : 10; // Less movement on mobile
-	const RANDOM_MOVE_SPEED = browser && window.innerWidth < 768 ? 0.1 : 0.25; // Slower on mobile
-	const EASING_FACTOR = 0.2; // Added: easing factor, controls movement smoothness
+	const MOUSE_PULL_FACTOR = 0.55;
+	const EASING_FACTOR = 0.2;
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D | null = null;
@@ -39,18 +32,19 @@
 
 	// Check if device is mobile
 	function checkMobile() {
-		if (browser) {
-			isMobile = window.innerWidth < 768 || 
-				('ontouchstart' in window) || 
-				(navigator.maxTouchPoints > 0);
-		}
+		if (!browser) return false;
+		
+		isMobile = window.innerWidth < 768 || 
+			('ontouchstart' in window) || 
+			(navigator.maxTouchPoints > 0);
+		
+		return isMobile;
 	}
 
 	// Initialize stars
 	function initializeDots() {
-		checkMobile(); // Update mobile status
 		const newDots = [];
-		const dotCount = isMobile ? 0 : NUM_DOTS; // Even fewer dots on confirmed mobile
+		const dotCount = isMobile ? 0 : NUM_DOTS;
 		
 		for (let i = 0; i < dotCount; i++) {
 			const x = Math.random() * window.innerWidth;
@@ -61,45 +55,34 @@
 				y,
 				originalX: x,
 				originalY: y,
-				targetX: x, // Initialize target position
-				targetY: y, // Initialize target position
-				size: Math.random() * 1.5 + 0.5, // Smaller dots on mobile
-				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-				velocityX: 0,
-				velocityY: 0,
-				randomMoveTimer: Math.random() * 1000
+				size: Math.random() * 1.5 + 0.5,
+				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)]
 			});
 		}
 		dots = newDots;
 	}
 
-	// Handle mouse movement
-	function handleMouseMove(event: MouseEvent) {
-		// On mobile, make mouse interactions less sensitive
-		if (!isMobile || Math.random() > 0.7) { // Only update position sometimes on mobile
-			mouse.x = event.clientX;
-			mouse.y = event.clientY;
-		}
+	// Handle pointer movement
+	function handlePointerMove(event: PointerEvent) {
+		if (isMobile) return;
+		
+		mouse.x = event.clientX;
+		mouse.y = event.clientY;
 	}
-
 
 	// Handle window resize
 	function handleResize() {
 		if (canvas) {
-			checkMobile(); // Update mobile status
 			canvas.width = window.innerWidth;
 			canvas.height = window.innerHeight;
-			initializeDots();
 		}
 	}
 
-	// Calculate glow intensity (using non-linear interpolation)
+	// Calculate glow intensity
 	function calculateGlow(dotX: number, dotY: number, mouseX: number, mouseY: number): number {
 		const distance = Math.sqrt((dotX - mouseX) ** 2 + (dotY - mouseY) ** 2);
 		if (distance < GLOW_RADIUS) {
-			// Reduce glow effect on mobile
-			const maxGlow = MAX_GLOW;
-			return maxGlow * (1 - distance / GLOW_RADIUS) ** 2;
+			return MAX_GLOW * (1 - distance / GLOW_RADIUS) ** 2;
 		}
 		return 0;
 	}
@@ -111,56 +94,32 @@
 
 	// Update star positions and animation
 	function updateDots() {
-		if (!ctx) return;
+		if (!ctx || !canvas) return;
 
 		// Clear canvas
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		dots = dots.map(dot => {
 			const newDot = { ...dot };
-			newDot.randomMoveTimer -= 1;
 
-			// Random movement - less frequent on mobile
-			if (newDot.randomMoveTimer <= 0) {
-				newDot.velocityX = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
-				newDot.velocityY = (Math.random() - 0.5) * RANDOM_MOVE_SPEED;
-				newDot.randomMoveTimer = Math.random() * 200 + 50;
-			}
-
-			// Calculate target position (random movement)
-			let targetX = newDot.x + newDot.velocityX;
-			let targetY = newDot.y + newDot.velocityY;
-
-			// Limit random movement range
-			const distanceFromOrigin = Math.sqrt(
-				(targetX - newDot.originalX) ** 2 + (targetY - newDot.originalY) ** 2
-			);
-			if (distanceFromOrigin > RANDOM_MOVE_RANGE) {
-				targetX = newDot.originalX;
-				targetY = newDot.originalY;
-			}
-
-			// Mouse pull force - reduced on mobile
+			// Mouse pull force with easing
 			const distance = Math.sqrt((newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2);
+			let targetX = newDot.originalX;
+			let targetY = newDot.originalY;
+
 			if (distance < GLOW_RADIUS) {
-				const pull = (1 - distance / GLOW_RADIUS) * 
-					MOUSE_PULL_FACTOR;
+				const pull = (1 - distance / GLOW_RADIUS) * MOUSE_PULL_FACTOR;
 				const dx = mouse.x - newDot.originalX;
 				const dy = mouse.y - newDot.originalY;
 				targetX = newDot.originalX + dx * pull;
 				targetY = newDot.originalY + dy * pull;
-			} else {
-				targetX = newDot.originalX;
-				targetY = newDot.originalY;
 			}
 
-			// Use easing to update actual position
-			newDot.targetX = targetX;
-			newDot.targetY = targetY;
-			newDot.x = lerp(newDot.x, newDot.targetX, EASING_FACTOR);
-			newDot.y = lerp(newDot.y, newDot.targetY, EASING_FACTOR);
+			// Use easing to update position
+			newDot.x = lerp(newDot.x, targetX, EASING_FACTOR);
+			newDot.y = lerp(newDot.y, targetY, EASING_FACTOR);
 
-			// Draw star
+			// Draw star with glow effect
 			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
 			if (ctx){
 				ctx.beginPath();
@@ -180,33 +139,53 @@
 		animationFrameId = requestAnimationFrame(updateDots);
 	}
 
-	// Initialize Canvas and events
+	// Initialize canvas and start animation
+	function initializeCanvas() {
+		if (!canvas) return;
+		
+		checkMobile();
+		ctx = canvas.getContext('2d');
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		
+		initializeDots();
+		
+		// Start animation loop only if not mobile
+		if (!isMobile) {
+			if (animationFrameId) {
+				cancelAnimationFrame(animationFrameId);
+			}
+			animationFrameId = requestAnimationFrame(updateDots);
+		}
+	}
+
+	// Clean up animation
+	function cleanup() {
+		if (animationFrameId) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
+		ctx = null;
+	}
+
+	// Initialize when canvas is available
 	$effect(() => {
 		if (browser && canvas) {
-			checkMobile(); // Check if we're on mobile
-			ctx = canvas.getContext('2d');
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
-
-			initializeDots();
-			window.addEventListener('mousemove', handleMouseMove);
-			window.addEventListener('resize', handleResize);
-			animationFrameId = requestAnimationFrame(updateDots);
-
-			return () => {
-				window.removeEventListener('mousemove', handleMouseMove);
-				window.removeEventListener('resize', handleResize);
-				if (animationFrameId) {
-					cancelAnimationFrame(animationFrameId);
-					animationFrameId = null;
-				}
-				ctx = null;
-			};
+			initializeCanvas();
+			return cleanup;
 		}
 	});
 </script>
 
-<canvas class="interactive-background" bind:this={canvas}></canvas>
+<canvas 
+	class="interactive-background" 
+	bind:this={canvas}
+></canvas>
+
+<svelte:window 
+	onpointermove={handlePointerMove} 
+	onresize={handleResize} 
+/>
 
 <style>
 	.interactive-background {

@@ -1,60 +1,26 @@
-# Svelte library
+# tomlord.fyi
 
-Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
+This is the second time I'm building my personal website.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+For this website, I followed the SvelteKit development guide to implement some key features and learn concepts:
 
-## Creating a project
+1. Routing mechanism
+2. Practicing \$effect, \$state, \$derived runes
+3. Familiarizing myself with Tailwind CSS
+4. Familiarizing myself with SVX (markdown package in SvelteKit)
 
-If you're seeing this, you've probably already done this step. Congrats!
+You can check out the repository to see how Svelte code is written.
 
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## How to run the project
+Prerequisites: You need to install npm first and then install pnpm.
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+git clone https://github.com/Tomlord1122/tomlord.io
+cd tomlord.io
+pnpm install
+pnpm dev
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+## How to deploy the project
 
-## Building
-
-To build your library:
-
-```bash
-npm run package
-```
-
-To create a production version of your showcase app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
-```
-
-# tomlord.io
+Connect to your vercel account and deploy the project.
