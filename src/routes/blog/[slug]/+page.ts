@@ -29,4 +29,4 @@ export const load: PageLoad = async ({ params }) => {
     console.error("Failed to load post:", e);
     error(404, "Post does not exist or cannot be loaded");
   }
-}; 
+};

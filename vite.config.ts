@@ -2,7 +2,7 @@ import { svelteTesting } from "@testing-library/svelte/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
-import { imagetools } from 'vite-imagetools';
+import { imagetools } from "vite-imagetools";
 
 export default defineConfig({
   plugins: [
@@ -10,9 +10,9 @@ export default defineConfig({
     sveltekit(),
     imagetools({
       defaultDirectives: new URLSearchParams({
-        format: 'webp',
-      })
-    })
+        format: "webp",
+      }),
+    }),
   ],
   test: {
     workspace: [

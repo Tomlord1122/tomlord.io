@@ -13,7 +13,6 @@ export interface Post extends Omit<PostMetadata, "description"> {
   duration: string;
 }
 
-
 export interface NewPostModalType {
   show: boolean;
   allCurrentTags: string[];
@@ -25,5 +24,5 @@ export interface NewPostModalType {
 }
 
 export interface EditPostModalType extends NewPostModalType {
-  postData: any
+  postData: any;
 }

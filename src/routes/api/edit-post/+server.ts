@@ -29,8 +29,14 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     // Validate slugs to prevent directory traversal
-    if (!/^[a-zA-Z0-9_-]+$/.test(originalSlug) || !/^[a-zA-Z0-9_-]+$/.test(newSlug)) {
-      throw error(400, "Invalid slug format. Only alphanumeric characters, hyphens, and underscores are allowed.");
+    if (
+      !/^[a-zA-Z0-9_-]+$/.test(originalSlug) ||
+      !/^[a-zA-Z0-9_-]+$/.test(newSlug)
+    ) {
+      throw error(
+        400,
+        "Invalid slug format. Only alphanumeric characters, hyphens, and underscores are allowed.",
+      );
     }
 
     const originalFileName = `${originalSlug}.svx`;
@@ -53,14 +59,14 @@ export const POST: RequestHandler = async ({ request }) => {
         throw error(409, "A post with the new slug already exists.");
       } catch (e) {
         // File doesn't exist, which is what we want
-        if ((e as any).code !== 'ENOENT') {
+        if ((e as any).code !== "ENOENT") {
           throw e;
         }
       }
     }
 
     // Write the new content
-    await fs.writeFile(newFilePath, content, 'utf-8');
+    await fs.writeFile(newFilePath, content, "utf-8");
 
     // If the slug changed, delete the old file
     if (originalSlug !== newSlug) {
@@ -90,14 +96,17 @@ export const POST: RequestHandler = async ({ request }) => {
 
 export const GET: RequestHandler = async ({ url }) => {
   if (!dev) {
-    throw error(403, "Post content access is only allowed in development mode.");
+    throw error(
+      403,
+      "Post content access is only allowed in development mode.",
+    );
   }
 
   try {
     await ensurePostsDir();
 
-    const slug = url.searchParams.get('slug');
-    
+    const slug = url.searchParams.get("slug");
+
     if (!slug) {
       throw error(400, "Post slug is required.");
     }
@@ -111,11 +120,13 @@ export const GET: RequestHandler = async ({ url }) => {
     const filePath = path.join(postsDir, fileName);
 
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      
+      const content = await fs.readFile(filePath, "utf-8");
+
       // Parse the frontmatter and content
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-      
+      const frontmatterMatch = content.match(
+        /^---\n([\s\S]*?)\n---\n([\s\S]*)$/,
+      );
+
       if (!frontmatterMatch) {
         throw error(400, "Invalid post format - no frontmatter found.");
       }
@@ -125,35 +136,35 @@ export const GET: RequestHandler = async ({ url }) => {
 
       // Parse frontmatter (simple YAML parsing for our use case)
       const metadata: any = {};
-      frontmatterText.split('\n').forEach(line => {
+      frontmatterText.split("\n").forEach((line) => {
         const match = line.match(/^(\w+):\s*(.+)$/);
         if (match) {
           const [, key, value] = match;
-          if (key === 'tags') {
+          if (key === "tags") {
             // Parse tags array
             const tagsMatch = value.match(/\[(.*)\]/);
             if (tagsMatch) {
               metadata[key] = tagsMatch[1]
-                .split(',')
-                .map(tag => tag.trim().replace(/^'|'$/g, ''))
-                .filter(tag => tag.length > 0);
+                .split(",")
+                .map((tag) => tag.trim().replace(/^'|'$/g, ""))
+                .filter((tag) => tag.length > 0);
             } else {
               metadata[key] = [];
             }
           } else {
             // Remove quotes from string values
-            metadata[key] = value.replace(/^'|'$/g, '');
+            metadata[key] = value.replace(/^'|'$/g, "");
           }
         }
       });
 
-      return json({ 
+      return json({
         metadata,
         content: postContent.trim(),
-        fullContent: content
+        fullContent: content,
       });
     } catch (readError: any) {
-      if (readError.code === 'ENOENT') {
+      if (readError.code === "ENOENT") {
         throw error(404, "Post not found.");
       }
       throw readError;
@@ -168,4 +179,4 @@ export const GET: RequestHandler = async ({ url }) => {
       err.message || "Failed to load post due to an internal server error.",
     );
   }
-}; 
+};

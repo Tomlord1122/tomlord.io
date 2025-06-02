@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
 	import { browser } from '$app/environment';
 
@@ -10,6 +10,9 @@
 	let showCreatePostModal = $state(false);
 	let isDev = $state(false); 
 	let language = $state<string>("");
+	let searchKeyword = $state<string>("");
+	let tagSearchKeyword = $state<string>("");
+
 	// Check environment on client-side
 	$effect(() => {
 		if (browser) {
@@ -44,14 +47,21 @@
 		}
 	}
 
-	// Derived list of posts filtered by the selected tags
-	// A post is included if it contains ALL of the selected tags
+	let filteredTags = $derived(
+		allTags.filter(tag => 
+			tagSearchKeyword.trim() === "" || 
+			tag.toLowerCase().includes(tagSearchKeyword.toLowerCase())
+		)
+	);
+
 	let filteredPosts = $derived(
 		data.posts.filter(post => {
-			if (selectedTags.length === 0) {
-				return true; // Show all posts if no tags are selected
-			}
-			return selectedTags.every(tag => post.tags?.includes(tag));
+			const languageMatch = language === "en" ? post.lang === "en" : true;
+			const tagMatch = selectedTags.length === 0 || selectedTags.every(tag => post.tags?.includes(tag));
+			const titleMatch = searchKeyword.trim() === "" || 
+				post.title.toLowerCase().includes(searchKeyword.toLowerCase());
+			
+			return languageMatch && tagMatch && titleMatch;
 		})
 	);
 
@@ -91,11 +101,8 @@
 	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
 </svelte:head>
 
-<!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto">
-	
-	<h1 
-		class="page-title mb-0">
+	<h1 class="page-title">
 		{#if isDev}
 			<button
 			onclick={openCreatePostModal}
@@ -107,35 +114,60 @@
 		{:else}
 		tom.changelog
 		{/if}
-		
 	</h1>
 
-	<div class="mb-4 not-prose font-serif">
-		<div class="flex gap-2 mb-4">
-			<label class="flex items-center gap-2 cursor-pointer">
-				<input 
-					type="checkbox" 
-					checked={language === "en"} 
-					onclick={() => {language === "en"? language = "": language = "en"}} 
-					class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
-				/>
-				<span class="text-sm text-gray-500">English Only</span>
-			</label>
+	<animate in:fade={{ duration: 800, delay: 200 }}> 
+		<div class="not-prose font-serif">
+			<div class="flex w-full justify-between">
+				<div class="flex items-center gap-1">
+					<label class="flex items-center cursor-pointer gap-1 text-sm text-gray-500">
+						<input 
+							type="checkbox" 
+							checked={language === "en"} 
+							onclick={() => {language === "en"? language = "": language = "en"}} 
+							class="form-checkbox h-4 w-4 text-gray-400 rounded border-gray-300 focus:ring-gray-500"
+						/>
+						English Only
+					</label>
+				</div>
+				<div>
+					<input 
+						type="text"
+						bind:value={searchKeyword}
+						placeholder="Search by title"
+						class="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent outline-none transition-all duration-200"
+					/>
+				</div>
+			</div>
 		</div>
-	</div>
-
-
-		<!-- Tag selection area -->
-			{#if allTags.length > 0}
-				<div class="mb-8 not-prose font-serif">
-					<h3 class="text-lg mb-2 text-gray-700">Filter by Tags:</h3>
-					<div class="flex flex-wrap gap-2">
-						{#each allTags as tag}
+	
+		{#if allTags.length > 0}
+			<div class="not-prose font-serif">
+				<div class="flex justify-between w-full">
+					<h3 class="text-md text-gray-700">Filter by Tags</h3>
+					{#if selectedTags.length > 0}
+					<button 
+						type="button"
+						onclick={() => selectedTags = []}
+						class="text-sm text-gray-600 hover:text-gray-800 hover:underline"
+					>
+					clear all tags ({selectedTags.length})
+					</button>
+					{/if}
+				</div>
+				
+				<div class="relative">
+					<div 
+						id="tag-container"
+						class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 scroll-smooth min-h-[32px]" 
+						style="scrollbar-width: none; -ms-overflow-style: none;"
+					>
+						{#each filteredTags as tag}
 							{@const isSelected = selectedTags.includes(tag)}
 							<button 
 								type="button"
 								onclick={() => toggleTag(tag)}
-								class={`px-3 py-1 text-xs rounded-full border 
+								class={`px-3 py-1 text-xs rounded-full border whitespace-nowrap flex-shrink-0
 										${isSelected 
 											? 'bg-gray-200 text-gray-600 border-gray-300' 
 											: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
@@ -145,41 +177,38 @@
 							</button>
 						{/each}
 					</div>
-					{#if selectedTags.length > 0}
-						<button 
-							type="button"
-							onclick={() => selectedTags = []}
-							class="mt-4 text-sm text-gray-600 hover:text-gray-800 hover:underline"
-						>
-							Clear all tags
-						</button>
-					{/if}
 				</div>
-			{/if}
-	
+			</div>
+		{/if}
+	</animate>
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} 
-		  class="main-content-area not-prose ">
-		
+
+	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area not-prose">
 		{#if filteredPosts && filteredPosts.length > 0}
 			<ul class="list-none">
-				{#each filteredPosts.filter(post => language === "en" ? post.lang === "en" : true) as post (post.slug)}
-					<li class="border-b border-gray-200 last:border-b-0 first:mb-1 pt-2" >
-						<a href="/blog/{post.slug}" class="underline underline-offset-4">
-							<h2 class="prose prose-sm sm:prose-lg  text-gray-700 hover:text-gray-900 mb-1">{post.title}</h2>
+				{#each filteredPosts as post, index (post.slug)}
+					<li class="border pl-2 border-gray-200 last:border-b-0 first:mb-1 pt-2 shadow-sm">
+						<a href="/blog/{post.slug}" class="underline underline-offset-4 inline-block">
+							<h2 class="prose prose-sm sm:prose-lg text-gray-700 hover:text-gray-900 mb-1">{post.title}</h2>
 						</a>
-						<div class="text-sm text-gray-500 flex">
-							<p class="my-0">
-							<!-- Modify the date to be in the format of "May 15, 2025" -->
-							 <!-- If we want to use Taiwan date do this: zh-TW, otherwise use en-US -->
+						<div class="text-sm text-gray-500">
+							<p class="mb-1">
 							{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} 
 							</p>
 							{#if post.tags && post.tags.length > 0}
-							<div class="flex flex-wrap gap-2 justify-items-center items-center ml-2">
-								{#each post.tags as tag}
-									<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">{tag}</span>
-								{/each}
-							</div>
+								<div class="relative">
+									<div 
+										id="post-tags-{index}"
+										class="flex gap-1 overflow-x-auto scrollbar-hide pb-1 scroll-smooth" 
+										style="scrollbar-width: none; -ms-overflow-style: none;"
+									>
+										{#each post.tags as tag}
+											<span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+												{tag}
+											</span>
+										{/each}
+									</div>
+								</div>
 							{/if}
 						</div>						
 					</li>
@@ -187,7 +216,7 @@
 			</ul>
 		{:else}
 			<p class="text-gray-600">
-				{#if selectedTags.length > 0}
+				{#if selectedTags.length > 0 || searchKeyword.trim() !== ""}
 					No posts match the selected tags.
 				{:else}
 					No posts yet.
@@ -195,7 +224,6 @@
 			</p>
 		{/if}
 	</main>
-
 	
 </div>
 

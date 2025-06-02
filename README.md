@@ -12,6 +12,7 @@ For this website, I followed the SvelteKit development guide to implement some k
 You can check out the repository to see how Svelte code is written.
 
 ## How to run the project
+
 Prerequisites: You need to install npm first and then install pnpm.
 
 ```bash

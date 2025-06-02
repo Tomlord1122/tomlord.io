@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types.js";
-import homeContent from '../content/home.md?raw';
+import homeContent from "../content/home.md?raw";
 
 function getDefaultHomeContent() {
   return `<div class="flex gap-2 flex-wrap">
@@ -47,12 +47,12 @@ This website contains some of my blog posts about my learning journey and topics
 export const load: PageServerLoad = async () => {
   try {
     return {
-      pageContent: homeContent || getDefaultHomeContent()
+      pageContent: homeContent || getDefaultHomeContent(),
     };
   } catch (error) {
     console.error("Error loading home page content:", error);
     return {
-      pageContent: getDefaultHomeContent()
+      pageContent: getDefaultHomeContent(),
     };
   }
-}; 
+};

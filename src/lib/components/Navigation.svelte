@@ -4,8 +4,6 @@
 	import { navigating } from '$app/state';
 	import { preloadData } from '$app/navigation';
 	import { goto } from '$app/navigation';
-	import { getBreadcrumbs } from '$lib/navigation.js';
-	import { browser } from '$app/environment';
 
 	// Navigation items configuration
 	const navItems = $state([
@@ -14,9 +12,6 @@
 		{ href: '/project', label: 'Project', shortcut: 'p' },
 		{ href: '/photography', label: 'Photography', shortcut: 'f' }
 	]);
-
-	// Get breadcrumbs reactively
-	let breadcrumbs = $derived(browser ? getBreadcrumbs() : []);
 
 	// Check if a route is currently active
 	function isActive(href: string): boolean {
@@ -61,7 +56,7 @@
 			<!-- Logo with preloading -->
 			<a 
 				href="/" 
-				class="transition-all duration-300 hover:scale-110"
+				class="transition-transform duration-300 hover:scale-110"
 				onmouseenter={() => handleMouseEnter('/')}
 				data-sveltekit-preload-data="hover"
 			>
@@ -78,15 +73,10 @@
 					{@const active = isActive(item.href)}
 					<a 
 						href={item.href}
-						class={`nav-link relative transition-all duration-300 hover:scale-105 ${
-							active 
-								? 'text-gray-900 font-semibold' 
-								: 'text-gray-700 hover:text-gray-900'
-						}`}
+						class={`nav-link relative ${active ? 'text-gray-900 font-semibold' : ''}`}
 						onmouseenter={() => handleMouseEnter(item.href)}
 						data-sveltekit-preload-data="hover"
 						aria-current={active ? 'page' : undefined}
-						title={`Navigate to ${item.label} (Alt+${item.shortcut.toUpperCase()})`}
 					>
 						{item.label}
 						
@@ -111,12 +101,5 @@
 		</div>
 	</div>
 
-	<!-- Global loading indicator -->
-	{#if navigating}
-		<div 
-			class="fixed top-0 left-0 w-full h-1 bg-blue-500 animate-pulse z-50"
-			role="progressbar"
-			aria-label="Page loading"
-		></div>
-	{/if}
+
 </nav> 

@@ -31,13 +31,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // Validate page name to prevent directory traversal
     if (!/^[a-zA-Z0-9_-]+$/.test(pageName)) {
-      throw error(400, "Invalid page name. Only alphanumeric characters, hyphens, and underscores are allowed.");
+      throw error(
+        400,
+        "Invalid page name. Only alphanumeric characters, hyphens, and underscores are allowed.",
+      );
     }
 
     const fileName = `${pageName}.md`;
     const filePath = path.join(contentDir, fileName);
 
-    await fs.writeFile(filePath, content, 'utf-8');
+    await fs.writeFile(filePath, content, "utf-8");
 
     console.log(`Page content saved successfully: ${filePath}`);
     return json(
@@ -50,25 +53,32 @@ export const POST: RequestHandler = async ({ request }) => {
   } catch (err: any) {
     console.error("Page save error:", err);
     if (err.status && err.body) {
-      throw error(err.status, err.body.message || "Failed to save page content.");
+      throw error(
+        err.status,
+        err.body.message || "Failed to save page content.",
+      );
     }
     throw error(
       500,
-      err.message || "Failed to save page content due to an internal server error.",
+      err.message ||
+        "Failed to save page content due to an internal server error.",
     );
   }
 };
 
 export const GET: RequestHandler = async ({ url }) => {
   if (!dev) {
-    throw error(403, "Page content access is only allowed in development mode.");
+    throw error(
+      403,
+      "Page content access is only allowed in development mode.",
+    );
   }
 
   try {
     await ensureContentDir();
 
-    const pageName = url.searchParams.get('page');
-    
+    const pageName = url.searchParams.get("page");
+
     if (!pageName) {
       throw error(400, "Page name is required.");
     }
@@ -82,23 +92,27 @@ export const GET: RequestHandler = async ({ url }) => {
     const filePath = path.join(contentDir, fileName);
 
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       return json({ content });
     } catch (readError: any) {
-      if (readError.code === 'ENOENT') {
+      if (readError.code === "ENOENT") {
         // File doesn't exist, return empty content
-        return json({ content: '' });
+        return json({ content: "" });
       }
       throw readError;
     }
   } catch (err: any) {
     console.error("Page load error:", err);
     if (err.status && err.body) {
-      throw error(err.status, err.body.message || "Failed to load page content.");
+      throw error(
+        err.status,
+        err.body.message || "Failed to load page content.",
+      );
     }
     throw error(
       500,
-      err.message || "Failed to load page content due to an internal server error.",
+      err.message ||
+        "Failed to load page content due to an internal server error.",
     );
   }
-}; 
+};
