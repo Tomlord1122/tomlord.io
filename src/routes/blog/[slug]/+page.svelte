@@ -72,9 +72,8 @@
 	<meta name="twitter:title" content={title} />
 </svelte:head>
 
-<div class="max-w-3xl mx-auto px-4 py-8">
 
-	<article>
+	<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
 		<header class="mb-8 page-title">
 			<div class="prose prose-sm sm:prose-base">
 				<h1>
@@ -113,15 +112,16 @@
 			class="prose prose-sm sm:prose-base max-w-none font-serif"> 
 			<Component class="img-center"/>
 
+		</div> 
+
+		<div
+		in:fly={{ y: 50, duration: 600, delay: 200 }} 
+		class="mt-12 pt-8 border-t border-gray-200">
+			<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
 		</div>
 	</article>
 
-	<div
-	in:fly={{ y: 50, duration: 600, delay: 200 }} 
-	class="mt-12 pt-8 border-t border-gray-200">
-		<a href="/blog" class="text-sky-600 hover:text-sky-800 hover:underlin ">&larr; Go back to blog list</a>
-	</div>
-</div>
+
 
 {#if isDev}
 	<EditPostModal 

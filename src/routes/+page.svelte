@@ -42,7 +42,7 @@
 
 
 <!-- This is the main container for your page content -->
-<div class="prose prose-sm sm:prose-base mx-auto">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
 	
 	<h1 
 		class="page-title">

@@ -7,6 +7,17 @@
    if you are setting up Tailwind from scratch.
    If you already have Tailwind configured, you might already have these. */
 
+
+   @layer base {
+    html {
+      /* 使用 TailwindCSS 的任意值語法 */
+      scrollbar-gutter: stable;
+    }
+    /* 或者回退方案 */
+    /* body {
+      @apply overflow-y-scroll;
+    } */
+  }
 /* Custom component classes */
 @layer components {
   .page-title {
@@ -25,7 +36,7 @@
     @apply w-full h-full object-cover hover:scale-105 transition-transform duration-300;
   }
   .photo-post {
-    @apply z-20 w-[400px] lg:w-3/4 object-cover rounded-lg hover:scale-105 transition-all duration-300 shadow-md;
+    @apply z-20 w-[400px] lg:w-1/2 object-cover rounded-lg hover:scale-105 transition-all duration-300 shadow-md;
   }
 
   .nav-link {
