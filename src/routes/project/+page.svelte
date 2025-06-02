@@ -51,7 +51,7 @@
 </svelte:head>
 
 <!-- This is the main container for your page content -->
-<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	
 	<!-- A large heading for the page title or your name -->
 	<h1 

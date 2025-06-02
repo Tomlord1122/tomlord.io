@@ -101,7 +101,7 @@
 	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
 </svelte:head>
 
-<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	<h1 class="page-title">
 		{#if isDev}
 			<button

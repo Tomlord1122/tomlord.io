@@ -90,7 +90,7 @@
 </svelte:head>
 
 <!-- This is the main container for your page content -->
-<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	
 	<h1 class="page-title flex justify-between items-center">
 		{#if isDev}

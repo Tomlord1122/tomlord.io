@@ -73,7 +73,7 @@
 </svelte:head>
 
 
-	<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-lg">
+	<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 		<header class="mb-8 page-title">
 			<div class="prose prose-sm sm:prose-base">
 				<h1>
