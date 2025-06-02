@@ -17,7 +17,7 @@
 				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
 						isInView = true;
-						observer.unobserve(entry.target);
+						observer.unobserve(entry.target); // 觀察到後就停止觀察
 					}
 				});
 			},
@@ -37,29 +37,40 @@
 		isLoaded = true;
 	}
 
-	// 只有當圖片進入視窗或是 eager 載入時才載入圖片
-	let shouldLoad = $derived(loading === 'eager' || isInView);
+	// 只有當圖片進入視窗或是 eager 載入時才設定圖片來源
+	let actualSrc = $derived((loading === 'eager' || isInView) ? src : '');
+
+    // 當 src prop 改變時，重置 isLoaded 狀態，以便為新圖片顯示載入器
+    $effect(() => {
+        if (src) {
+            isLoaded = false;
+            // actualSrc 會依賴 isInView 更新，如果需要，會觸發新的載入
+        }
+    });
+
 </script>
 
 <button
-	class="relative z-10 aspect-square cursor-pointer overflow-hidden rounded-lg shadow-md"
+	class="relative z-10 aspect-square cursor-pointer overflow-hidden rounded-lg shadow-md bg-gray-100"
 	{onclick}
 >
-	<!-- Loading skeleton -->
-	{#if !isLoaded}
-		<div class="absolute inset-0 flex items-center justify-center bg-gray-100">
-			<div
-				class="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
-			></div>
-		</div>
-	{/if}
-
+	<!-- Loading skeleton with CSS transition for opacity -->
+	<div
+		class="absolute inset-0 flex items-center justify-center bg-gray-100 transition-opacity duration-300 ease-out"
+		style:opacity={isLoaded ? 0 : 1}
+		style:pointer-events={isLoaded ? 'none' : 'auto'}
+	>
+		<div
+			class="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
+		></div>
+	</div>
+	
 	<img
 		bind:this={imgElement}
-		src={shouldLoad ? src : ''}
+		src={actualSrc}
 		{alt}
-		class="photo-grid"
+		class="photo-grid "
 		onload={handleLoad}
-		style="min-height: 200px;"
+		style:opacity={isLoaded ? 1 : 0}
 	/>
 </button>

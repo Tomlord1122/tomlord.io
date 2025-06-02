@@ -50,7 +50,7 @@
 	async function loadMorePhotos() {
 		isLoadingMore = true;
 
-		// await new Promise(resolve => setTimeout(resolve, 200));
+		// await new Promise(resolve => setTimeout(resolve, 1000));
 
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
@@ -121,18 +121,6 @@
 				</div>
 			{/each}
 		</div>
-
-		<!-- 載入更多照片的狀態指示 -->
-		{#if isLoadingMore}
-			<div class="mt-8 mb-8 text-center" in:fade={{ duration: 200 }}>
-				<div class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-6 py-3">
-					<div
-						class="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
-					></div>
-					<span class="text-gray-600">Loading more photos...</span>
-				</div>
-			</div>
-		{/if}
 	{:else}
 		<p class="text-gray-600">No photos to display yet. Upload some if you're on localhost!</p>
 	{/if}
