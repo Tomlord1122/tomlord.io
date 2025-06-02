@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { marked } from 'marked';
+	import { marked } from 'marked';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { NewPostModalType } from '../types/post.js';
-	let { 
-		show = $bindable(false), 
+	let {
+		show = $bindable(false),
 		allCurrentTags = $bindable([]),
 		availableImages = [], // New prop for available image paths
 		onSaved = () => {}, // Default to an empty function
-		onCancel = () => {}    // Default to an empty function
-	} : NewPostModalType = $props();
+		onCancel = () => {} // Default to an empty function
+	}: NewPostModalType = $props();
 
 	let lang = $state('en');
 	// State for the new post data
@@ -18,9 +18,6 @@
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
 	let showPreview = $state(false); // Controls whether to show preview or editor
-
-
-
 
 	// Function to close the modal
 	function closeModal() {
@@ -41,18 +38,22 @@
 			alert('Please enter a URL slug for your post.');
 			return;
 		}
-		
-		const finalSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-		
+
+		const finalSlug = slug
+			.trim()
+			.toLowerCase()
+			.replace(/\s+/g, '-')
+			.replace(/[^\w-]+/g, '');
+
 		const duration = calculateDuration(content, lang);
-		
+
 		const frontmatter = `---
 title: '${title}'
 date: '${new Date().toISOString().split('T')[0]}'
 slug: '${finalSlug}'
 lang: '${lang}'
 duration: '${duration}min'
-tags: [${postTags.map(tag => `'${tag}'`).join(', ')}]
+tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ---
 
 ${content}`;
@@ -95,7 +96,7 @@ ${content}`;
 	function togglePostTag(tag: string) {
 		const index = postTags.indexOf(tag);
 		if (index > -1) {
-			postTags = postTags.filter(t => t !== tag);
+			postTags = postTags.filter((t) => t !== tag);
 		} else {
 			postTags = [...postTags, tag];
 		}
@@ -114,65 +115,77 @@ ${content}`;
 		}
 		newTagInput = '';
 	}
-
 </script>
 
 {#if show}
-	<div class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-auto">
-		<div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-4xl  max-h-[90vh] flex flex-col">
-			<div class="flex justify-between items-center mb-6">
+	<div
+		class="bg-opacity-75 fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black p-4"
+	>
+		<div class="flex max-h-[90vh] w-4xl flex-col rounded-lg bg-white p-6 shadow-xl sm:p-8">
+			<div class="mb-6 flex items-center justify-between">
 				<h2 class="text-2xl font-semibold text-gray-800">Create New Post</h2>
-				<button 
+				<button
 					onclick={() => {
 						onCancel(); // Call the oncancel callback
-						show = false;   // Then close the modal
-					}} 
-					class="text-gray-500 hover:text-gray-700 text-2xl"
+						show = false; // Then close the modal
+					}}
+					class="text-2xl text-gray-500 hover:text-gray-700"
 				>
 					&times;
 				</button>
 			</div>
 
-			<div class="flex-grow overflow-y-auto pr-2"> 
-				<form onsubmit={() => { /* handleCreatePost is called by button, prevent default form submission if any */ }} class="space-y-4 z-20">
+			<div class="flex-grow overflow-y-auto pr-2">
+				<form
+					onsubmit={() => {
+						/* handleCreatePost is called by button, prevent default form submission if any */
+					}}
+					class="z-20 space-y-4"
+				>
 					<section class="flex justify-between">
-						<div class="gap-3 w-1/2 mr-2">
-								<label for="post-title-input" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-								<input 
-									type="text" 
-									id="post-title-input"
-									bind:value={title} 
-									class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
-									required
-								/>
-	
+						<div class="mr-2 w-1/2 gap-3">
+							<label for="post-title-input" class="mb-1 block text-sm font-medium text-gray-700"
+								>Title</label
+							>
+							<input
+								type="text"
+								id="post-title-input"
+								bind:value={title}
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								required
+							/>
 						</div>
-						
+
 						<div class="w-1/2">
-							<label for="post-slug-input" class="block text-sm font-medium text-gray-700 mb-1">URL Slug (for the post URL)</label>
+							<label for="post-slug-input" class="mb-1 block text-sm font-medium text-gray-700"
+								>URL Slug (for the post URL)</label
+							>
 							<div class="flex items-center">
-								<span class="text-gray-500 p-2 bg-gray-100 rounded-l-md border border-r-0 border-gray-300">/blog/</span>
-								<input 
-									type="text" 
+								<span
+									class="rounded-l-md border border-r-0 border-gray-300 bg-gray-100 p-2 text-gray-500"
+									>/blog/</span
+								>
+								<input
+									type="text"
 									id="post-slug-input"
-									bind:value={slug} 
+									bind:value={slug}
 									placeholder="your-post-url"
-									class="flex-grow p-2 border border-gray-300 rounded-r-md shadow-sm focus:ring-blue-500 focus:border-blue-500" 
+									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 									required
 								/>
 							</div>
-							
 						</div>
 					</section>
-				
 
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+					<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
 						<div>
-							<label for="post-lang" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
-							<select 
+							<label for="post-lang" class="mb-1 block text-sm font-medium text-gray-700"
+								>Language</label
+							>
+							<select
 								id="post-lang"
 								bind:value={lang}
-								class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 							>
 								<option value="en">English</option>
 								<option value="zh-tw">Traditional Chinese</option>
@@ -182,37 +195,42 @@ ${content}`;
 
 					<div class="space-y-2">
 						<div>
-							<p class="block text-sm font-medium text-gray-700 mb-1">Tags</p>
-							<div class="flex flex-wrap gap-2 mb-1">
-								{#each allCurrentTags as tag} 
+							<p class="mb-1 block text-sm font-medium text-gray-700">Tags</p>
+							<div class="mb-1 flex flex-wrap gap-2">
+								{#each allCurrentTags as tag}
 									{@const isSelected = postTags.includes(tag)}
-									<button 
+									<button
 										type="button"
 										onclick={() => togglePostTag(tag)}
-										class={`px-3 py-1 text-xs rounded-full border 
-												${isSelected 
-													? 'bg-gray-500 text-white border-gray-600' 
-													: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+										class={`rounded-full border px-3 py-1 text-xs 
+												${
+													isSelected
+														? 'border-gray-600 bg-gray-500 text-white'
+														: 'border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'
 												} transition-colors duration-150`}
 									>
 										{tag}
 									</button>
 								{/each}
 							</div>
-							
 						</div>
 						<div class="flex items-center gap-2">
-							<input 
-								type="text" 
-								bind:value={newTagInput} 
+							<input
+								type="text"
+								bind:value={newTagInput}
 								placeholder="Add new tag"
-								class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-								onkeypress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addNewTag(); }}}
+								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								onkeypress={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										addNewTag();
+									}
+								}}
 							/>
-							<button 
-								type="button" 
+							<button
+								type="button"
 								onclick={addNewTag}
-								class="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+								class="rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
 							>
 								Add Tag
 							</button>
@@ -220,85 +238,101 @@ ${content}`;
 						{#if postTags.length > 0}
 							<div class="mt-1">
 								<p class="text-xs text-gray-600">Selected tags for this post:</p>
-								<div class="flex flex-wrap gap-1 mt-1">
+								<div class="mt-1 flex flex-wrap gap-1">
 									{#each postTags as tag}
-										<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{tag}</span>
+										<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700"
+											>{tag}</span
+										>
 									{/each}
 								</div>
 							</div>
 						{/if}
 					</div>
-					
+
 					<!-- Section to display available images -->
 					{#if availableImages.length > 0}
-						<div class="mt-4 pt-4 border-t border-gray-200">
-							<h4 class="text-md font-medium text-gray-700 mb-2">Available Images</h4>
-							<div class="max-h-96 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-2 border rounded-md bg-gray-50">
+						<div class="mt-4 border-t border-gray-200 pt-4">
+							<h4 class="text-md mb-2 font-medium text-gray-700">Available Images</h4>
+							<div
+								class="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto rounded-md border bg-gray-50 p-2 sm:grid-cols-3 md:grid-cols-4"
+							>
 								{#each availableImages as imagePath (imagePath)}
-									<div class="text-xs p-1.5 border border-gray-200 rounded bg-white shadow-sm hover:shadow-md transition-shadow">
-										<img src={imagePath} alt="Preview {imagePath.split('/').pop()}" class="w-full h-24 object-cover rounded mb-1.5"/>
-										<p class="truncate text-gray-600" title={imagePath}>{imagePath.split('/').pop()}</p>
-										<button 
+									<div
+										class="rounded border border-gray-200 bg-white p-1.5 text-xs shadow-sm transition-shadow hover:shadow-md"
+									>
+										<img
+											src={imagePath}
+											alt="Preview {imagePath.split('/').pop()}"
+											class="mb-1.5 h-24 w-full rounded object-cover"
+										/>
+										<p class="truncate text-gray-600" title={imagePath}>
+											{imagePath.split('/').pop()}
+										</p>
+										<button
 											type="button"
 											onclick={() => copyImageMarkdown(imagePath)}
-											class="mt-1 w-full text-center px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-[10px] leading-tight"
+											class="mt-1 w-full rounded bg-blue-500 px-2 py-1 text-center text-[10px] leading-tight text-white hover:bg-blue-600"
 										>
 											Copy MD
 										</button>
 									</div>
 								{/each}
 							</div>
-							<p class="text-xs text-gray-500 mt-1">Click "Copy MD" to get the Markdown for an image.</p>
+							<p class="mt-1 text-xs text-gray-500">
+								Click "Copy MD" to get the Markdown for an image.
+							</p>
 						</div>
 					{/if}
 
 					<div class="mt-3">
-						<div class="flex justify-between items-center mb-1">
+						<div class="mb-1 flex items-center justify-between">
 							<label for="post-content" class="block text-sm font-medium text-gray-700">
 								{showPreview ? 'Live Preview' : 'Content (Markdown)'}
 							</label>
-							<button 
+							<button
 								type="button"
-								onclick={() => showPreview = !showPreview}
-								class="px-3 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md hover:bg-blue-50"
+								onclick={() => (showPreview = !showPreview)}
+								class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
 							>
 								{showPreview ? 'Edit Content' : 'Show Preview'}
 							</button>
 						</div>
-						
+
 						{#if showPreview}
-							<div 
-								class="prose z-20 prose-sm sm:prose-base max-w-none p-3 border border-gray-300 rounded-md bg-gray-50 overflow-y-auto"
+							<div
+								class="prose prose-sm sm:prose-base z-20 max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
 								style="min-height: calc(20em + 40px);"
 							>
 								{@html marked(content)}
 							</div>
 						{:else}
-							<textarea 
+							<textarea
 								id="post-content"
-								bind:value={content} 
+								bind:value={content}
 								rows="15"
-								class="w-full z-20 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+								class="z-20 w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
 								placeholder="Write your blog post content here using Markdown..."
 							></textarea>
 						{/if}
 					</div>
 
-					<div class="z-20 sticky bottom-0 bg-white flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 pb-2">
-						<button 
-							type="button" 
+					<div
+						class="sticky bottom-0 z-20 mt-6 flex justify-end space-x-3 border-t border-gray-200 bg-white pt-4 pb-2"
+					>
+						<button
+							type="button"
 							onclick={() => {
 								onCancel(); // Call the oncancel callback
-								show = false;   // Then close the modal
+								show = false; // Then close the modal
 							}}
-							class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 border border-gray-300"
+							class="rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
 						>
 							Cancel
 						</button>
-						<button 
+						<button
 							type="button"
 							onclick={handleCreatePost}
-							class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+							class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
 						>
 							Create Post
 						</button>

@@ -10,19 +10,21 @@
 
 	// Create photo objects from layout's availablePhotos
 	let photos = $derived(
-		data.availablePhotos ? data.availablePhotos.map((photoUrl: string) => {
-			const filename = photoUrl.substring(photoUrl.lastIndexOf("/") + 1);
-			return {
-				src: photoUrl,
-				alt: `Photo ${filename}`,
-				filename
-			};
-		}) : []
+		data.availablePhotos
+			? data.availablePhotos.map((photoUrl: string) => {
+					const filename = photoUrl.substring(photoUrl.lastIndexOf('/') + 1);
+					return {
+						src: photoUrl,
+						alt: `Photo ${filename}`,
+						filename
+					};
+				})
+			: []
 	);
 
 	// isDev state to control visibility of the uploader trigger
 	let isDev = $state(false);
-	
+
 	// Use a normal variable for this check instead of wrapping in an effect
 	if (browser) {
 		// Only localhost is considered development for showing the uploader
@@ -31,7 +33,7 @@
 
 	// State to control the visibility of the image upload modal
 	let showImageUploadModal = $state(false);
-	
+
 	// State to control the full-size image modal
 	let showFullSizeImage = $state(false);
 	let currentFullSizeImage = $state('');
@@ -47,15 +49,15 @@
 	// ---- Function to load more photos ----
 	async function loadMorePhotos() {
 		isLoadingMore = true;
-		
+
 		// await new Promise(resolve => setTimeout(resolve, 200));
-		
+
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
 		if (photos && visiblePhotosCount > photos.length) {
 			visiblePhotosCount = photos.length;
 		}
-		
+
 		isLoadingMore = false;
 	}
 
@@ -64,7 +66,7 @@
 		currentFullSizeImage = imageSrc;
 		showFullSizeImage = true;
 	}
-	
+
 	// Function to close the full-size image modal
 	function closeFullSizeImage() {
 		showFullSizeImage = false;
@@ -82,7 +84,6 @@
 	function handleModalCancel() {
 		console.log('Image upload modal cancelled.');
 	}
-
 </script>
 
 <svelte:head>
@@ -91,13 +92,12 @@
 
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
-	
-	<h1 class="page-title flex justify-between items-center">
+	<h1 class="page-title flex items-center justify-between">
 		{#if isDev}
 			<!-- Button to open the image upload modal -->
-			<button 
-				onclick={() => showImageUploadModal = true} 
-				class="hover:text-gray-600 transition-colors"
+			<button
+				onclick={() => (showImageUploadModal = true)}
+				class="transition-colors hover:text-gray-600"
 			>
 				tom.photography
 			</button>
@@ -109,22 +109,24 @@
 
 <main in:fly={{ y: 100, duration: 1000, delay: 100 }} class="main-content-area mt-10">
 	{#if displayedPhotos && displayedPhotos.length > 0}
-		<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-		   {#each displayedPhotos as photo, i (photo.src)}
-			   <ResponsiveImage 
-				   src={photo.src}
-				   alt={photo.alt}
-				   loading={i < 6 ? "eager" : "lazy"}
-				   onclick={() => openFullSizeImage(photo.src)}
-			   />
-		   {/each}
+		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			{#each displayedPhotos as photo, i (photo.src)}
+				<ResponsiveImage
+					src={photo.src}
+					alt={photo.alt}
+					loading={i < 6 ? 'eager' : 'lazy'}
+					onclick={() => openFullSizeImage(photo.src)}
+				/>
+			{/each}
 		</div>
-		
+
 		<!-- 載入更多照片的狀態指示 -->
 		{#if isLoadingMore}
-			<div class="text-center mt-8 mb-8" in:fade={{ duration: 200 }}>
-				<div class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100">
-					<div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+			<div class="mt-8 mb-8 text-center" in:fade={{ duration: 200 }}>
+				<div class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-6 py-3">
+					<div
+						class="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
+					></div>
 					<span class="text-gray-600">Loading more photos...</span>
 				</div>
 			</div>
@@ -135,10 +137,10 @@
 
 	<!-- "Load More" Button -->
 	{#if photos && displayedPhotos.length < photos.length && !isLoadingMore}
-		<div class="text-center mt-8 mb-8">
-			<button 
+		<div class="mt-8 mb-8 text-center">
+			<button
 				onclick={loadMorePhotos}
-				class="relative overflow-hidden px-6 py-3 rounded-lg animate-pulse"
+				class="relative animate-pulse overflow-hidden rounded-lg px-6 py-3"
 			>
 				Load More Photos ({displayedPhotos.length} / {photos.length})
 			</button>
@@ -149,18 +151,18 @@
 <!-- Full-size image modal -->
 {#if showFullSizeImage}
 	<div
-		class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-filter backdrop-blur-lg"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-lg backdrop-filter"
 		onclick={closeFullSizeImage}
 		onkeydown={(e) => e.key === 'Escape' && closeFullSizeImage()}
 		role="dialog"
 		tabindex="0"
 		in:fade={{ duration: 200 }}
 	>
-		<div class="max-w-full max-h-full overflow-auto">
+		<div class="max-h-full max-w-full overflow-auto">
 			<img
 				src={currentFullSizeImage}
 				alt="Full size view"
-				class="max-w-full max-h-[90vh] object-contain"
+				class="max-h-[90vh] max-w-full object-contain"
 				loading="eager"
 			/>
 		</div>
@@ -169,9 +171,9 @@
 
 <!-- Conditionally render the ImageUploadModal -->
 {#if isDev}
-  <ImageUploadModal 
-    bind:show={showImageUploadModal}
-    onUploadSuccess={handleModalUploadSuccess}
-    onCancel={handleModalCancel}
-  />
+	<ImageUploadModal
+		bind:show={showImageUploadModal}
+		onUploadSuccess={handleModalUploadSuccess}
+		onCancel={handleModalCancel}
+	/>
 {/if}

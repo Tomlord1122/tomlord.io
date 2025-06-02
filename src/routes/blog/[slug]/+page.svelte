@@ -4,7 +4,7 @@
 	import EditPostModal from '$lib/components/EditPostModal.svelte';
 
 	// export let data; // 從 load 函數接收資料 (data.post)
-	let {data} = $props(); // Using $props() instead of export let data
+	let { data } = $props(); // Using $props() instead of export let data
 
 	const { title, date, tags, content, duration, slug } = data.post;
 	const Component = $derived(content);
@@ -72,59 +72,58 @@
 	<meta name="twitter:title" content={title} />
 </svelte:head>
 
-
-	<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
-		<header class="mb-8 page-title">
-			<div class="prose prose-sm sm:prose-base">
-				<h1>
-					{#if isDev}
-						<button
-							onclick={openEditModal}
-							aria-label="Edit Post"
-							class="hover:text-gray-600 transition-colors text-left"
-						>
-							{title}
-						</button>
-					{:else}
+<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
+	<header class="page-title mb-8">
+		<div class="prose prose-sm sm:prose-base">
+			<h1>
+				{#if isDev}
+					<button
+						onclick={openEditModal}
+						aria-label="Edit Post"
+						class="text-left transition-colors hover:text-gray-600"
+					>
 						{title}
-					{/if}
-				</h1>
-			</div>
-			
-			<p 
-				class="text-gray-500 text-sm">
-				Posted on {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-			</p>
-			<p class="text-gray-500 text-sm">
-				Reading time: {duration} 
-			</p>
-			{#if tags && tags.length > 0}
-				<div 
-					class="mt-4 flex flex-wrap gap-2">
-					{#each tags as tag}
-						<span class="bg-gray-200 text-gray-700 text-xs font-medium px-2.5 py-0.5 rounded-full">{tag}</span>
-					{/each}
-				</div>
-			{/if}
-		</header>
-		<div 
-			in:fly={{ y: 50, duration: 600, delay: 200 }}
-			class="prose prose-sm sm:prose-base max-w-none font-serif"> 
-			<Component class="img-center"/>
-
-		</div> 
-
-		<div
-		in:fly={{ y: 50, duration: 600, delay: 200 }} 
-		class="mt-12 pt-8 border-t border-gray-200">
-			<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
+					</button>
+				{:else}
+					{title}
+				{/if}
+			</h1>
 		</div>
-	</article>
 
+		<p class="text-sm text-gray-500">
+			Posted on {new Date(date).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			})}
+		</p>
+		<p class="text-sm text-gray-500">
+			Reading time: {duration}
+		</p>
+		{#if tags && tags.length > 0}
+			<div class="mt-4 flex flex-wrap gap-2">
+				{#each tags as tag}
+					<span class="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700"
+						>{tag}</span
+					>
+				{/each}
+			</div>
+		{/if}
+	</header>
+	<div
+		in:fly={{ y: 50, duration: 600, delay: 200 }}
+		class="prose prose-sm sm:prose-base max-w-none font-serif"
+	>
+		<Component class="img-center" />
+	</div>
 
+	<div in:fly={{ y: 50, duration: 600, delay: 200 }} class="mt-12 border-t border-gray-200 pt-8">
+		<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
+	</div>
+</article>
 
 {#if isDev}
-	<EditPostModal 
+	<EditPostModal
 		bind:show={showEditModal}
 		{postData}
 		bind:allCurrentTags={allTags}
@@ -133,4 +132,3 @@
 		onCancel={handleEditCancel}
 	/>
 {/if}
-

@@ -3,7 +3,7 @@
 
 	// Mouse position (non-reactive)
 	let mouse = { x: 0, y: 0 };
-	
+
 	// Track if we're on mobile
 	let isMobile = false;
 
@@ -33,11 +33,9 @@
 	// Check if device is mobile
 	function checkMobile() {
 		if (!browser) return false;
-		
-		isMobile = window.innerWidth < 768 || 
-			('ontouchstart' in window) || 
-			(navigator.maxTouchPoints > 0);
-		
+
+		isMobile = window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 		return isMobile;
 	}
 
@@ -45,7 +43,7 @@
 	function initializeDots() {
 		const newDots = [];
 		const dotCount = isMobile ? 0 : NUM_DOTS;
-		
+
 		for (let i = 0; i < dotCount; i++) {
 			const x = Math.random() * window.innerWidth;
 			const y = Math.random() * window.innerHeight;
@@ -65,7 +63,7 @@
 	// Handle pointer movement
 	function handlePointerMove(event: PointerEvent) {
 		if (isMobile) return;
-		
+
 		mouse.x = event.clientX;
 		mouse.y = event.clientY;
 	}
@@ -99,11 +97,13 @@
 		// Clear canvas
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		dots = dots.map(dot => {
+		dots = dots.map((dot) => {
 			const newDot = { ...dot };
 
 			// Mouse pull force with easing
-			const distance = Math.sqrt((newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2);
+			const distance = Math.sqrt(
+				(newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2
+			);
 			let targetX = newDot.originalX;
 			let targetY = newDot.originalY;
 
@@ -121,7 +121,7 @@
 
 			// Draw star with glow effect
 			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
-			if (ctx){
+			if (ctx) {
 				ctx.beginPath();
 				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
 				ctx.fillStyle = newDot.color;
@@ -142,14 +142,14 @@
 	// Initialize canvas and start animation
 	function initializeCanvas() {
 		if (!canvas) return;
-		
+
 		checkMobile();
 		ctx = canvas.getContext('2d');
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
-		
+
 		initializeDots();
-		
+
 		// Start animation loop only if not mobile
 		if (!isMobile) {
 			if (animationFrameId) {
@@ -177,15 +177,9 @@
 	});
 </script>
 
-<canvas 
-	class="interactive-background" 
-	bind:this={canvas}
-></canvas>
+<canvas class="interactive-background" bind:this={canvas}></canvas>
 
-<svelte:window 
-	onpointermove={handlePointerMove} 
-	onresize={handleResize} 
-/>
+<svelte:window onpointermove={handlePointerMove} onresize={handleResize} />
 
 <style>
 	.interactive-background {

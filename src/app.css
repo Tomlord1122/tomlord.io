@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
@@ -7,39 +7,38 @@
    if you are setting up Tailwind from scratch.
    If you already have Tailwind configured, you might already have these. */
 
-
-   @layer base {
-    html {
-      /* 使用 TailwindCSS 的任意值語法 */
-      scrollbar-gutter: stable;
-    }
-    /* 或者回退方案 */
-    /* body {
+@layer base {
+	html {
+		/* 使用 TailwindCSS 的任意值語法 */
+		scrollbar-gutter: stable;
+	}
+	/* 或者回退方案 */
+	/* body {
       @apply overflow-y-scroll;
     } */
-  }
+}
 /* Custom component classes */
 @layer components {
-  .page-title {
-    /* These are the common classes for your h1 tags */
-    @apply shadow-gray-500 font-serif border-b border-gray-400 pb-2;
-  }
+	.page-title {
+		/* These are the common classes for your h1 tags */
+		@apply border-b border-gray-400 pb-2 font-serif shadow-gray-500;
+	}
 
-  .main-content-area {
-    /* These are the common classes for your main tags */
-    /* We noticed 'gap-3' is used in project and photography, 
+	.main-content-area {
+		/* These are the common classes for your main tags */
+		/* We noticed 'gap-3' is used in project and photography, 
        and 'gap-4' in blog. We'll use 'gap-3' here as a common base.
        We can discuss how to handle variations later if needed! */
-    @apply flex flex-col gap-3 font-serif;
-  }
-  .photo-grid {
-    @apply w-full h-full object-cover hover:scale-105 transition-transform duration-300;
-  }
-  .photo-post {
-    @apply z-20 w-[400px] lg:w-1/2 object-cover rounded-lg hover:scale-105 transition-all duration-300 shadow-md;
-  }
+		@apply flex flex-col gap-3 font-serif;
+	}
+	.photo-grid {
+		@apply h-full w-full object-cover transition-transform duration-300 hover:scale-105;
+	}
+	.photo-post {
+		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105 lg:w-1/2;
+	}
 
-  .nav-link {
-    @apply text-gray-700 hover:text-gray-900  transition-all duration-300 hover:scale-105;
-  }
+	.nav-link {
+		@apply text-gray-700 transition-all duration-300 hover:scale-105 hover:text-gray-900;
+	}
 }

@@ -52,15 +52,13 @@
 
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
-	
 	<!-- A large heading for the page title or your name -->
-	<h1 
-		class="page-title">
+	<h1 class="page-title">
 		{#if isDev}
 			<button
 				onclick={openEditModal}
 				aria-label="Edit Project Page"
-				class="hover:text-gray-600 transition-colors"
+				class="transition-colors hover:text-gray-600"
 			>
 				tom.project
 			</button>
@@ -69,8 +67,7 @@
 		{/if}
 	</h1>
 
-	<main in:fly={{ y: 100, duration: 800, delay: 100 }} 
-		class="main-content-area">
+	<main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area">
 		<div class="prose prose-sm sm:prose-lg max-w-none">
 			{@html htmlContent}
 		</div>
@@ -78,7 +75,7 @@
 </div>
 
 {#if isDev}
-	<EditPageModal 
+	<EditPageModal
 		bind:show={showEditModal}
 		pageTitle="Project Page"
 		initialContent={pageContent}
@@ -87,4 +84,3 @@
 		onCancel={handleEditCancel}
 	/>
 {/if}
-

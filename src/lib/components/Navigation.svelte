@@ -36,8 +36,8 @@
 		// Only trigger if Alt key is pressed (Alt + letter)
 		if (event.altKey && !event.ctrlKey && !event.metaKey) {
 			const shortcut = event.key.toLowerCase();
-			const navItem = navItems.find(item => item.shortcut === shortcut);
-			
+			const navItem = navItems.find((item) => item.shortcut === shortcut);
+
 			if (navItem) {
 				event.preventDefault();
 				goto(navItem.href);
@@ -52,26 +52,26 @@
 <nav class="p-4" aria-label="Main navigation">
 	<div class="container mx-auto">
 		<!-- Main navigation row -->
-		<div class="flex justify-between items-center">
+		<div class="flex items-center justify-between">
 			<!-- Logo with preloading -->
-			<a 
-				href="/" 
+			<a
+				href="/"
 				class="transition-transform duration-300 hover:scale-110"
 				onmouseenter={() => handleMouseEnter('/')}
 				data-sveltekit-preload-data="hover"
 			>
-				<img 
-					src="/app_icon.png" 
-					alt="Tomlord" 
-					class="w-15 h-15 rounded-2xl border-2 border-gray-300"
-				>
+				<img
+					src="/app_icon.png"
+					alt="Tomlord"
+					class="h-15 w-15 rounded-2xl border-2 border-gray-300"
+				/>
 			</a>
 
 			<!-- Navigation Links -->
-			<div class="flex items-center gap-4 text-lg font-serif">
+			<div class="flex items-center gap-4 font-serif text-lg">
 				{#each navItems as item}
 					{@const active = isActive(item.href)}
-					<a 
+					<a
 						href={item.href}
 						class={`nav-link relative ${active ? 'text-gray-900' : ''}`}
 						onmouseenter={() => handleMouseEnter(item.href)}
@@ -79,19 +79,19 @@
 						aria-current={active ? 'page' : undefined}
 					>
 						{item.label}
-						
+
 						<!-- Active indicator -->
 						{#if active}
-							<span 
-								class="absolute -bottom-1 left-0 w-full h-0.5 bg-gray-900 rounded-full"
+							<span
+								class="absolute -bottom-1 left-0 h-0.5 w-full rounded-full bg-gray-900"
 								aria-hidden="true"
 							></span>
 						{/if}
-						
+
 						<!-- Loading indicator for this specific link -->
 						{#if navigating && navigating.to?.url.pathname === item.href}
-							<span 
-								class="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+							<span
+								class="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-blue-500"
 								aria-hidden="true"
 							></span>
 						{/if}
@@ -100,6 +100,4 @@
 			</div>
 		</div>
 	</div>
-
-
-</nav> 
+</nav>
