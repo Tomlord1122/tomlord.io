@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly, fade } from 'svelte/transition';
+	import { fly, fade, slide } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
@@ -111,12 +111,14 @@
 	{#if displayedPhotos && displayedPhotos.length > 0}
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.src)}
-				<ResponsiveImage
-					src={photo.src}
-					alt={photo.alt}
-					loading={i < 6 ? 'eager' : 'lazy'}
-					onclick={() => openFullSizeImage(photo.src)}
-				/>
+				<div in:fade|global={{ duration: 300, delay: (i % 10 * 70)}}>
+					<ResponsiveImage
+						src={photo.src}
+						alt={photo.alt}
+						loading={i < 6 ? 'eager' : 'lazy'}
+						onclick={() => openFullSizeImage(photo.src)}
+					/>
+				</div>
 			{/each}
 		</div>
 

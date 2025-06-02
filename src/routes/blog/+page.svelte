@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, fly } from 'svelte/transition';
+	import { blur, fade, fly, slide } from 'svelte/transition';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
 	import { browser } from '$app/environment';
 
@@ -98,6 +98,34 @@
 		}
 		showCreatePostModal = true;
 	}
+
+	let tagContainer: HTMLElement | null = $state(null);
+	let canScrollLeft = $state(false);
+	let canScrollRight = $state(true);
+
+	function updateScrollButtons() {
+		if (tagContainer) {
+			const { scrollLeft, scrollWidth, clientWidth } = tagContainer;
+			canScrollLeft = scrollLeft > 0;
+			canScrollRight = scrollLeft < scrollWidth - clientWidth - 1;
+		}
+	}
+
+	function scrollTags(direction: 'left' | 'right') {
+		if (tagContainer) {
+			const scrollAmount = 200;
+			tagContainer.scrollBy({
+				left: direction === 'left' ? -scrollAmount : scrollAmount,
+				behavior: 'smooth'
+			});
+		}
+	}
+
+	$effect(() => {
+		if (tagContainer) {
+			updateScrollButtons();
+		}
+	});
 </script>
 
 <svelte:head>
@@ -105,7 +133,7 @@
 </svelte:head>
 
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
-	<h1 class="page-title">
+	<h1 class="page-title" >
 		{#if isDev}
 			<button
 				onclick={openCreatePostModal}
@@ -121,8 +149,8 @@
 
 	<animate in:fade={{ duration: 800, delay: 200 }}>
 		<div class="not-prose font-serif">
-			<div class="flex w-full justify-between">
-				<div class="flex items-center gap-1">
+			<div class="flex flex-col w-full justify-between sm:flex-row">
+				<div class="flex items-center ">
 					<label class="flex cursor-pointer items-center gap-1 text-sm text-gray-500">
 						<input
 							type="checkbox"
@@ -135,7 +163,13 @@
 						English Only
 					</label>
 				</div>
-				<div>
+				<div class="flex gap-2 flex-col mt-2 sm:mt-0 sm:flex-row">
+					<input
+						type="text"
+						bind:value={tagSearchKeyword}
+						placeholder="Search tags"
+						class="rounded-lg border border-gray-300 px-4 py-2 text-sm transition-all duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-gray-400"
+					/>
 					<input
 						type="text"
 						bind:value={searchKeyword}
@@ -161,10 +195,40 @@
 					{/if}
 				</div>
 
-				<div class="relative">
+				<div class="relative group">
+					<!-- 左箭頭按鈕 -->
+					{#if canScrollLeft}
+						<button
+							type="button"
+							onclick={() => scrollTags('left')}
+							class="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+							aria-label="Scroll tags left"
+						>
+							<svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+							</svg>
+						</button>
+					{/if}
+					
+					<!-- 右箭頭按鈕 -->
+					{#if canScrollRight}
+						<button
+							type="button"
+							onclick={() => scrollTags('right')}
+							class="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+							aria-label="Scroll tags right"
+						>
+							<svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							</svg>
+						</button>
+					{/if}
+					
 					<div
+						bind:this={tagContainer}
+						onscroll={updateScrollButtons}
 						id="tag-container"
-						class="scrollbar-hide flex min-h-[32px] gap-2 overflow-x-auto scroll-smooth pb-2"
+						class="scrollbar-hide flex min-h-[40px] items-center gap-2 overflow-x-auto scroll-smooth px-4 py-2"
 						style="scrollbar-width: none; -ms-overflow-style: none;"
 					>
 						{#each filteredTags as tag}
@@ -175,8 +239,8 @@
 								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
 										${
 											isSelected
-												? 'border-gray-300 bg-gray-200 text-gray-600'
-												: 'border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'
+												? 'border-gray-400 bg-gray-300 '
+												: 'border-gray-300 bg-gray-100 hover:bg-gray-200'
 										} transition-colors duration-150`}
 							>
 								{tag}
@@ -192,14 +256,17 @@
 		{#if filteredPosts && filteredPosts.length > 0}
 			<ul class="list-none">
 				{#each filteredPosts as post, index (post.slug)}
-					<li class="border border-gray-200 pt-2 pl-2 shadow-sm first:mb-1 last:border-b-0">
+					<li 
+						class="border-l border-b border-gray-300 pt-2 pl-2 mb-1"
+						transition:slide={{ duration: 400, delay: index * 100 }}
+					>
 						<a href="/blog/{post.slug}" class="inline-block underline underline-offset-4">
-							<h2 class="prose prose-sm sm:prose-lg mb-1 text-gray-700 hover:text-gray-900">
+							<h2 class="prose prose-sm sm:prose-lg text-gray-700 hover:text-gray-900">
 								{post.title}
 							</h2>
 						</a>
 						<div class="text-sm text-gray-500">
-							<p class="mb-1">
+							<p>
 								{new Date(post.date).toLocaleDateString('en-US', {
 									year: 'numeric',
 									month: 'long',
@@ -210,12 +277,12 @@
 								<div class="relative">
 									<div
 										id="post-tags-{index}"
-										class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth pb-1"
+										class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth"
 										style="scrollbar-width: none; -ms-overflow-style: none;"
 									>
 										{#each post.tags as tag}
 											<span
-												class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
+												class="flex-shrink-0 rounded-full bg-gray-200 py-1 px-2 text-xs whitespace-nowrap text-gray-700"
 											>
 												{tag}
 											</span>
@@ -228,7 +295,7 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="text-gray-600">
+			<p class="text-gray-600" in:fade={{ duration: 300, delay: 300 }}>
 				{#if selectedTags.length > 0 || searchKeyword.trim() !== ''}
 					No posts match the selected tags.
 				{:else}
