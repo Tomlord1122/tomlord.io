@@ -69,7 +69,7 @@
 		{/if}
 	</h1>
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} 
+	<main in:fly={{ y: 100, duration: 800, delay: 100 }} 
 		class="main-content-area">
 		<div class="prose prose-sm sm:prose-lg max-w-none">
 			{@html htmlContent}

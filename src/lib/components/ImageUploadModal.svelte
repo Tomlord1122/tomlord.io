@@ -144,7 +144,7 @@
 {#if show}
   <button 
     class="fixed inset-0 bg-black/30 z-40" 
-    transition:fly={{ y: 0, duration: 200 }} 
+    in:fly={{ y: 0, duration: 200 }} 
     onclick={closeModal}
     aria-label="Close modal"
   ></button>
@@ -152,7 +152,6 @@
   <div 
     class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-lg" 
     in:fly={{ y: 20, duration: 300, delay: 50 }}
-    out:fly={{ y: -20, duration: 200 }}
   >
     
     <div class="flex justify-between items-center mb-4">
