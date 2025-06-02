@@ -11,7 +11,7 @@
 </script>
 
 <InteractiveBackground />
-<div class="min-h-screen bg-[#EDEDED] flex flex-col font-sans">
+<div class="min-h-screen bg-[#EDEDED] flex flex-col">
 	<Navigation />
 	<main class="flex-1 container mx-auto p-4">
 		{@render children()}

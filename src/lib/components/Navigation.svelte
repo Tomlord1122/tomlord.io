@@ -68,12 +68,12 @@
 			</a>
 
 			<!-- Navigation Links -->
-			<div class="flex items-center gap-4 text-lg">
+			<div class="flex items-center gap-4 text-lg font-serif">
 				{#each navItems as item}
 					{@const active = isActive(item.href)}
 					<a 
 						href={item.href}
-						class={`nav-link relative ${active ? 'text-gray-900 font-semibold' : ''}`}
+						class={`nav-link relative ${active ? 'text-gray-900' : ''}`}
 						onmouseenter={() => handleMouseEnter(item.href)}
 						data-sveltekit-preload-data="hover"
 						aria-current={active ? 'page' : undefined}
