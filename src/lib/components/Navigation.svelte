@@ -3,14 +3,13 @@
 	import { page } from '$app/state';
 	import { navigating } from '$app/state';
 	import { preloadData } from '$app/navigation';
-	import { goto } from '$app/navigation';
 
 	// Navigation items configuration
 	const navItems = $state([
-		{ href: '/', label: 'Home', shortcut: 'h' },
-		{ href: '/blog', label: 'Blog', shortcut: 'b' },
-		{ href: '/project', label: 'Project', shortcut: 'p' },
-		{ href: '/photography', label: 'Photography', shortcut: 'f' }
+		{ href: '/', label: 'Home' },
+		{ href: '/blog', label: 'Blog' },
+		{ href: '/project', label: 'Project' },
+		{ href: '/photography', label: 'Photography' }
 	]);
 
 	// Check if a route is currently active
@@ -31,23 +30,7 @@
 		}
 	}
 
-	// Handle keyboard shortcuts
-	function handleKeydown(event: KeyboardEvent) {
-		// Only trigger if Alt key is pressed (Alt + letter)
-		if (event.altKey && !event.ctrlKey && !event.metaKey) {
-			const shortcut = event.key.toLowerCase();
-			const navItem = navItems.find((item) => item.shortcut === shortcut);
-
-			if (navItem) {
-				event.preventDefault();
-				goto(navItem.href);
-			}
-		}
-	}
 </script>
-
-<!-- Add keyboard event listener to the window -->
-<svelte:window onkeydown={handleKeydown} />
 
 <nav class="p-4" aria-label="Main navigation">
 	<div class="container mx-auto">
@@ -56,19 +39,19 @@
 			<!-- Logo with preloading -->
 			<a
 				href="/"
-				class="transition-transform duration-300 hover:scale-110"
+				class="transition-transform duration-300 hover:scale-110 mr-4"
 				onmouseenter={() => handleMouseEnter('/')}
 				data-sveltekit-preload-data="hover"
 			>
 				<img
 					src="/app_icon.png"
 					alt="Tomlord"
-					class="h-15 w-15 rounded-2xl border-2 border-gray-300"
+					class="h-12 w-12 sm:h-15 sm:w-15 rounded-2xl border-2 border-gray-300"
 				/>
 			</a>
 
 			<!-- Navigation Links -->
-			<div class="flex items-center gap-4 font-serif text-lg">
+			<div class="flex items-center gap-2 font-serif text-lg ml-4">
 				{#each navItems as item}
 					{@const active = isActive(item.href)}
 					<a
@@ -88,13 +71,6 @@
 							></span>
 						{/if}
 
-						<!-- Loading indicator for this specific link -->
-						{#if navigating && navigating.to?.url.pathname === item.href}
-							<span
-								class="absolute -top-1 -right-1 h-2 w-2 animate-pulse rounded-full bg-blue-500"
-								aria-hidden="true"
-							></span>
-						{/if}
 					</a>
 				{/each}
 			</div>
