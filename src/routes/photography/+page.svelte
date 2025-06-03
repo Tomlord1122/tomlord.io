@@ -112,29 +112,29 @@
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.src)}
 				<div in:fade|global={{ duration: 300, delay: (i % 10) * 50 + 200 }}>
-						<ResponsiveImage
+					<ResponsiveImage
 						src={photo.src}
 						alt={photo.alt}
 						loading={i < 10 ? 'eager' : 'lazy'}
 						onclick={() => openFullSizeImage(photo.src)}
-						/>
+					/>
 				</div>
 			{/each}
 		</div>
+
+		<!-- "Load More" Button -->
+		{#if photos && displayedPhotos.length < photos.length && !isLoadingMore}
+			<div class="mt-8 mb-8 text-center" in:fade={{ duration: 1000, delay: 1000 }}>
+				<button
+					onclick={loadMorePhotos}
+					class="relative cursor-pointer overflow-hidden rounded-lg px-6 py-3"
+				>
+					Load More Photos ({displayedPhotos.length} / {photos.length})
+				</button>
+			</div>
+		{/if}
 	{:else}
 		<p class="text-gray-600">No photos to display yet. Upload some if you're on localhost!</p>
-	{/if}
-
-	<!-- "Load More" Button -->
-	{#if photos && displayedPhotos.length < photos.length && !isLoadingMore}
-		<div class="mt-8 mb-8 text-center">
-			<button
-				onclick={loadMorePhotos}
-				class="relative overflow-hidden rounded-lg px-6 py-3 cursor-pointer"
-			>
-				Load More Photos ({displayedPhotos.length} / {photos.length})
-			</button>
-		</div>
 	{/if}
 </main>
 

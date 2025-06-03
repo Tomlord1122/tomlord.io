@@ -53,7 +53,6 @@
 	class="relative z-10 aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100 shadow-md"
 	{onclick}
 >
-
 	<img
 		bind:this={imgElement}
 		src={actualSrc}
