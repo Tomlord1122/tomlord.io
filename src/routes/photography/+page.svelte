@@ -111,7 +111,7 @@
 	{#if displayedPhotos && displayedPhotos.length > 0}
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.src)}
-				<div in:fade|global={{ duration: 300, delay: (i % 10) * 70 }}>
+				<div in:fade|global={{ duration: 300, delay: (i % 10) * 50 + 100 }}>
 						<ResponsiveImage
 						src={photo.src}
 						alt={photo.alt}
@@ -130,7 +130,7 @@
 		<div class="mt-8 mb-8 text-center">
 			<button
 				onclick={loadMorePhotos}
-				class="relative animate-pulse overflow-hidden rounded-lg px-6 py-3"
+				class="relative overflow-hidden rounded-lg px-6 py-3"
 			>
 				Load More Photos ({displayedPhotos.length} / {photos.length})
 			</button>
