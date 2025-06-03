@@ -51,7 +51,7 @@
 			</a>
 
 			<!-- Navigation Links -->
-			<div class="flex items-center gap-2 font-serif text-lg ml-4">
+			<div class="flex items-center gap-3 font-serif text-lg">
 				{#each navItems as item}
 					{@const active = isActive(item.href)}
 					<a
