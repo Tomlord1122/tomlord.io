@@ -197,52 +197,25 @@
 
 				<div class="group relative">
 					<!-- 左箭頭按鈕 -->
-					{#if canScrollLeft}
-						<button
-							type="button"
-							onclick={() => scrollTags('left')}
-							class="absolute top-1/2 left-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
-							aria-label="Scroll tags left"
-						>
-							<svg
-								class="h-4 w-4 text-gray-600"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
+					{#each [{ direction: 'left' as const, canScroll: canScrollLeft, path: 'M15 19l-7-7 7-7' }, { direction: 'right' as const, canScroll: canScrollRight, path: 'M9 5l7 7-7 7' }] as { direction, canScroll, path }}
+						{#if canScroll}
+							<button
+								type="button"
+								onclick={() => scrollTags(direction)}
+								class="absolute top-1/2 {direction}-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
+								aria-label="Scroll tags {direction}"
 							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M15 19l-7-7 7-7"
-								/>
-							</svg>
-						</button>
-					{/if}
-
-					<!-- 右箭頭按鈕 -->
-					{#if canScrollRight}
-						<button
-							type="button"
-							onclick={() => scrollTags('right')}
-							class="absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
-							aria-label="Scroll tags right"
-						>
-							<svg
-								class="h-4 w-4 text-gray-600"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M9 5l7 7-7 7"
-								/>
-							</svg>
-						</button>
-					{/if}
+								<svg
+									class="h-4 w-4 text-gray-600"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={path} />
+								</svg>
+							</button>
+						{/if}
+					{/each}
 
 					<div
 						bind:this={tagContainer}
@@ -251,9 +224,11 @@
 						class="scrollbar-hide flex min-h-[40px] items-center gap-2 overflow-x-auto scroll-smooth px-4 py-2"
 						style="scrollbar-width: none; -ms-overflow-style: none;"
 					>
+					{#if filteredTags.length > 0}
 						{#each filteredTags as tag}
 							{@const isSelected = selectedTags.includes(tag)}
 							<button
+								transition:blur={{duration: 200 }}
 								type="button"
 								onclick={() => toggleTag(tag)}
 								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
@@ -263,9 +238,13 @@
 												: 'border-gray-300 bg-gray-100 hover:bg-gray-200'
 										} transition-colors duration-150`}
 							>
-								{tag}
-							</button>
-						{/each}
+									{tag}
+								</button>
+							{/each}
+						{:else}
+							<p transition:fade={{duration: 200 }}
+							class="flex-shrink-0 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs whitespace-nowrap text-gray-500">No tags found</p>
+						{/if}
 					</div>
 				</div>
 			</div>

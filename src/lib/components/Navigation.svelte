@@ -57,25 +57,14 @@
 					{@const isNavigatingTo = navigating.to?.url.pathname === item.href}
 					<a
 						href={item.href}
-						class={`nav-link relative transition-all duration-200 ${
+						class={`nav-link relative  ${
 							active ? 'text-gray-900' : ''
-						} ${isNavigatingTo ? 'opacity-60' : ''}`}
+						} `}
 						onmouseenter={() => handleMouseEnter(item.href)}
 						data-sveltekit-preload-data="hover"
 						aria-current={active ? 'page' : undefined}
 					>
 						{item.label}
-						
-						<!-- Loading indicator for the link being navigated to -->
-						{#if isNavigatingTo}
-							<span 
-								class="absolute -bottom-1 left-0 h-0.5 bg-blue-500 rounded-full"
-								in:fly={{ x: -20, duration: 100 }}
-								style="width: 100%; animation: pulse 1s infinite;"
-								aria-hidden="true"
-							></span>
-						{/if}
-						
 						<!-- Active indicator -->
 						{#if active && !isNavigatingTo}
 							<span
@@ -92,25 +81,17 @@
 
 	<!-- Global loading indicator -->
 	{#if navigating.to}
-		<div 
-			class="fixed top-0 left-0 right-0 z-50"
+		<div
+			class="fixed top-0 right-0 left-0 z-50"
 			in:fade={{ duration: 150 }}
 			out:fade={{ duration: 300 }}
 		>
-			<div class="h-1 bg-blue-500 progress-bar"></div>
+			<div class="progress-bar h-1 bg-blue-500"></div>
 		</div>
 	{/if}
 </nav>
 
 <style>
-	.nav-link {
-		transition: opacity 0.2s ease, color 0.2s ease;
-	}
-
-	.nav-link:hover {
-		color: #374151;
-	}
-
 	/* Progress bar animation */
 	.progress-bar {
 		animation: progress 1s ease-in-out infinite;
@@ -130,7 +111,8 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 		}
 		50% {
