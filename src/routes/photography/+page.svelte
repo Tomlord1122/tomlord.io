@@ -124,7 +124,7 @@
 
 		<!-- "Load More" Button -->
 		{#if photos && displayedPhotos.length < photos.length && !isLoadingMore}
-			<div class="mt-8 mb-8 text-center" in:fade={{ duration: 1000, delay: 1000 }}>
+			<div class="mt-8 mb-8 text-center" in:fly|global={{ y: 100, duration: 1000, delay: 1500 }}>
 				<button
 					onclick={loadMorePhotos}
 					class="relative cursor-pointer overflow-hidden rounded-lg px-6 py-3"
