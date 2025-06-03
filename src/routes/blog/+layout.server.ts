@@ -1,7 +1,7 @@
-import type { PageServerLoad } from './$types.js';
+import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata } from '$lib/types/post.js';
 
-export const load: PageServerLoad = async () => {
+export const load: LayoutServerLoad = async () => {
 	const posts: PostMetadata[] = [];
 	const postModules = import.meta.glob('/src/markdown/posts/**/*.svx', {
 		eager: true
