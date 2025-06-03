@@ -111,13 +111,13 @@
 	{#if displayedPhotos && displayedPhotos.length > 0}
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.src)}
-				<div in:fade|global={{ duration: 300, delay: (i % 10 * 70)}}>
-					<ResponsiveImage
+				<div in:fade|global={{ duration: 300, delay: (i % 10) * 70 }}>
+						<ResponsiveImage
 						src={photo.src}
 						alt={photo.alt}
-						loading={i < 6 ? 'eager' : 'lazy'}
+						loading={i < 10 ? 'eager' : 'lazy'}
 						onclick={() => openFullSizeImage(photo.src)}
-					/>
+						/>
 				</div>
 			{/each}
 		</div>

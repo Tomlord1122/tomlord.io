@@ -133,7 +133,7 @@
 </svelte:head>
 
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
-	<h1 class="page-title" >
+	<h1 class="page-title">
 		{#if isDev}
 			<button
 				onclick={openCreatePostModal}
@@ -149,8 +149,8 @@
 
 	<animate in:fade={{ duration: 800, delay: 200 }}>
 		<div class="not-prose font-serif">
-			<div class="flex flex-col w-full justify-between sm:flex-row">
-				<div class="flex items-center ">
+			<div class="flex w-full flex-col justify-between sm:flex-row">
+				<div class="flex items-center">
 					<label class="flex cursor-pointer items-center gap-1 text-sm text-gray-500">
 						<input
 							type="checkbox"
@@ -163,7 +163,7 @@
 						English Only
 					</label>
 				</div>
-				<div class="flex gap-2 flex-col mt-2 sm:mt-0 sm:flex-row">
+				<div class="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row">
 					<input
 						type="text"
 						bind:value={tagSearchKeyword}
@@ -195,35 +195,55 @@
 					{/if}
 				</div>
 
-				<div class="relative group">
+				<div class="group relative">
 					<!-- 左箭頭按鈕 -->
 					{#if canScrollLeft}
 						<button
 							type="button"
 							onclick={() => scrollTags('left')}
-							class="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+							class="absolute top-1/2 left-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
 							aria-label="Scroll tags left"
 						>
-							<svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+							<svg
+								class="h-4 w-4 text-gray-600"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M15 19l-7-7 7-7"
+								/>
 							</svg>
 						</button>
 					{/if}
-					
+
 					<!-- 右箭頭按鈕 -->
 					{#if canScrollRight}
 						<button
 							type="button"
 							onclick={() => scrollTags('right')}
-							class="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+							class="absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
 							aria-label="Scroll tags right"
 						>
-							<svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							<svg
+								class="h-4 w-4 text-gray-600"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M9 5l7 7-7 7"
+								/>
 							</svg>
 						</button>
 					{/if}
-					
+
 					<div
 						bind:this={tagContainer}
 						onscroll={updateScrollButtons}
@@ -256,8 +276,8 @@
 		{#if filteredPosts && filteredPosts.length > 0}
 			<ul class="list-none">
 				{#each filteredPosts as post, index (post.slug)}
-					<li 
-						class="border-l border-b border-gray-300 pt-2 pl-2 mb-1"
+					<li
+						class="mb-1 border-b border-l border-gray-300 pt-2 pl-2"
 						transition:slide={{ duration: 400, delay: index * 100 }}
 					>
 						<a href="/blog/{post.slug}" class="inline-block underline underline-offset-4">
@@ -282,7 +302,7 @@
 									>
 										{#each post.tags as tag}
 											<span
-												class="flex-shrink-0 rounded-full bg-gray-200 py-1 px-2 text-xs whitespace-nowrap text-gray-700"
+												class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
 											>
 												{tag}
 											</span>

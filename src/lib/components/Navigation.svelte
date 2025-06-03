@@ -29,7 +29,6 @@
 			console.debug('Preload failed for:', href);
 		}
 	}
-
 </script>
 
 <nav class="p-4" aria-label="Main navigation">
@@ -39,14 +38,14 @@
 			<!-- Logo with preloading -->
 			<a
 				href="/"
-				class="transition-transform duration-300 hover:scale-110 mr-4"
+				class="mr-4 transition-transform duration-300 hover:scale-110"
 				onmouseenter={() => handleMouseEnter('/')}
 				data-sveltekit-preload-data="hover"
 			>
 				<img
 					src="/app_icon.png"
 					alt="Tomlord"
-					class="h-12 w-12 sm:h-15 sm:w-15 rounded-2xl border-2 border-gray-300"
+					class="h-12 w-12 rounded-2xl border-2 border-gray-300 sm:h-15 sm:w-15"
 				/>
 			</a>
 
@@ -70,7 +69,6 @@
 								aria-hidden="true"
 							></span>
 						{/if}
-
 					</a>
 				{/each}
 			</div>
