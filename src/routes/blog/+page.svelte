@@ -296,7 +296,7 @@
 		{:else}
 			<p class="text-gray-600" in:fade={{ duration: 300, delay: 300 }}>
 				{#if selectedTags.length > 0 || searchKeyword.trim() !== ''}
-					No posts match the selected tags.
+					No posts match the filter.
 				{:else}
 					No posts yet.
 				{/if}
