@@ -19,53 +19,70 @@
 
 	// ---- Mobile detection ----
 	let isMobile = $state(false);
+	let resizeHandler: (() => void) | null = null;
 	
-	if (browser) {
-		// 檢測是否為手機裝置
+	// Initialize mobile detection safely
+	$effect(() => {
+		if (!browser) return;
+		
+		// Initial check
 		isMobile = window.innerWidth < 768;
 		
-		// 監聽視窗大小變化
-		const handleResize = () => {
+		// Create handler
+		resizeHandler = () => {
 			isMobile = window.innerWidth < 768;
 		};
-		window.addEventListener('resize', handleResize);
 		
-		// 清理事件監聽器
-		$effect(() => {
-			return () => {
-				window.removeEventListener('resize', handleResize);
-			};
-		});
-	}
+		// Add listener
+		window.addEventListener('resize', resizeHandler, { passive: true });
+		
+		// Cleanup
+		return () => {
+			if (resizeHandler) {
+				window.removeEventListener('resize', resizeHandler);
+				resizeHandler = null;
+			}
+		};
+	});
 
 	// Function to go to next photo in carousel
 	function nextPhoto() {
-		if (photos && currentIndex < photos.length - 1) {
-			const newIndex = currentIndex + 1;
-			onIndexChange(newIndex);
-		} else if (photos) {
-			onIndexChange(0); // Loop back to first
+		if (isProcessingTouch) return; // Prevent rapid fire
+		
+		if (photos && photos.length > 0) {
+			if (currentIndex < photos.length - 1) {
+				onIndexChange(currentIndex + 1);
+			} else {
+				onIndexChange(0); // Loop back to first
+			}
 		}
 	}
 
 	// Function to go to previous photo in carousel
 	function prevPhoto() {
-		if (currentIndex > 0) {
-			const newIndex = currentIndex - 1;
-			onIndexChange(newIndex);
-		} else if (photos) {
-			onIndexChange(photos.length - 1); // Loop to last
+		if (isProcessingTouch) return; // Prevent rapid fire
+		
+		if (photos && photos.length > 0) {
+			if (currentIndex > 0) {
+				onIndexChange(currentIndex - 1);
+			} else {
+				onIndexChange(photos.length - 1); // Loop to last
+			}
 		}
 	}
 
 	// Function to go to specific photo
 	function goToPhoto(index: number) {
-		onIndexChange(index);
+		if (isProcessingTouch) return; // Prevent rapid fire
+		
+		if (photos && photos.length > 0 && index >= 0 && index < photos.length) {
+			onIndexChange(index);
+		}
 	}
 
 	// Handle keyboard navigation
 	function handleKeydown(e: KeyboardEvent) {
-		if (!show) return;
+		if (!show || !photos || photos.length === 0) return;
 		
 		switch (e.key) {
 			case 'ArrowRight':
@@ -86,42 +103,57 @@
 	// 手機端觸控事件處理
 	let touchStartX = 0;
 	let touchStartY = 0;
+	let isProcessingTouch = false;
 	
 	function handleTouchStart(e: TouchEvent) {
-		if (!show) return;
+		if (!show || !isMobile || isProcessingTouch) return;
+		
+		e.preventDefault();
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
 	}
 	
 	function handleTouchEnd(e: TouchEvent) {
-		if (!show) return;
+		if (!show || !isMobile || isProcessingTouch) return;
+		
+		e.preventDefault();
+		isProcessingTouch = true;
 		
 		const touchEndX = e.changedTouches[0].clientX;
 		const touchEndY = e.changedTouches[0].clientY;
 		const deltaX = touchEndX - touchStartX;
 		const deltaY = touchEndY - touchStartY;
 		
-		// 確保是水平滑動而非垂直滑動
-		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+		// 確保是水平滑動而非垂直滑動，並且有足夠的滑動距離
+		if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
 			if (deltaX > 0) {
 				prevPhoto(); // 向右滑動，顯示上一張
 			} else {
 				nextPhoto(); // 向左滑動，顯示下一張
 			}
 		}
+		
+		// 防止連續觸發
+		setTimeout(() => {
+			isProcessingTouch = false;
+		}, 300);
 	}
 
 	// 優化版本的 visibleCarouselPhotos - 減少重複計算
 	let visibleCarouselPhotos = $derived(() => {
-		if (!photos || !show || photos.length === 0) return [];
+		// 早期返回避免不必要的計算
+		if (!photos || !show || photos.length === 0 || currentIndex < 0 || currentIndex >= photos.length) {
+			return [];
+		}
 		
 		// 手機端只顯示當前圖片，桌面端顯示前後各一張
 		const range = isMobile ? 0 : 1;
 		const result = [];
 		
-		for (let i = Math.max(0, currentIndex - range); 
-			 i <= Math.min(photos.length - 1, currentIndex + range); 
-			 i++) {
+		const startIdx = Math.max(0, currentIndex - range);
+		const endIdx = Math.min(photos.length - 1, currentIndex + range);
+		
+		for (let i = startIdx; i <= endIdx; i++) {
 			const offset = i - currentIndex;
 			result.push({ 
 				photo: photos[i], 
@@ -134,11 +166,7 @@
 	});
 </script>
 
-<svelte:window 
-	onkeydown={handleKeydown} 
-	ontouchstart={handleTouchStart}
-	ontouchend={handleTouchEnd}
-/>
+<svelte:window onkeydown={handleKeydown} />
 
 <!-- Carousel view modal with Fujifilm layered photo effect -->
 {#if show && photos && photos.length > 0}
@@ -189,7 +217,11 @@
 		{/if}
 
 		<!-- Layered photo display container -->
-		<div class="relative w-full h-full flex items-center justify-center px-2 sm:px-8 py-8 sm:py-16 overflow-hidden">
+		<div 
+			class="relative w-full h-full flex items-center justify-center px-2 sm:px-8 py-8 sm:py-16 overflow-hidden"
+			ontouchstart={handleTouchStart}
+			ontouchend={handleTouchEnd}
+		>
 			<div class="relative max-w-full max-h-full flex items-center justify-center">
 				{#each visibleCarouselPhotos() as { photo, index, wrappedOffset } (photo.src)}
 					{@const translateX = isMobile ? wrappedOffset * 100 : wrappedOffset * 200}
@@ -254,7 +286,11 @@
 						
 						{#if startIndex > 0}
 							<button
-								onclick={() => goToPhoto(0)}
+								onclick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									goToPhoto(0);
+								}}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
 								style="width: {isMobile ? '48px' : '64px'}; height: {isMobile ? '48px' : '64px'};"
 							>
@@ -268,7 +304,11 @@
 						{#each photos.slice(startIndex, endIndex) as photo, localIndex}
 							{@const index = startIndex + localIndex}
 							<button
-								onclick={() => goToPhoto(index)}
+								onclick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									goToPhoto(index);
+								}}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
 							>
 								<img
@@ -286,7 +326,11 @@
 								<div class="flex items-center justify-center text-white opacity-50 px-1">...</div>
 							{/if}
 							<button
-								onclick={() => goToPhoto(photos.length - 1)}
+								onclick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									goToPhoto(photos.length - 1);
+								}}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
 								style="width: {isMobile ? '48px' : '64px'}; height: {isMobile ? '48px' : '64px'};"
 							>
@@ -297,7 +341,11 @@
 						<!-- For smaller collections, show all thumbnails -->
 						{#each photos as photo, index}
 							<button
-								onclick={() => goToPhoto(index)}
+								onclick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									goToPhoto(index);
+								}}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
 							>
 								<img
