@@ -138,21 +138,30 @@
 
 	function handleTouchStart(e: TouchEvent) {
 		if (!showCarouselView) return;
-		touchStartX = e.changedTouches[0].screenX;
-		isSwiping = false;
+		// Only handle single-finger touch
+		if (e.touches && e.touches.length === 1) {
+			touchStartX = e.touches[0].screenX;
+			isSwiping = false;
+		}
 	}
 
 	function handleTouchMove(e: TouchEvent) {
 		if (!showCarouselView) return;
-		// Prevent default scrolling behavior during swipe
-		e.preventDefault();
+		// Only handle single-finger touch
+		if (e.touches && e.touches.length === 1) {
+			// Prevent default scrolling behavior during swipe
+			e.preventDefault();
+		}
 	}
 
 	function handleTouchEnd(e: TouchEvent) {
 		if (!showCarouselView) return;
-		touchEndX = e.changedTouches[0].screenX;
-		if (!isSwiping) {
-			handleSwipe();
+		// Only handle single-finger touch
+		if (e.changedTouches && e.changedTouches.length === 1) {
+			touchEndX = e.changedTouches[0].screenX;
+			if (!isSwiping) {
+				handleSwipe();
+			}
 		}
 	}
 
@@ -316,11 +325,12 @@
 <!-- Carousel view modal with Fujifilm layered photo effect -->
 {#if showCarouselView && photos && photos.length > 0}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg touch-none"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg"
 		ontouchstart={handleTouchStart}
 		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
 		in:fade={{ duration: 200 }}
+		style="touch-action: pan-y;" 
 	>
 		<!-- Close button -->
 		<button
