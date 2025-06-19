@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
+	import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
 	import { invalidateAll } from '$app/navigation'; // For refreshing data
 
 	// Get data from both page and layout
@@ -88,47 +89,9 @@
 		showCarouselView = false;
 	}
 
-	// Function to go to next photo in carousel
-	function nextPhoto() {
-		if (photos && currentCarouselIndex < photos.length - 1) {
-			currentCarouselIndex++;
-		} else if (photos) {
-			currentCarouselIndex = 0; // Loop back to first
-		}
-	}
-
-	// Function to go to previous photo in carousel
-	function prevPhoto() {
-		if (currentCarouselIndex > 0) {
-			currentCarouselIndex--;
-		} else if (photos) {
-			currentCarouselIndex = photos.length - 1; // Loop to last
-		}
-	}
-
-	// Function to go to specific photo
-	function goToPhoto(index: number) {
+	// Function to handle carousel index change
+	function handleCarouselIndexChange(index: number) {
 		currentCarouselIndex = index;
-	}
-
-	// Handle keyboard navigation
-	function handleKeydown(e: KeyboardEvent) {
-		if (!showCarouselView) return;
-		
-		switch (e.key) {
-			case 'ArrowRight':
-				e.preventDefault();
-				nextPhoto();
-				break;
-			case 'ArrowLeft':
-				e.preventDefault();
-				prevPhoto();
-				break;
-			case 'Escape':
-				e.preventDefault();
-				closeCarouselView();
-				break;
-		}
 	}
 
 	// Callback for successful upload from the modal
@@ -143,28 +106,13 @@
 	function handleModalCancel() {
 		console.log('Image upload modal cancelled.');
 	}
-
-	// Performance optimizations: Memoize visible carousel photos to avoid unnecessary calculations
-	let visibleCarouselPhotos = $derived(() => {
-		if (!photos || !showCarouselView) return [];
-		
-		const result = [];
-		for (let i = 0; i < photos.length; i++) {
-			const offset = i - currentCarouselIndex;
-			const wrappedOffset = offset > photos.length / 2 ? offset - photos.length : offset < -photos.length / 2 ? offset + photos.length : offset;
-			if (Math.abs(wrappedOffset) <= 1) {
-				result.push({ photo: photos[i], index: i, wrappedOffset });
-			}
-		}
-		return result;
-	});
 </script>
 
 <svelte:head>
 	<meta name="twitter:title" content="Photography | Tomlord's Blog" />
 </svelte:head>
 
-<svelte:window onkeydown={handleKeydown} />
+
 
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
@@ -185,10 +133,11 @@
 		{#if photos && photos.length > 0}
 			<button
 				onclick={() => openCarouselView()}
-				class="ml-4 rounded-lg bg-gray-100 px-3 py-1 text-xs transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+				class="ml-2 sm:ml-4 rounded-lg bg-gray-100 px-2 py-1 text-xs sm:px-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
 				title="Carousel View"
 			>
-				Carousel View
+				<span class="sm:hidden">Carousel</span>
+				<span class="hidden sm:inline">Carousel View</span>
 			</button>
 		{/if}
 	</h1>
@@ -235,7 +184,7 @@
 <!-- Full-size image modal -->
 {#if showFullSizeImage}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-lg backdrop-filter"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-lg backdrop-filter"
 		onclick={closeFullSizeImage}
 		onkeydown={(e) => e.key === 'Escape' && closeFullSizeImage()}
 		role="dialog"
@@ -244,7 +193,7 @@
 	>
 		<div class="relative max-h-full max-w-full flex items-center justify-center">
 			<!-- Fujifilm-style border container for full-size image -->
-			<div class="relative p-2 bg-white rounded-sm shadow-2xl max-w-[90vw] max-h-[90vh] flex items-center justify-center" 
+			<div class="relative p-1 sm:p-2 bg-white rounded-sm shadow-2xl max-w-[95vw] max-h-[90vh] sm:max-w-[90vw] flex items-center justify-center" 
 				style="
 					background: #f8f8f8;
 					border: 1px solid #2d5016;
@@ -254,7 +203,7 @@
 				"
 			>
 				<!-- Fujifilm brand label -->
-				<div class="absolute -top-6 right-2 text-xs font-bold text-white bg-green-800 px-2 py-1 tracking-wider rounded-sm">
+				<div class="absolute -top-4 sm:-top-6 right-1 sm:right-2 text-xs font-bold text-white bg-green-800 px-1 sm:px-2 py-1 tracking-wider rounded-sm">
 					tom.photography
 				</div>
 				
@@ -263,7 +212,7 @@
 					<img
 						src={currentFullSizeImage}
 						alt="Full size view"
-						class="max-h-[80vh] max-w-[85vw] object-contain"
+						class="max-h-[75vh] max-w-[90vw] sm:max-h-[80vh] sm:max-w-[85vw] object-contain"
 						loading="eager"
 					/>
 				</div>
@@ -272,177 +221,14 @@
 	</div>
 {/if}
 
-<!-- Carousel view modal with Fujifilm layered photo effect -->
-{#if showCarouselView && photos && photos.length > 0}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg"
-		in:fade={{ duration: 200 }}
-	>
-		<!-- Close button -->
-		<button
-			onclick={closeCarouselView}
-			aria-label="Close carousel"
-			class="absolute top-4 right-4 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
-		>
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<line x1="18" y1="6" x2="6" y2="18"></line>
-				<line x1="6" y1="6" x2="18" y2="18"></line>
-			</svg>
-		</button>
-
-		<!-- Photo counter -->
-		<div class="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-4 py-2 text-white font-mono text-sm">
-			{currentCarouselIndex + 1} / {photos.length}
-		</div>
-
-		<!-- Navigation arrows -->
-		<button
-			onclick={prevPhoto}
-			class="absolute left-4 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/50 p-3 text-white hover:bg-black/70 transition-colors"
-			disabled={photos.length <= 1}
-			aria-label="Previous photo"
-		>
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<polyline points="15,18 9,12 15,6"></polyline>
-			</svg>
-		</button>
-		
-		<button
-			onclick={nextPhoto}
-			class="absolute right-4 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/50 p-3 text-white hover:bg-black/70 transition-colors"
-			disabled={photos.length <= 1}
-			aria-label="Next photo"
-		>
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-				<polyline points="9,18 15,12 9,6"></polyline>
-			</svg>
-		</button>
-
-		<!-- Layered photo display container -->
-		<div class="relative w-full h-full flex items-center justify-center px-8 py-16 overflow-hidden">
-			<div class="relative max-w-full max-h-full flex items-center justify-center">
-				{#each visibleCarouselPhotos() as { photo, index, wrappedOffset } (photo.src)}
-					<div 
-						class="absolute transition-all duration-300 ease-out"
-						style="
-							transform: 
-								translateX({wrappedOffset * 200}px) 
-								translateY({Math.abs(wrappedOffset) * 8}px) 
-								rotate({wrappedOffset * 2}deg) 
-								scale({1 - Math.abs(wrappedOffset) * 0.05});
-							z-index: {10 - Math.abs(wrappedOffset)};
-							opacity: {wrappedOffset === 0 ? 1 : 0.4 - Math.abs(wrappedOffset) * 0.15};
-						"
-					>
-						<!-- Fujifilm-style border container -->
-						<div class="relative p-2 bg-white rounded-sm shadow-2xl max-w-[80vw] max-h-[60vh] flex items-center justify-center" 
-							style="
-								background: #f8f8f8;
-								border: 1px solid #2d5016;
-								box-shadow: 
-									inset 0 0 0 1px #ffffff,
-									0 8px 25px rgba(0,0,0,0.3);
-							"
-						>
-							{#if wrappedOffset === 0}
-								<!-- Fujifilm brand label -->
-								<div class="absolute -top-5 right-1 text-xs font-bold text-white bg-green-800 px-2 py-1 tracking-wider rounded-sm">
-									tom.photography-{String(index + 1).padStart(2, '0')}
-								</div>
-								
-							{/if}
-							
-							<!-- Photo container -->
-							<div class="relative bg-white flex items-center justify-center">
-								<img
-									src={photo.src}
-									alt={photo.alt}
-									class="max-h-[55vh] max-w-[75vw] object-contain transition-all duration-300"
-									loading={wrappedOffset === 0 ? 'eager' : 'lazy'}
-									decoding="async"
-								/>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Virtualized thumbnail navigation -->
-		<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pb-4 pt-8">
-			<div class="flex justify-center">
-				<div 
-					class="flex mt-2 gap-2 overflow-x-auto px-4 pb-2 scroll-smooth"
-					style="max-width: 90vw;"
-				>
-					{#if photos.length > 10}
-						<!-- For large collections, show only a subset of thumbnails around current photo for performance -->
-						{@const startIndex = Math.max(0, Math.min(currentCarouselIndex - 3, photos.length - 7))}
-						{@const endIndex = Math.min(photos.length, startIndex + 7)}
-						
-						{#if startIndex > 0}
-							<button
-								onclick={() => goToPhoto(0)}
-								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
-								style="width: 64px; height: 64px;"
-							>
-								1
-							</button>
-							{#if startIndex > 1}
-								<div class="flex items-center justify-center text-white opacity-50 px-2">...</div>
-							{/if}
-						{/if}
-						
-						{#each photos.slice(startIndex, endIndex) as photo, localIndex}
-							{@const index = startIndex + localIndex}
-							<button
-								onclick={() => goToPhoto(index)}
-								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentCarouselIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
-							>
-								<img
-									src={photo.src}
-									alt={photo.alt}
-									class="h-16 w-16 object-cover"
-									loading="lazy"
-									decoding="async"
-								/>
-							</button>
-						{/each}
-						
-						{#if endIndex < photos.length}
-							{#if endIndex < photos.length - 1}
-								<div class="flex items-center justify-center text-white opacity-50 px-2">...</div>
-							{/if}
-							<button
-								onclick={() => goToPhoto(photos.length - 1)}
-								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
-								style="width: 64px; height: 64px;"
-							>
-								{photos.length}
-							</button>
-						{/if}
-					{:else}
-						<!-- For smaller collections (≤10), show all thumbnails -->
-						{#each photos as photo, index}
-							<button
-								onclick={() => goToPhoto(index)}
-								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentCarouselIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
-							>
-								<img
-									src={photo.src}
-									alt={photo.alt}
-									class="h-16 w-16 object-cover"
-									loading="lazy"
-									decoding="async"
-								/>
-							</button>
-						{/each}
-					{/if}
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+<!-- Photo Carousel Component -->
+<PhotoCarousel
+	{photos}
+	show={showCarouselView}
+	currentIndex={currentCarouselIndex}
+	onClose={closeCarouselView}
+	onIndexChange={handleCarouselIndexChange}
+/>
 
 <!-- Conditionally render the ImageUploadModal -->
 {#if isDev}
