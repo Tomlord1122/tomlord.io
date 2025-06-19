@@ -55,9 +55,7 @@
 		isLoadingMore = true;
 
 		// Simulate loading delay only in dev mode
-		if (isDev) {
-			await new Promise(resolve => setTimeout(resolve, 300));
-		}
+		await new Promise(resolve => setTimeout(resolve, 300));
 
 		visiblePhotosCount += PHOTOS_TO_LOAD_AT_ONCE;
 		// Ensure we don't try to show more photos than available
@@ -139,11 +137,19 @@
 	let isSwiping = false;
 
 	function handleTouchStart(e: TouchEvent) {
+		if (!showCarouselView) return;
 		touchStartX = e.changedTouches[0].screenX;
 		isSwiping = false;
 	}
 
+	function handleTouchMove(e: TouchEvent) {
+		if (!showCarouselView) return;
+		// Prevent default scrolling behavior during swipe
+		e.preventDefault();
+	}
+
 	function handleTouchEnd(e: TouchEvent) {
+		if (!showCarouselView) return;
 		touchEndX = e.changedTouches[0].screenX;
 		if (!isSwiping) {
 			handleSwipe();
@@ -310,8 +316,9 @@
 <!-- Carousel view modal with Fujifilm layered photo effect -->
 {#if showCarouselView && photos && photos.length > 0}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg touch-none"
 		ontouchstart={handleTouchStart}
+		ontouchmove={handleTouchMove}
 		ontouchend={handleTouchEnd}
 		in:fade={{ duration: 200 }}
 	>
@@ -356,7 +363,7 @@
 		</button>
 
 		<!-- Layered photo display container -->
-		<div class="relative w-full h-full flex items-center justify-center px-8 py-16">
+		<div class="relative w-full h-full flex items-center justify-center px-8 py-16 overflow-hidden">
 			<div class="relative max-w-full max-h-full flex items-center justify-center">
 				{#each visibleCarouselPhotos() as { photo, index, wrappedOffset } (photo.src)}
 					<div 
