@@ -131,56 +131,6 @@
 		}
 	}
 
-	// Touch/swipe handling with improved performance
-	let touchStartX = 0;
-	let touchEndX = 0;
-	let isSwiping = false;
-
-	function handleTouchStart(e: TouchEvent) {
-		if (!showCarouselView) return;
-		// Only handle single-finger touch
-		if (e.touches && e.touches.length === 1) {
-			touchStartX = e.touches[0].screenX;
-			isSwiping = false;
-		}
-	}
-
-	function handleTouchMove(e: TouchEvent) {
-		if (!showCarouselView) return;
-		// Only handle single-finger touch
-		if (e.touches && e.touches.length === 1) {
-			// Prevent default scrolling behavior during swipe
-			e.preventDefault();
-		}
-	}
-
-	function handleTouchEnd(e: TouchEvent) {
-		if (!showCarouselView) return;
-		// Only handle single-finger touch
-		if (e.changedTouches && e.changedTouches.length === 1) {
-			touchEndX = e.changedTouches[0].screenX;
-			if (!isSwiping) {
-				handleSwipe();
-			}
-		}
-	}
-
-	function handleSwipe() {
-		const swipeThreshold = 50;
-		const diff = touchStartX - touchEndX;
-
-		if (Math.abs(diff) > swipeThreshold) {
-			isSwiping = true;
-			if (diff > 0) {
-				// Swiped left, go to next photo
-				nextPhoto();
-			} else {
-				// Swiped right, go to previous photo
-				prevPhoto();
-			}
-		}
-	}
-
 	// Callback for successful upload from the modal
 	function handleModalUploadSuccess(newImagePaths: string[]) {
 		console.log(`${newImagePaths.length} new image(s) uploaded`);
@@ -326,11 +276,7 @@
 {#if showCarouselView && photos && photos.length > 0}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg"
-		ontouchstart={handleTouchStart}
-		ontouchmove={handleTouchMove}
-		ontouchend={handleTouchEnd}
 		in:fade={{ duration: 200 }}
-		style="touch-action: pan-y;" 
 	>
 		<!-- Close button -->
 		<button
