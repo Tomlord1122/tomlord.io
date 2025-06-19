@@ -25,11 +25,23 @@
 
 	// isDev state to control visibility of the uploader trigger
 	let isDev = $state(false);
+	
+	// Mobile detection to hide carousel view on mobile
+	let isMobile = $state(false);
 
 	// Use a normal variable for this check instead of wrapping in an effect
 	if (browser) {
 		// Only localhost is considered development for showing the uploader
 		isDev = window.location.hostname === 'localhost';
+		
+		// Check if device is mobile
+		isMobile = window.innerWidth < 768;
+		
+		// Update mobile state on resize
+		const handleResize = () => {
+			isMobile = window.innerWidth < 768;
+		};
+		window.addEventListener('resize', handleResize);
 	}
 
 	// State to control the visibility of the image upload modal
@@ -78,8 +90,9 @@
 		showFullSizeImage = false;
 	}
 
-	// Function to open carousel view
+	// Function to open carousel view (only on desktop)
 	function openCarouselView(index = 0) {
+		if (isMobile) return; // Prevent carousel on mobile
 		currentCarouselIndex = index;
 		showCarouselView = true;
 	}
@@ -129,8 +142,8 @@
 			tom.photography
 		{/if}
 		
-		<!-- Carousel view toggle button -->
-		{#if photos && photos.length > 0}
+		<!-- Carousel view toggle button - hidden on mobile -->
+		{#if photos && photos.length > 0 && !isMobile}
 			<button
 				onclick={() => openCarouselView()}
 				class="ml-2 sm:ml-4 rounded-lg bg-gray-100 px-2 py-1 text-xs sm:px-3 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
