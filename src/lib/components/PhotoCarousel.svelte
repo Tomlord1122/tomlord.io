@@ -16,25 +16,45 @@
 		onIndexChange: (index: number) => void;
 	} = $props();
 
+	// Optimization: Pre-compute commonly used values to avoid repeated calculations
+	const TRANSLATE_DISTANCE = 200;
+	const SCALE_FACTOR = 0.05;
+	const ROTATION_FACTOR = 2;
+	const Y_OFFSET_FACTOR = 8;
+
+	// Optimization: Use Map to cache calculation results
+	const transformCache = new Map<string, string>();
+	
+	// Optimization: Batch event handler to avoid creating separate handlers for each thumbnail
+	function handleThumbnailClick(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+		
+		const target = event.target as HTMLElement;
+		const button = target.closest('button') as HTMLButtonElement;
+		
+		if (button && button.dataset.index) {
+			const index = parseInt(button.dataset.index, 10);
+			
+			if (!isNaN(index) && index >= 0 && index < photos.length) {
+				goToPhoto(index);
+			}
+		}
+	}
+
 	// Function to go to next photo in carousel
 	function nextPhoto() {
 		if (photos && photos.length > 0) {
-			if (currentIndex < photos.length - 1) {
-				onIndexChange(currentIndex + 1);
-			} else {
-				onIndexChange(0); // Loop back to first
-			}
+			const nextIndex = currentIndex < photos.length - 1 ? currentIndex + 1 : 0;
+			onIndexChange(nextIndex);
 		}
 	}
 
 	// Function to go to previous photo in carousel
 	function prevPhoto() {
 		if (photos && photos.length > 0) {
-			if (currentIndex > 0) {
-				onIndexChange(currentIndex - 1);
-			} else {
-				onIndexChange(photos.length - 1); // Loop to last
-			}
+			const prevIndex = currentIndex > 0 ? currentIndex - 1 : photos.length - 1;
+			onIndexChange(prevIndex);
 		}
 	}
 
@@ -65,28 +85,73 @@
 		}
 	}
 
-	// Desktop version of visibleCarouselPhotos - show current and adjacent photos
+	// Optimization: Simplified visibleCarouselPhotos calculation
 	let visibleCarouselPhotos = $derived(() => {
 		if (!photos || !show || photos.length === 0 || currentIndex < 0 || currentIndex >= photos.length) {
 			return [];
 		}
 		
-		const result = [];
-		const range = 1; // Show previous and next photo
+		// Optimization: Directly calculate three indices to avoid loops
+		const prevIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
+		const nextIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
 		
-		const startIdx = Math.max(0, currentIndex - range);
-		const endIdx = Math.min(photos.length - 1, currentIndex + range);
+		return [
+			{ photo: photos[prevIndex], index: prevIndex, wrappedOffset: -1 },
+			{ photo: photos[currentIndex], index: currentIndex, wrappedOffset: 0 },
+			{ photo: photos[nextIndex], index: nextIndex, wrappedOffset: 1 }
+		];
+	});
+
+	// Optimization: Pre-compute thumbnail range to avoid calculations in template
+	let thumbnailRange = $derived(() => {
+		if (!photos || photos.length === 0) return { start: 0, end: 0, showFirst: false, showLast: false };
 		
-		for (let i = startIdx; i <= endIdx; i++) {
-			const offset = i - currentIndex;
-			result.push({ 
-				photo: photos[i], 
-				index: i, 
-				wrappedOffset: offset 
-			});
+		if (photos.length <= 10) {
+			return { start: 0, end: photos.length, showFirst: false, showLast: false };
 		}
 		
-		return result;
+		const maxThumbnails = 7;
+		const start = Math.max(0, Math.min(currentIndex - Math.floor(maxThumbnails/2), photos.length - maxThumbnails));
+		const end = Math.min(photos.length, start + maxThumbnails);
+		
+		return {
+			start,
+			end,
+			showFirst: start > 0,
+			showLast: end < photos.length
+		};
+	});
+
+	// Optimization: Pre-compute style strings
+	function getPhotoStyle(wrappedOffset: number): string {
+		const cacheKey = `${wrappedOffset}`;
+		
+		if (transformCache.has(cacheKey)) {
+			return transformCache.get(cacheKey)!;
+		}
+		
+		const translateX = wrappedOffset * TRANSLATE_DISTANCE;
+		const translateY = Math.abs(wrappedOffset) * Y_OFFSET_FACTOR;
+		const rotate = wrappedOffset * ROTATION_FACTOR;
+		const scale = 1 - Math.abs(wrappedOffset) * SCALE_FACTOR;
+		const zIndex = 10 - Math.abs(wrappedOffset);
+		const opacity = wrappedOffset === 0 ? 1 : 0.4 - Math.abs(wrappedOffset) * 0.15;
+		
+		const style = `
+			transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(${scale});
+			z-index: ${zIndex};
+			opacity: ${opacity};
+		`;
+		
+		transformCache.set(cacheKey, style);
+		return style;
+	}
+
+	// Optimization: Clear cache to prevent memory leaks
+	$effect(() => {
+		return () => {
+			transformCache.clear();
+		};
 	});
 </script>
 
@@ -138,23 +203,13 @@
 			</svg>
 		</button>
 
-		<!-- Layered photo display container -->
+		<!-- Optimization: Use pre-computed styles -->
 		<div class="relative w-full h-full flex items-center justify-center px-8 py-16 overflow-hidden">
 			<div class="relative max-w-full max-h-full flex items-center justify-center">
 				{#each visibleCarouselPhotos() as { photo, index, wrappedOffset } (photo.src)}
-					{@const translateX = wrappedOffset * 200}
-					{@const scale = 1 - Math.abs(wrappedOffset) * 0.05}
 					<div 
 						class="absolute transition-all duration-300 ease-out"
-						style="
-							transform: 
-								translateX({translateX}px) 
-								translateY({Math.abs(wrappedOffset) * 8}px) 
-								rotate({wrappedOffset * 2}deg) 
-								scale({scale});
-							z-index: {10 - Math.abs(wrappedOffset)};
-							opacity: {wrappedOffset === 0 ? 1 : 0.4 - Math.abs(wrappedOffset) * 0.15};
-						"
+						style={getPhotoStyle(wrappedOffset)}
 					>
 						<!-- Fujifilm-style border container -->
 						<div class="relative p-2 bg-white rounded-sm shadow-2xl max-w-[80vw] max-h-[60vh] flex items-center justify-center" 
@@ -189,44 +244,36 @@
 			</div>
 		</div>
 
-		<!-- Virtualized thumbnail navigation -->
+		<!-- Optimization: Use batch event handling and pre-computed range -->
 		<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pb-4 pt-8">
 			<div class="flex justify-center">
 				<div 
 					class="flex mt-2 gap-2 overflow-x-auto px-4 pb-2 scroll-smooth"
 					style="max-width: 95vw;"
+					onclick={handleThumbnailClick}
+					onkeydown={handleThumbnailClick}
+					role="listbox"
+					tabindex="0"
 				>
 					{#if photos.length > 10}
-						<!-- For large collections, show only a subset of thumbnails around current photo for performance -->
-						{@const maxThumbnails = 7}
-						{@const startIndex = Math.max(0, Math.min(currentIndex - Math.floor(maxThumbnails/2), photos.length - maxThumbnails))}
-						{@const endIndex = Math.min(photos.length, startIndex + maxThumbnails)}
-						
-						{#if startIndex > 0}
+						{@const range = thumbnailRange()}
+						{#if range.showFirst}
 							<button
-								onclick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									goToPhoto(0);
-								}}
+								data-index="0"
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
 								style="width: 64px; height: 64px;"
 							>
 								1
 							</button>
-							{#if startIndex > 1}
+							{#if range.start > 1}
 								<div class="flex items-center justify-center text-white opacity-50 px-1">...</div>
 							{/if}
 						{/if}
 						
-						{#each photos.slice(startIndex, endIndex) as photo, localIndex}
-							{@const index = startIndex + localIndex}
+						{#each photos.slice(range.start, range.end) as photo, localIndex}
+							{@const index = range.start + localIndex}
 							<button
-								onclick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									goToPhoto(index);
-								}}
+								data-index={index}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
 							>
 								<img
@@ -239,16 +286,12 @@
 							</button>
 						{/each}
 						
-						{#if endIndex < photos.length}
-							{#if endIndex < photos.length - 1}
+						{#if range.showLast}
+							{#if range.end < photos.length - 1}
 								<div class="flex items-center justify-center text-white opacity-50 px-1">...</div>
 							{/if}
 							<button
-								onclick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									goToPhoto(photos.length - 1);
-								}}
+								data-index={photos.length - 1}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-400 opacity-50 hover:opacity-70 transition-all duration-200 flex items-center justify-center bg-gray-800 text-white text-xs font-bold"
 								style="width: 64px; height: 64px;"
 							>
@@ -256,14 +299,9 @@
 							</button>
 						{/if}
 					{:else}
-						<!-- For smaller collections, show all thumbnails -->
 						{#each photos as photo, index}
 							<button
-								onclick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									goToPhoto(index);
-								}}
+								data-index={index}
 								class="flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 {currentIndex === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-80'}"
 							>
 								<img
