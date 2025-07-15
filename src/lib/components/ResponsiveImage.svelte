@@ -74,7 +74,7 @@
 </script>
 
 <button
-	class="relative z-10 aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100 shadow-md transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500"
+	class="relative z-10 aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100 shadow-md transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 duration-200"
 	{onclick}
 	aria-label={alt}
 >
