@@ -2,6 +2,8 @@
 	import { fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import EditPostModal from '$lib/components/EditPostModal.svelte';
+	import CommentForm from '$lib/components/CommentForm.svelte';
+	import CommentList from '$lib/components/CommentList.svelte';
 
 	// export let data; // 從 load 函數接收資料 (data.post)
 	let { data } = $props(); // Using $props() instead of export let data
@@ -14,6 +16,7 @@
 	let showEditModal = $state(false);
 	let postData = $state({});
 	let allTags = $state<string[]>([]);
+	let commentRefreshTrigger = $state(0);
 
 	// Check environment on client-side
 	$effect(() => {
@@ -60,6 +63,10 @@
 	// Callback for modal cancellation
 	function handleEditCancel() {
 		console.log('Edit cancelled.');
+	}
+
+	function handleCommentAdded() {
+		commentRefreshTrigger++;
 	}
 
 	// Function to open the edit modal
@@ -117,7 +124,19 @@
 		<Component class="img-center" />
 	</div>
 
-	<div in:fly={{ y: 50, duration: 600, delay: 200 }} class="mt-12 border-t border-gray-200 pt-8">
+	<!-- Comments Section -->
+	<div in:fly={{ y: 50, duration: 600, delay: 400 }} class="mt-12">
+		<CommentList 
+			postSlug={slug} 
+			refreshTrigger={commentRefreshTrigger}
+		/>
+		<CommentForm 
+			postSlug={slug} 
+			onCommentAdded={handleCommentAdded}
+		/>
+	</div>
+
+	<div in:fly={{ y: 50, duration: 600, delay: 500 }} class="mt-12 border-t border-gray-200 pt-8">
 		<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
 	</div>
 </article>

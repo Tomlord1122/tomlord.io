@@ -11,6 +11,7 @@ export interface PostMetadata {
 export interface Post extends Omit<PostMetadata, 'description'> {
 	content: any; // or more precisely SvelteComponent type, if easily available
 	duration: string;
+	description: string;
 }
 
 export interface NewPostModalType {

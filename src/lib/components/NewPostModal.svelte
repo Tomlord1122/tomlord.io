@@ -59,12 +59,21 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ${content}`;
 
 		try {
+			// Get authentication token for backend API integration
+			const token = localStorage.getItem('auth_token');
+			const headers: Record<string, string> = {
+				'Content-Type': 'application/json'
+			};
+			
+			// Add authorization header if token exists
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`;
+			}
+
 			// Updated API endpoint path to match your server endpoint
 			const response = await fetch('/api/add-post', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+				headers,
 				body: JSON.stringify({
 					filename: `${finalSlug}.svx`,
 					content: frontmatter
@@ -72,7 +81,12 @@ ${content}`;
 			});
 
 			if (response.ok) {
-				alert('Post created successfully!');
+				const result = await response.json();
+				if (result.warning) {
+					alert(`Post created with warning: ${result.warning}`);
+				} else {
+					alert('Post created successfully in database and saved locally!');
+				}
 				onSaved(); // Call the oncreated callback
 				// Reset form and close modal
 				title = '';
@@ -84,7 +98,21 @@ ${content}`;
 			} else {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('Server error:', errorData);
-				alert(`Failed to create post: ${errorData.message || 'Unknown error'}`);
+				
+				if (errorData.requiresAuth) {
+					alert('Please sign in to save posts to the database. The post was saved locally.');
+					// Still call onSaved since the file was saved locally
+					onSaved();
+					// Reset form and close modal
+					title = '';
+					slug = '';
+					content = '';
+					postTags = [];
+					newTagInput = '';
+					closeModal();
+				} else {
+					alert(`Failed to create post: ${errorData.error || 'Unknown error'}`);
+				}
 			}
 		} catch (error) {
 			console.error('Error creating post:', error);
@@ -151,7 +179,7 @@ ${content}`;
 								type="text"
 								id="post-title-input"
 								bind:value={title}
-								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								required
 							/>
 						</div>
@@ -170,7 +198,7 @@ ${content}`;
 									id="post-slug-input"
 									bind:value={slug}
 									placeholder="your-post-url"
-									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 									required
 								/>
 							</div>
@@ -185,7 +213,7 @@ ${content}`;
 							<select
 								id="post-lang"
 								bind:value={lang}
-								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 							>
 								<option value="en">English</option>
 								<option value="zh-tw">Traditional Chinese</option>
@@ -219,7 +247,7 @@ ${content}`;
 								type="text"
 								bind:value={newTagInput}
 								placeholder="Add new tag"
-								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								onkeypress={(e) => {
 									if (e.key === 'Enter') {
 										e.preventDefault();
@@ -310,7 +338,7 @@ ${content}`;
 								id="post-content"
 								bind:value={content}
 								rows="15"
-								class="z-20 w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="z-20 w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								placeholder="Write your blog post content here using Markdown..."
 							></textarea>
 						{/if}
@@ -332,7 +360,7 @@ ${content}`;
 						<button
 							type="button"
 							onclick={handleCreatePost}
-							class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+							class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-gray-300"
 						>
 							Create Post
 						</button>

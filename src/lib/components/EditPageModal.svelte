@@ -139,7 +139,7 @@
 								id="page-content-textarea"
 								bind:value={content}
 								rows="20"
-								class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								placeholder="Edit your page content here using Markdown..."
 							></textarea>
 						{/if}

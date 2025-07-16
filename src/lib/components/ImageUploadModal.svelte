@@ -175,7 +175,7 @@
 					multiple
 					onchange={handleFileChange}
 					disabled={isLoading}
-					class="block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+					class="block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
 				/>
 			</div>
 
@@ -205,7 +205,7 @@
 			<button
 				onclick={uploadImages}
 				disabled={isLoading || selectedFiles.length === 0}
-				class="w-full rounded-md bg-blue-600 px-4 py-2 text-white transition-colors duration-150 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-400"
+				class="w-full rounded-md bg-blue-600 px-4 py-2 text-white transition-colors duration-150 hover:bg-blue-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-400"
 			>
 				{#if isLoading}
 					<span>{overallProgressMessage || 'Uploading...'}</span>

@@ -198,7 +198,7 @@ ${content}`;
 								type="text"
 								id="edit-post-title-input"
 								bind:value={title}
-								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								required
 							/>
 						</div>
@@ -217,7 +217,7 @@ ${content}`;
 									id="edit-post-slug-input"
 									bind:value={slug}
 									placeholder="your-post-url"
-									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 									required
 								/>
 							</div>
@@ -232,7 +232,7 @@ ${content}`;
 							<select
 								id="edit-post-lang"
 								bind:value={lang}
-								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 							>
 								<option value="en">English</option>
 								<option value="zh-tw">Traditional Chinese</option>
@@ -266,7 +266,7 @@ ${content}`;
 								type="text"
 								bind:value={newTagInput}
 								placeholder="Add new tag"
-								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								onkeypress={(e) => {
 									if (e.key === 'Enter') {
 										e.preventDefault();
@@ -366,7 +366,7 @@ ${content}`;
 								id="edit-post-content"
 								bind:value={content}
 								rows="15"
-								class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								placeholder="Edit your blog post content here using Markdown..."
 							></textarea>
 						{/if}
