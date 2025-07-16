@@ -18,6 +18,8 @@
 	// Reactive access to auth state
 	let authState = $derived(authStore.state);
 
+	let isComposing = $state(false); // 添加這個狀態變數
+
 	async function handleSubmit() {
 		if (!authState.isAuthenticated || !authState.user) {
 			// Save current location and trigger login
@@ -118,8 +120,15 @@
 					rows="4"
 					class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-500 resize-none"
 					disabled={isSubmitting}
+					oncompositionstart={() => {
+						isComposing = true;
+					}}
+					oncompositionend={() => {
+						isComposing = false;
+					}}
 					onkeydown={(e) => {
-						if (e.key === 'Enter' && !e.shiftKey) {
+						// 只有在非輸入法狀態下才處理 Enter 鍵
+						if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
 							e.preventDefault();
 							if (message.trim() && !isSubmitting) {
 								handleSubmit();
