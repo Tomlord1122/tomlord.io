@@ -315,11 +315,11 @@
 			<span class="ml-2 text-gray-600 text-sm">Loading comments...</span>
 		</div>
 	{:else if error}
-		<div class="bg-red-50 border border-red-200 rounded-lg p-4">
+		<div class="rounded-lg p-4 flex flex-col items-center justify-center border border-gray-200">
 			<p class="text-red-600 text-sm">{error}</p>
 			<button
 				onclick={loadComments}
-				class="mt-2 text-sm text-red-700 hover:text-red-800 underline"
+				class="mt-2 text-sm text-red-700 hover:text-red-800 underline cursor-pointer"
 			>
 				Try again
 			</button>
