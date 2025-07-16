@@ -55,19 +55,19 @@
 	- This creates a clear separation between user info and the message body.
 	- No background/border since parent container handles styling
 -->
-<div class="flex flex-col gap-1.5 px-3 py-3 hover:bg-gray-50 transition-colors duration-150">
+<div class="flex flex-col gap-2 px-4 py-4 hover:bg-gray-50 transition-colors duration-150">
 	<!-- Header: avatar, name, time, and like button -->
 	<div class="flex items-center justify-between">
 		<!-- Left side: Avatar, Name, Time -->
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-3">
 			<img
 				src={comment.user_picture}
 				alt={comment.user_name}
-				class="w-6 h-6 rounded-full object-cover"
+				class="w-8 h-8 rounded-full object-cover"
 				onerror={handleImageError}
 			>
-			<div class="flex items-baseline gap-2 text-xs">
-				<span class="font-medium text-gray-900 truncate max-w-[100px]">{comment.user_name}</span>
+			<div class="flex items-baseline gap-2 text-sm">
+				<span class="font-medium text-gray-900 truncate max-w-[120px]">{comment.user_name}</span>
 				<span class="text-gray-500">{formatRelativeTime(comment.created_at)}</span>
 			</div>
 		</div>
@@ -75,12 +75,12 @@
 		<!-- Right side: Like Button -->
 		<button
 			onclick={onLikeToggle}
-			class="flex items-center gap-1 text-xs transition-colors duration-150
+			class="flex items-center gap-1.5 text-sm transition-colors duration-150
 				{comment.user_thumbed ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
 			aria-label="Like"
 		>
 			<svg
-				class="w-3 h-3"
+				class="w-4 h-4"
 				fill={comment.user_thumbed ? 'currentColor' : 'none'}
 				stroke="currentColor"
 				viewBox="0 0 24 24"
@@ -99,5 +99,5 @@
 	</div>
 	
 	<!-- Message content -->
-	<p class="text-sm text-gray-800 whitespace-pre-wrap break-words leading-snug">{comment.message}</p>
+	<p class="text-base text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{comment.message}</p>
 </div>

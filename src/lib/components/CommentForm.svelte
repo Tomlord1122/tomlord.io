@@ -86,7 +86,7 @@
 	}
 </script>
 
-<div class="mt-8 border-t border-gray-300 pt-6 font-serif">
+<div class="mt-8 border-t border-gray-300 pt-6 font-serif not-prose">
 	<h3 class="text-lg font-semibold text-gray-800 mb-4">Leave a Comment</h3>
 	
 	{#if !authState.isAuthenticated}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { wsManager } from '$lib/stores/websocket.svelte';
+	import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
 	import CommentItem from './CommentItem.svelte';
 	import type { Comment } from '$lib/types/comment.js';
 
@@ -22,8 +22,9 @@
 
 	// Make WebSocket connection status reactive
 	let wsConnected = $state(false);
+	let wsState = $state('disconnected');
 
-	// Initialize WebSocket manager
+	// Initialize WebSocket manager only once
 	$effect(() => {
 		wsManager.init();
 	});
@@ -33,17 +34,24 @@
 		wsManager.onAuthChange(authState.isAuthenticated);
 	});
 
-	// Monitor WebSocket connection status
+	// Monitor WebSocket connection status with improved tracking
 	$effect(() => {
-		const checkConnection = () => {
-			wsConnected = wsManager.isConnected;
+		const updateConnectionStatus = () => {
+			const connected = wsManager.isConnected;
+			const state = wsManager.state;
+			
+			if (wsConnected !== connected || wsState !== state) {
+				wsConnected = connected;
+				wsState = state;
+				console.log(`WebSocket status updated: connected=${connected}, state=${state}`);
+			}
 		};
 		
 		// Check immediately
-		checkConnection();
+		updateConnectionStatus();
 		
-		// Check periodically
-		const interval = setInterval(checkConnection, 1000);
+		// Check periodically but less frequently to reduce overhead
+		const interval = setInterval(updateConnectionStatus, 2000);
 		
 		return () => clearInterval(interval);
 	});
@@ -59,9 +67,11 @@
 		return sorted;
 	});
 
-	// Set up WebSocket subscription for this post/blog
+	// Set up WebSocket subscription for this post/blog with improved cleanup
 	$effect(() => {
 		const room = postSlug;  // Always use postSlug as the room name for consistency
+		
+		console.log(`Setting up WebSocket subscription for room: ${room}`);
 		
 		// Subscribe to this room
 		wsManager.subscribeToRooms([room]);
@@ -96,11 +106,16 @@
 		wsManager.addEventListener('new_comment', handleNewComment);
 		wsManager.addEventListener('thumb_update', handleThumbUpdate);
 
-		// Cleanup function
+		// Cleanup function with better error handling
 		return () => {
-			wsManager.removeEventListener('new_comment', handleNewComment);
-			wsManager.removeEventListener('thumb_update', handleThumbUpdate);
-			wsManager.unsubscribeFromRooms([room]);
+			try {
+				console.log(`Cleaning up WebSocket subscription for room: ${room}`);
+				wsManager.removeEventListener('new_comment', handleNewComment);
+				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
+				wsManager.unsubscribeFromRooms([room]);
+			} catch (error) {
+				console.error('Error during WebSocket cleanup:', error);
+			}
 		};
 	});
 
@@ -240,14 +255,39 @@
 		sortBy = target.value as 'time' | 'likes';
 	}
 
-	// Add this function to handle comment addition manually when WebSocket fails
-	function handleCommentAdded() {
-		console.log('Comment added callback triggered, reloading comments...');
-		loadComments();
+	// Helper function to get connection status display
+	function getConnectionStatusDisplay() {
+		switch (wsState) {
+			case ConnectionState.CONNECTED:
+				return 'Live updates active';
+			case ConnectionState.CONNECTING:
+				return 'Connecting...';
+			case ConnectionState.RECONNECTING:
+				return 'Reconnecting...';
+			case ConnectionState.FAILED:
+				return 'Connection failed';
+			default:
+				return 'Live updates disconnected';
+		}
+	}
+
+	// Helper function to get status color
+	function getStatusColor() {
+		switch (wsState) {
+			case ConnectionState.CONNECTED:
+				return 'bg-green-500';
+			case ConnectionState.CONNECTING:
+			case ConnectionState.RECONNECTING:
+				return 'bg-yellow-500';
+			case ConnectionState.FAILED:
+				return 'bg-red-500';
+			default:
+				return 'bg-gray-500';
+		}
 	}
 </script>
 
-<div class="mt-6 font-serif">
+<div class="mt-6 font-serif not-prose">
 	<div class="flex justify-between items-center mb-4">
 		<h3 class="text-lg font-semibold text-gray-800">
 			Comments ({comments.length})
@@ -310,8 +350,8 @@
 		<!-- WebSocket connection status indicator -->
 		{#if authState.isAuthenticated}
 			<div class="mt-2 text-xs text-gray-500 flex items-center space-x-2">
-				<div class="w-2 h-2 rounded-full {wsConnected ? 'bg-green-500' : 'bg-red-500'}"></div>
-				<span>{wsConnected ? 'Live updates active' : 'Live updates connecting...'}</span>
+				<div class="w-2 h-2 rounded-full {getStatusColor()}"></div>
+				<span>{getConnectionStatusDisplay()}</span>
 			</div>
 		{/if}
 	{/if}
