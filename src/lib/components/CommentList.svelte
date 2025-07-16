@@ -335,7 +335,7 @@
 		</div>
 	{:else}
 		<!-- Chat-like comment container -->
-		<div class="bg-white rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
+		<div class="rounded-lg border border-gray-300 max-h-96 overflow-y-auto">
 			<div class="divide-y divide-gray-100">
 				{#each sortedComments() as comment (comment.id)}
 					<CommentItem 

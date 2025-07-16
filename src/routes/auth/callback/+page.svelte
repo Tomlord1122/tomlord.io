@@ -50,9 +50,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Authenticating...</title>
-</svelte:head>
 
 <div class="flex min-h-screen items-center justify-center">
 	<div class="text-center">

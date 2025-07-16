@@ -92,11 +92,11 @@
 	<h3 class="text-lg font-semibold text-gray-800 mb-4">Leave a Comment</h3>
 	
 	{#if !authState.isAuthenticated}
-		<div class="bg-gray-50 rounded-lg p-6 text-center">
+		<div class=" border border-gray-300 rounded-lg p-6 text-center">
 			<p class="text-gray-600 mb-4">Sign in with Google to leave a comment</p>
 			<button
 				onclick={handleLogin}
-				class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+				class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-500 transition-colors cursor-pointer"
 			>
 				<svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
 					<path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

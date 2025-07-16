@@ -55,7 +55,7 @@
 	- This creates a clear separation between user info and the message body.
 	- No background/border since parent container handles styling
 -->
-<div class="flex flex-col gap-2 px-4 py-4 hover:bg-gray-50 transition-colors duration-150">
+<div class="flex flex-col gap-2 px-4 py-4 hover:bg-gray-200 transition-colors duration-150">
 	<!-- Header: avatar, name, time, and like button -->
 	<div class="flex items-center justify-between">
 		<!-- Left side: Avatar, Name, Time -->
