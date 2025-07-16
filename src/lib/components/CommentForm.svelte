@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
+	import { wsManager } from '$lib/stores/websocket.svelte';
 	import type { CreateCommentRequest } from '$lib/types/comment.js';
 
 	interface Props {
@@ -57,8 +58,14 @@
 			});
 
 			if (response.ok) {
+				const responseData = await response.json();
 				message = '';
-				onCommentAdded?.();
+				
+				// Call the callback once for immediate feedback
+				// WebSocket will handle real-time updates for other users
+				if (onCommentAdded) {
+					onCommentAdded();
+				}
 			} else {
 				const errorData = await response.json();
 				error = errorData.error || 'Failed to post comment';
@@ -111,6 +118,14 @@
 					rows="4"
 					class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-500 resize-none"
 					disabled={isSubmitting}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && !e.shiftKey) {
+							e.preventDefault();
+							if (message.trim() && !isSubmitting) {
+								handleSubmit();
+							}
+						}
+					}}
 				></textarea>
 			</div>
 			
