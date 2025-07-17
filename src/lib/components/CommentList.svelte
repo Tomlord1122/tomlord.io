@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
-	import CommentItem from './CommentItem.svelte';
-	import type { Comment } from '$lib/types/comment.js';
+import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
+import { config } from '$lib/config';
+import CommentItem from './CommentItem.svelte';
+import type { Comment } from '$lib/types/comment.js';
 
 	interface Props {
 		postSlug: string;
@@ -149,8 +150,8 @@
 		try {
 			const token = localStorage.getItem('auth_token');
 			const url = blogId
-				? `http://localhost:8080/api/blogs/${postSlug}/messages`
-				: `http://localhost:8080/api/messages/post/${postSlug}`;
+				? `${config.API.BLOGS}/${postSlug}/messages`
+				: `${config.API.MESSAGES}/post/${postSlug}`;
 
 			console.log('Loading comments from:', url);
 
@@ -210,7 +211,7 @@
 
 		try {
 			const token = localStorage.getItem('auth_token');
-			const response = await fetch(`http://localhost:8080/api/messages/${commentId}/thumb`, {
+			const response = await fetch(`${config.API.MESSAGES}/${commentId}/thumb`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`
@@ -281,7 +282,7 @@
 
 		try {
 			const token = localStorage.getItem('auth_token');
-			const response = await fetch(`http://localhost:8080/api/messages/${commentId}`, {
+			const response = await fetch(`${config.API.MESSAGES}/${commentId}`, {
 				method: 'DELETE',
 				headers: {
 					Authorization: `Bearer ${token}`

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { config } from '$lib/config';
 
 export interface User {
 	id: string;
@@ -47,7 +48,7 @@ function createAuthStore() {
 		state.error = null;
 
 		try {
-			const response = await fetch('http://localhost:8080/auth/me', {
+			const response = await fetch(`${config.API.AUTH_ME}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
@@ -77,7 +78,7 @@ function createAuthStore() {
 		if (!browser) return;
 
 		// Redirect to backend OAuth endpoint
-		window.location.href = 'http://localhost:8080/auth/google';
+		window.location.href = `${config.API.AUTH_GOOGLE}`;
 	}
 
 	function logout() {
@@ -89,7 +90,7 @@ function createAuthStore() {
 		state.error = null;
 
 		// Optionally call backend logout endpoint
-		fetch('http://localhost:8080/auth/logout', {
+		fetch(`${config.API.AUTH_LOGOUT}`, {
 			method: 'POST'
 		}).catch(console.error);
 	}

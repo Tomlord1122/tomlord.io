@@ -6,7 +6,8 @@ export const load: LayoutServerLoad = async () => {
 
 	try {
 		// First, try to load from backend API
-		const response = await fetch('http://localhost:8080/api/blogs?limit=100&published=true');
+		const backendUrl = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+		const response = await fetch(`${backendUrl}/api/blogs?limit=100&published=true`);
 
 		if (response.ok) {
 			const data = await response.json();

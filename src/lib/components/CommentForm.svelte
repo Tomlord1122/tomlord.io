@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { wsManager } from '$lib/stores/websocket.svelte';
-	import type { CreateCommentRequest } from '$lib/types/comment.js';
+import { wsManager } from '$lib/stores/websocket.svelte';
+import { config } from '$lib/config';
+import type { CreateCommentRequest } from '$lib/types/comment.js';
 
 	interface Props {
 		postSlug: string;
@@ -50,7 +51,7 @@
 				commentData.blog_id = blogId;
 			}
 
-			const response = await fetch('http://localhost:8080/api/messages/', {
+			const response = await fetch(`${config.API.MESSAGES}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

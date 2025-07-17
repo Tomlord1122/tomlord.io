@@ -7,7 +7,8 @@ export const load: PageLoad = async ({ params, fetch }) => {
 
 	try {
 		// First, try to get blog metadata from backend API
-		const blogResponse = await fetch(`http://localhost:8080/api/blogs/${slug}`);
+		const backendUrl = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+		const blogResponse = await fetch(`${backendUrl}/api/blogs/${slug}`);
 
 		if (!blogResponse.ok) {
 			if (blogResponse.status === 404) {

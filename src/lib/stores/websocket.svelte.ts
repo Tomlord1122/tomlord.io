@@ -1,4 +1,5 @@
 import { authStore } from './auth.svelte';
+import { PUBLIC_BACKEND_WS_URL } from '$env/static/public';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -103,7 +104,8 @@ class WebSocketManager {
 
 			// Include auth token if available
 			const token = localStorage.getItem('auth_token');
-			let wsUrl = 'ws://localhost:8080/ws';
+			// Use environment variable for WebSocket URL (supports Minikube/production)
+			let wsUrl = PUBLIC_BACKEND_WS_URL + '/ws';
 
 			// Add rooms as query parameter if provided
 			if (rooms.length > 0) {
