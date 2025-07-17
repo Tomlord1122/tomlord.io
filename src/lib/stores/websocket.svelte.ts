@@ -1,6 +1,7 @@
 import { authStore } from './auth.svelte';
 import { PUBLIC_BACKEND_WS_URL } from '$env/static/public';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
+import { config } from '$lib/config.js';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -59,13 +60,14 @@ enum ConnectionState {
 class WebSocketManager {
 	private ws: WebSocket | null = null;
 	private reconnectAttempts = 0;
-	private maxReconnectAttempts = 5;
-	private reconnectInterval = 3000; // 3 seconds
+	private maxReconnectAttempts = 3; // Reduced from 5
+	private reconnectInterval = 2000; // Reduced from 3000
 	private subscribedRooms = new Set<string>();
 	private isInitialized = false;
 	private connectionState = ConnectionState.DISCONNECTED;
 	private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 	private connectionCheckTimer: ReturnType<typeof setInterval> | null = null;
+	private connectionTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Event listeners for different message types
 	private listeners: Map<MessageType, Set<(payload: MessagePayload) => void>> = new Map();
@@ -93,10 +95,11 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Check auth state and connect if authenticated
+		// Check auth state and connect if authenticated - but don't block page loading
 		const authState = authStore.state;
 		if (authState.isAuthenticated) {
-			this.connect();
+			// Use setTimeout to make connection non-blocking
+			setTimeout(() => this.connect(), 100);
 		}
 	}
 
@@ -155,10 +158,25 @@ class WebSocketManager {
 
 			this.ws = new WebSocket(wsUrl);
 
+			// Set a shorter connection timeout
+			this.connectionTimeout = setTimeout(() => {
+				if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+					console.warn('WebSocket connection timeout - closing connection');
+					this.ws.close();
+					this.handleConnectionFailure();
+				}
+			}, config.WEBSOCKET_TIMEOUT); // Use config timeout (2 seconds)
+
 			this.ws.onopen = () => {
 				console.log('WebSocket connected successfully');
 				this.connectionState = ConnectionState.CONNECTED;
 				this.reconnectAttempts = 0;
+
+				// Clear connection timeout
+				if (this.connectionTimeout) {
+					clearTimeout(this.connectionTimeout);
+					this.connectionTimeout = null;
+				}
 
 				// Clear any existing reconnect timer
 				if (this.reconnectTimer) {
@@ -190,31 +208,28 @@ class WebSocketManager {
 				this.connectionState = ConnectionState.DISCONNECTED;
 				this.ws = null;
 
+				// Clear connection timeout
+				if (this.connectionTimeout) {
+					clearTimeout(this.connectionTimeout);
+					this.connectionTimeout = null;
+				}
+
 				// Only attempt reconnect if it wasn't a clean close and we haven't exceeded max attempts
 				if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
 					this.attemptReconnect();
 				} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 					this.connectionState = ConnectionState.FAILED;
-					console.error('Max reconnection attempts reached, giving up');
+					console.warn('Max WebSocket reconnection attempts reached, giving up (this won\'t affect page functionality)');
 				}
 			};
 
 			this.ws.onerror = (error) => {
-				console.error('WebSocket error:', error);
-				this.connectionState = ConnectionState.DISCONNECTED;
+				console.warn('WebSocket error (this won\'t affect page functionality):', error);
+				this.handleConnectionFailure();
 			};
-
-			// Set a connection timeout
-			setTimeout(() => {
-				if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
-					console.warn('WebSocket connection timeout');
-					this.ws.close();
-				}
-			}, 10000); // 10 second timeout
 		} catch (error) {
-			console.error('Failed to create WebSocket connection:', error);
-			this.connectionState = ConnectionState.DISCONNECTED;
-			this.attemptReconnect();
+			console.warn('Failed to create WebSocket connection (this won\'t affect page functionality):', error);
+			this.handleConnectionFailure();
 		}
 	}
 
@@ -283,6 +298,11 @@ class WebSocketManager {
 		if (this.connectionCheckTimer) {
 			clearInterval(this.connectionCheckTimer);
 			this.connectionCheckTimer = null;
+		}
+
+		if (this.connectionTimeout) {
+			clearTimeout(this.connectionTimeout);
+			this.connectionTimeout = null;
 		}
 
 		// Clean up connection
@@ -364,6 +384,25 @@ class WebSocketManager {
 				this.connect(Array.from(this.subscribedRooms));
 			}
 		}, delay);
+	}
+
+	// Handle connection failures without blocking the application
+	private handleConnectionFailure() {
+		this.connectionState = ConnectionState.DISCONNECTED;
+		
+		// Clear connection timeout
+		if (this.connectionTimeout) {
+			clearTimeout(this.connectionTimeout);
+			this.connectionTimeout = null;
+		}
+
+		// Only attempt reconnect if we haven't exceeded max attempts
+		if (this.reconnectAttempts < this.maxReconnectAttempts) {
+			this.attemptReconnect();
+		} else {
+			this.connectionState = ConnectionState.FAILED;
+			console.warn('WebSocket connection failed permanently (comments may not update in real-time)');
+		}
 	}
 
 	// Start connection health monitoring

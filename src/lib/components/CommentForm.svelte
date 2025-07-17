@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { config } from '$lib/config.js';
+	import { config, fetchWithTimeout } from '$lib/config.js';
 	import type { CreateCommentRequest } from '$lib/types/comment.js';
 
 	interface Props {
@@ -50,28 +50,34 @@
 				commentData.blog_id = blogId;
 			}
 
-			const response = await fetch(`${config.API.MESSAGES}/`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
+			// Use fetchWithTimeout for comment submission
+			const response = await fetchWithTimeout(
+				`${config.API.MESSAGES}/`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`
+					},
+					body: JSON.stringify(commentData)
 				},
-				body: JSON.stringify(commentData)
-			});
+				5000 // 5 second timeout for comment submission
+			);
 
 			if (response.ok) {
 				message = '';
+				error = ''; // Clear any previous errors
 				// Call the callback once for immediate feedback
 				// WebSocket will handle real-time updates for other users
 				if (onCommentAdded) {
 					onCommentAdded();
 				}
 			} else {
-				const errorData = await response.json();
+				const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
 				error = errorData.error || 'Failed to post comment';
 			}
 		} catch (err) {
-			console.error('Error posting comment:', err);
+			console.warn('Error posting comment:', err);
 			error = 'Failed to post comment. Please try again.';
 		} finally {
 			isSubmitting = false;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
-	import { config } from '$lib/config.js';
+	import { config, fetchWithTimeout } from '$lib/config.js';
 	import CommentItem from './CommentItem.svelte';
 	import type { Comment } from '$lib/types/comment.js';
 
@@ -167,17 +167,26 @@
 				headers['Authorization'] = `Bearer ${token}`;
 			}
 
-			const response = await fetch(url, { headers });
+			// Use fetchWithTimeout to prevent hanging
+			const response = await fetchWithTimeout(
+				url, 
+				{ headers },
+				2000 // 2 second timeout for comments
+			);
 
 			if (response.ok) {
 				const data = await response.json();
 				comments = data.messages || [];
 			} else {
-				error = 'Failed to load comments';
+				// Don't show error for non-critical comment loading
+				console.warn('Failed to load comments:', response.status);
+				comments = []; // Empty comments array, don't block the page
 			}
 		} catch (err) {
-			console.error('Error loading comments:', err);
-			error = 'Failed to load comments';
+			console.warn('Error loading comments (this won\'t affect page functionality):', err);
+			// Set empty comments instead of error to not block the page
+			comments = [];
+			// Only show error in console, not to user
 		} finally {
 			isLoading = false;
 		}
@@ -217,12 +226,18 @@
 
 		try {
 			const token = localStorage.getItem('auth_token');
-			const response = await fetch(`${config.API.MESSAGES}/${commentId}/thumb`, {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			});
+			
+			// Use fetchWithTimeout for like toggle as well
+			const response = await fetchWithTimeout(
+				`${config.API.MESSAGES}/${commentId}/thumb`,
+				{
+					method: 'POST',
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
+				},
+				3000 // 3 second timeout for like toggle
+			);
 
 			if (response.ok) {
 				const data = await response.json();
@@ -251,11 +266,13 @@
 					}
 					return comment;
 				});
-				console.error('Failed to toggle like');
+				console.warn('Failed to toggle like');
 			}
-		} catch (err) {
-			// If there was an error, revert the optimistic update
-			comments = comments.map((comment: Comment) => {
+		} catch (error) {
+			console.warn('Error toggling like:', error);
+			
+			// Revert the optimistic update
+			comments = comments.map((comment) => {
 				if (comment.id === commentId) {
 					return {
 						...comment,
@@ -265,7 +282,6 @@
 				}
 				return comment;
 			});
-			console.error('Error toggling like:', err);
 		}
 	}
 

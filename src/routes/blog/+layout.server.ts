@@ -1,40 +1,38 @@
 import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata, PostData } from '$lib/types/post.js';
-import { config } from '$lib/config.js';
+import { config, fetchWithTimeout, fetchWithFallback } from '$lib/config.js';
 
 export const load: LayoutServerLoad = async () => {
-	let posts: PostMetadata[] = [];
-
-	try {
-		// First, try to load from backend API
-		const response = await fetch(`${config.API.BLOGS}/?limit=100&published=true`);
-
-		if (response.ok) {
-			const data: { blogs: PostData[] } = await response.json();
-			// Transform backend blog data to PostMetadata format
-			posts = data.blogs.map((blog: PostData) => ({
-				title: blog.title,
-				date: blog.date,
-				slug: blog.slug,
-				description: blog.description || '',
-				tags: blog.tags || [],
-				lang: blog.lang || 'en',
-				duration: blog.duration || '5min'
-			}));
-
-			console.log(`Loaded ${posts.length} posts from backend API`);
-		} else {
-			console.warn('Backend API not available, falling back to local markdown files');
-			throw new Error('Backend API not available');
+	// API 載入函數
+	const loadFromAPI = async (): Promise<PostMetadata[]> => {
+		const response = await fetchWithTimeout(`${config.API.BLOGS}/?limit=100&published=true`);
+		
+		if (!response.ok) {
+			throw new Error(`Backend API error: ${response.status}`);
 		}
-	} catch (error) {
-		console.warn('Failed to load from backend API, loading from local markdown files:', error);
 
-		// Fallback: load from local markdown files
+		const data: { blogs: PostData[] } = await response.json();
+		const posts = data.blogs.map((blog: PostData) => ({
+			title: blog.title,
+			date: blog.date,
+			slug: blog.slug,
+			description: blog.description || '',
+			tags: blog.tags || [],
+			lang: blog.lang || 'en',
+			duration: blog.duration || '5min'
+		}));
+
+		console.log(`✅ Loaded ${posts.length} posts from backend API`);
+		return posts;
+	};
+
+	// 本地文件載入函數
+	const loadFromLocal = async (): Promise<PostMetadata[]> => {
 		const postModules = import.meta.glob('/src/markdown/posts/**/*.svx', {
 			eager: true
 		});
 
+		const posts: PostMetadata[] = [];
 		for (const postPath in postModules) {
 			const file = postModules[postPath];
 			if (file && typeof file === 'object' && 'metadata' in file) {
@@ -53,7 +51,22 @@ export const load: LayoutServerLoad = async () => {
 			}
 		}
 
-		console.log(`Loaded ${posts.length} posts from local markdown files as fallback`);
+		console.log(`📁 Loaded ${posts.length} posts from local markdown files`);
+		return posts;
+	};
+
+	// 使用快速失敗機制
+	let posts: PostMetadata[] = [];
+	try {
+		posts = await fetchWithFallback(
+			loadFromAPI,
+			loadFromLocal,
+			1500 // 更短的超時時間，1.5秒
+		);
+	} catch (error) {
+		console.error('Both API and local loading failed:', error);
+		// 如果都失敗，返回空陣列但不讓頁面崩潰
+		posts = [];
 	}
 
 	// Sort posts by date (newest first)
