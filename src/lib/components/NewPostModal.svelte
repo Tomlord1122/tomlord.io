@@ -64,7 +64,7 @@ ${content}`;
 			const headers: Record<string, string> = {
 				'Content-Type': 'application/json'
 			};
-			
+
 			// Add authorization header if token exists
 			if (token) {
 				headers['Authorization'] = `Bearer ${token}`;
@@ -98,7 +98,7 @@ ${content}`;
 			} else {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('Server error:', errorData);
-				
+
 				if (errorData.requiresAuth) {
 					alert('Please sign in to save posts to the database. The post was saved locally.');
 					// Still call onSaved since the file was saved locally

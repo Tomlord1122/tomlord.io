@@ -5,12 +5,12 @@ import path from 'path';
 export async function POST({ request }) {
 	try {
 		const postsDir = path.join(process.cwd(), 'src', 'markdown', 'posts');
-		
+
 		if (!fs.existsSync(postsDir)) {
 			return json({ error: 'Posts directory not found' }, { status: 404 });
 		}
 
-		const files = fs.readdirSync(postsDir).filter(file => file.endsWith('.svx'));
+		const files = fs.readdirSync(postsDir).filter((file) => file.endsWith('.svx'));
 		const results = [];
 		const errors = [];
 
@@ -18,7 +18,7 @@ export async function POST({ request }) {
 			try {
 				const filePath = path.join(postsDir, filename);
 				const content = fs.readFileSync(filePath, 'utf-8');
-				
+
 				// Parse frontmatter
 				const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
 				if (!frontmatterMatch) {
@@ -31,7 +31,7 @@ export async function POST({ request }) {
 
 				// Parse frontmatter to extract blog metadata
 				const frontmatterData: Record<string, any> = {};
-				frontmatterString.split('\n').forEach(line => {
+				frontmatterString.split('\n').forEach((line) => {
 					const [key, ...valueParts] = line.split(':');
 					if (key && valueParts.length > 0) {
 						const value = valueParts.join(':').trim();
@@ -44,8 +44,8 @@ export async function POST({ request }) {
 							if (tagsContent.trim()) {
 								frontmatterData[key.trim()] = tagsContent
 									.split(',')
-									.map(tag => tag.trim().replace(/'/g, ''))
-									.filter(tag => tag);
+									.map((tag) => tag.trim().replace(/'/g, ''))
+									.filter((tag) => tag);
 							} else {
 								frontmatterData[key.trim()] = [];
 							}
@@ -69,14 +69,14 @@ export async function POST({ request }) {
 
 				// Check if blog already exists
 				const checkResponse = await fetch(`http://localhost:8080/api/blogs/${blogData.slug}`);
-				
+
 				if (checkResponse.ok) {
 					// Blog exists, update it
 					const updateResponse = await fetch(`http://localhost:8080/api/blogs/${blogData.slug}`, {
 						method: 'PUT',
 						headers: {
 							'Content-Type': 'application/json',
-							'Authorization': `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
+							Authorization: `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
 						},
 						body: JSON.stringify(blogData)
 					});
@@ -98,7 +98,7 @@ export async function POST({ request }) {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
-							'Authorization': `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
+							Authorization: `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
 						},
 						body: JSON.stringify(blogData)
 					});
@@ -115,9 +115,10 @@ export async function POST({ request }) {
 						errors.push(`${filename}: Failed to create - ${errorData.error || 'Unknown error'}`);
 					}
 				}
-
 			} catch (fileError) {
-				errors.push(`${filename}: ${fileError instanceof Error ? fileError.message : 'Unknown file error'}`);
+				errors.push(
+					`${filename}: ${fileError instanceof Error ? fileError.message : 'Unknown file error'}`
+				);
 			}
 		}
 
@@ -132,12 +133,14 @@ export async function POST({ request }) {
 				failed: errors.length
 			}
 		});
-
 	} catch (error) {
 		console.error('Error syncing blogs:', error);
-		return json({
-			error: 'Failed to sync blogs',
-			details: error instanceof Error ? error.message : 'Unknown error'
-		}, { status: 500 });
+		return json(
+			{
+				error: 'Failed to sync blogs',
+				details: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
 	}
-} 
+}

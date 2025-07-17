@@ -7,7 +7,7 @@ export const load: LayoutServerLoad = async () => {
 	try {
 		// First, try to load from backend API
 		const response = await fetch('http://localhost:8080/api/blogs?limit=100&published=true');
-		
+
 		if (response.ok) {
 			const data = await response.json();
 			// Transform backend blog data to PostMetadata format
@@ -20,7 +20,7 @@ export const load: LayoutServerLoad = async () => {
 				lang: blog.lang || 'en',
 				duration: blog.duration || '5min'
 			}));
-			
+
 			console.log(`Loaded ${posts.length} posts from backend API`);
 		} else {
 			console.warn('Backend API not available, falling back to local markdown files');
@@ -28,7 +28,7 @@ export const load: LayoutServerLoad = async () => {
 		}
 	} catch (error) {
 		console.warn('Failed to load from backend API, loading from local markdown files:', error);
-		
+
 		// Fallback: load from local markdown files
 		const postModules = import.meta.glob('/src/markdown/posts/**/*.svx', {
 			eager: true
@@ -51,7 +51,7 @@ export const load: LayoutServerLoad = async () => {
 				}
 			}
 		}
-		
+
 		console.log(`Loaded ${posts.length} posts from local markdown files as fallback`);
 	}
 
@@ -95,4 +95,4 @@ async function getAvailablePhotos(): Promise<string[]> {
 		console.warn('Failed to load available photos:', error);
 		return [];
 	}
-};
+}

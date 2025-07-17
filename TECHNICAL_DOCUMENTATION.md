@@ -7,6 +7,7 @@
 ## 技術架構 (Technical Architecture)
 
 ### 前端 Frontend
+
 - **框架**: SvelteKit (Svelte 5)
 - **CSS 框架**: Tailwind CSS 4.0
 - **Markdown 處理**: MDSvex (Svelte + Markdown)
@@ -15,6 +16,7 @@
 - **分析**: Vercel Analytics
 
 ### 後端 Backend
+
 - **語言**: Go 1.24.4
 - **框架**: Gin
 - **資料庫**: PostgreSQL (使用 pgx 驅動)
@@ -22,6 +24,7 @@
 - **測試**: Go 內建測試框架 + Testcontainers
 
 ### 開發工具 (Development Tools)
+
 - **包管理器**: pnpm (前端) / Go Modules (後端)
 - **程式碼品質**: ESLint, Prettier, TypeScript
 - **熱重載**: Vite (前端) / Air (後端)
@@ -81,6 +84,7 @@ tomlord.io-backend/
 ### 1. 部落格系統 (Blog System)
 
 #### 文章管理
+
 - **動態路由**: 使用 SvelteKit 的 `[slug]` 動態路由載入個別文章
 - **Markdown 支援**: 透過 MDSvex 處理 Markdown 格式文章
 - **前端 Matter**: 支援 YAML 前端 Matter，包含標題、日期、標籤等元數據
@@ -88,16 +92,17 @@ tomlord.io-backend/
 ```typescript
 // 文章型別定義
 export interface PostMetadata {
-  title: string;
-  date: string;
-  slug: string;
-  description: string;
-  tags: string[];
-  lang: string;
+	title: string;
+	date: string;
+	slug: string;
+	description: string;
+	tags: string[];
+	lang: string;
 }
 ```
 
 #### 內容管理 (開發模式)
+
 - **即時編輯**: 在開發環境中可直接編輯文章和頁面內容
 - **檔案自動儲存**: 透過 API 端點直接寫入檔案系統
 - **圖片上傳**: 支援圖片上傳並自動轉換為 WebP 格式
@@ -109,16 +114,17 @@ export interface PostMetadata {
 ```typescript
 // 使用 Svelte 5 的 $state 和 $props
 const navItems = $state([
-  { href: '/', label: 'Home' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/project', label: 'Project' },
-  { href: '/photography', label: 'Photography' }
+	{ href: '/', label: 'Home' },
+	{ href: '/blog', label: 'Blog' },
+	{ href: '/project', label: 'Project' },
+	{ href: '/photography', label: 'Photography' }
 ]);
 ```
 
 ### 3. 互動式背景 (Interactive Background)
 
 實現了基於滑鼠位置的星空動畫效果：
+
 - **Canvas 渲染**: 使用 HTML5 Canvas 繪製動畫
 - **滑鼠互動**: 根據滑鼠位置動態調整星點位置和亮度
 - **響應式設計**: 在行動裝置上自動禁用以優化效能
@@ -133,6 +139,7 @@ const navItems = $state([
 ### 前端 API 端點
 
 #### 1. 文章管理 API
+
 ```typescript
 // POST /api/add-post - 新增文章
 // POST /api/edit-post - 編輯文章
@@ -140,12 +147,14 @@ const navItems = $state([
 ```
 
 #### 2. 頁面管理 API
+
 ```typescript
 // POST /api/edit-page - 編輯頁面
 // GET /api/edit-page?page=<page> - 獲取頁面內容
 ```
 
 #### 3. 圖片上傳 API
+
 ```typescript
 // POST /api/upload-image - 上傳圖片
 // 自動轉換為 WebP 格式並優化
@@ -163,16 +172,19 @@ const navItems = $state([
 ## 資料流程 (Data Flow)
 
 ### 1. 靜態內容載入
+
 ```
 Markdown 檔案 → MDSvex 處理 → SvelteKit 路由 → 頁面渲染
 ```
 
 ### 2. 動態內容編輯 (開發模式)
+
 ```
 前端編輯器 → API 請求 → 檔案系統寫入 → 頁面重新整理
 ```
 
 ### 3. 圖片處理流程
+
 ```
 上傳檔案 → Sharp 處理 → WebP 轉換 → 靜態資源儲存
 ```
@@ -228,10 +240,12 @@ make itest
 ## 環境配置 (Environment Configuration)
 
 ### 前端環境變數
+
 - **開發模式檢測**: 透過 `window.location.hostname === 'localhost'` 判斷
 - **Vercel Analytics**: 自動根據環境切換開發/生產模式
 
 ### 後端環境變數
+
 ```bash
 # 資料庫配置
 BLUEPRINT_DB_DATABASE=your_database
@@ -248,11 +262,13 @@ PORT=8080
 ## 部署策略 (Deployment Strategy)
 
 ### 前端部署 (Vercel)
+
 - **自動部署**: 連接 Git 儲存庫，推送後自動部署
 - **CDN 加速**: Vercel 全球 CDN 分發
 - **Analytics**: 整合 Vercel Analytics 追蹤使用者行為
 
 ### 後端部署 (容器化)
+
 ```dockerfile
 # 多階段構建
 FROM golang:1.23-alpine AS build
@@ -262,12 +278,14 @@ FROM alpine:3.20.1 AS prod
 ## 效能優化 (Performance Optimization)
 
 ### 前端優化
+
 1. **圖片優化**: 自動轉換為 WebP 格式
 2. **程式碼分割**: SvelteKit 自動程式碼分割
 3. **預載入**: 導航連結支援資料預載入
 4. **響應式設計**: 行動裝置優化
 
 ### 後端優化
+
 1. **連接池**: 資料庫連接重用
 2. **優雅關機**: 支援優雅關機處理
 3. **CORS 優化**: 精確的 CORS 配置
@@ -275,11 +293,13 @@ FROM alpine:3.20.1 AS prod
 ## 測試策略 (Testing Strategy)
 
 ### 前端測試
+
 - **單元測試**: Vitest + Testing Library
 - **型別檢查**: TypeScript 靜態型別檢查
 - **E2E 測試**: 計劃使用 Playwright
 
 ### 後端測試
+
 - **單元測試**: Go 內建測試框架
 - **整合測試**: Testcontainers 進行資料庫測試
 - **健康檢查**: 內建健康檢查端點
@@ -301,10 +321,12 @@ FROM alpine:3.20.1 AS prod
 ### 常見問題
 
 1. **開發模式編輯功能無法使用**
+
    - 確認是在 `localhost` 環境運行
    - 檢查 API 端點是否正確回應
 
 2. **圖片上傳失敗**
+
    - 確認 `sharp` 套件正確安裝
    - 檢查檔案權限設定
 

@@ -39,20 +39,20 @@
 		const updateConnectionStatus = () => {
 			const connected = wsManager.isConnected;
 			const state = wsManager.state;
-			
+
 			if (wsConnected !== connected || wsState !== state) {
 				wsConnected = connected;
 				wsState = state;
 				console.log(`WebSocket status updated: connected=${connected}, state=${state}`);
 			}
 		};
-		
+
 		// Check immediately
 		updateConnectionStatus();
-		
+
 		// Check periodically but less frequently to reduce overhead
 		const interval = setInterval(updateConnectionStatus, 2000);
-		
+
 		return () => clearInterval(interval);
 	});
 
@@ -60,7 +60,9 @@
 	let sortedComments = $derived(() => {
 		const sorted = [...comments];
 		if (sortBy === 'time') {
-			return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+			return sorted.sort(
+				(a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+			);
 		} else if (sortBy === 'likes') {
 			return sorted.sort((a, b) => b.thumb_count - a.thumb_count);
 		}
@@ -69,13 +71,13 @@
 
 	// Set up WebSocket subscription for this post/blog with improved cleanup
 	$effect(() => {
-		const room = postSlug;  // Always use postSlug as the room name for consistency
-		
+		const room = postSlug; // Always use postSlug as the room name for consistency
+
 		console.log(`Setting up WebSocket subscription for room: ${room}`);
-		
+
 		// Subscribe to this room
 		wsManager.subscribeToRooms([room]);
-		
+
 		// Set up event listeners for real-time updates
 		const handleNewComment = (payload: any) => {
 			console.log('New comment received via WebSocket:', payload);
@@ -85,11 +87,11 @@
 
 		const handleThumbUpdate = (payload: any) => {
 			console.log('Thumb update received via WebSocket:', payload);
-			
+
 			// Only update if this change came from a different user
 			// (to avoid duplicate updates from our own actions)
 			if (authState.user?.id !== payload.user_id) {
-				comments = comments.map(comment => {
+				comments = comments.map((comment) => {
 					if (comment.id === payload.message_id) {
 						return {
 							...comment,
@@ -102,9 +104,18 @@
 			}
 		};
 
+		// Add handler for comment deletion
+		const handleCommentDelete = (payload: any) => {
+			console.log('Comment delete received via WebSocket:', payload);
+			
+			// Remove the deleted comment from the list
+			comments = comments.filter((comment) => comment.id !== payload.message_id);
+		};
+
 		// Add event listeners
 		wsManager.addEventListener('new_comment', handleNewComment);
 		wsManager.addEventListener('thumb_update', handleThumbUpdate);
+		wsManager.addEventListener('comment_delete', handleCommentDelete);
 
 		// Cleanup function with better error handling
 		return () => {
@@ -112,6 +123,7 @@
 				console.log(`Cleaning up WebSocket subscription for room: ${room}`);
 				wsManager.removeEventListener('new_comment', handleNewComment);
 				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
+				wsManager.removeEventListener('comment_delete', handleCommentDelete);
 				wsManager.unsubscribeFromRooms([room]);
 			} catch (error) {
 				console.error('Error during WebSocket cleanup:', error);
@@ -136,7 +148,7 @@
 
 		try {
 			const token = localStorage.getItem('auth_token');
-			const url = blogId 
+			const url = blogId
 				? `http://localhost:8080/api/blogs/${postSlug}/messages`
 				: `http://localhost:8080/api/messages/post/${postSlug}`;
 
@@ -175,17 +187,17 @@
 		}
 
 		// Find the current comment to get its current state
-		const currentComment = comments.find(c => c.id === commentId);
+		const currentComment = comments.find((c) => c.id === commentId);
 		if (!currentComment) return;
 
 		// Optimistically update the UI immediately
 		const wasThumbedByUser = currentComment.user_thumbed;
-		const newThumbCount = wasThumbedByUser 
-			? currentComment.thumb_count - 1 
+		const newThumbCount = wasThumbedByUser
+			? currentComment.thumb_count - 1
 			: currentComment.thumb_count + 1;
 
 		// Update local state immediately for instant feedback
-		comments = comments.map(comment => {
+		comments = comments.map((comment) => {
 			if (comment.id === commentId) {
 				return {
 					...comment,
@@ -201,16 +213,16 @@
 			const response = await fetch(`http://localhost:8080/api/messages/${commentId}/thumb`, {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${token}`
+					Authorization: `Bearer ${token}`
 				}
 			});
 
 			if (response.ok) {
 				const data = await response.json();
 				console.log('Like toggled successfully:', data);
-				
+
 				// Update with the actual server response to ensure consistency
-				comments = comments.map(comment => {
+				comments = comments.map((comment) => {
 					if (comment.id === commentId) {
 						return {
 							...comment,
@@ -222,7 +234,7 @@
 				});
 			} else {
 				// If the request failed, revert the optimistic update
-				comments = comments.map(comment => {
+				comments = comments.map((comment) => {
 					if (comment.id === commentId) {
 						return {
 							...comment,
@@ -247,6 +259,47 @@
 				return comment;
 			});
 			console.error('Error toggling like:', err);
+		}
+	}
+
+	async function handleDeleteMessage(commentId: string) {
+		if (!authState.isAuthenticated) {
+			// Save current location and trigger login
+			if (typeof window !== 'undefined') {
+				sessionStorage.setItem('auth_return_to', window.location.pathname);
+			}
+			authStore.login();
+			return;
+		}
+
+		// Find the current comment to get its current state
+		const currentComment = comments.find((c) => c.id === commentId);
+		if (!currentComment) return;
+
+		// Optimistically update the UI immediately
+		comments = comments.filter((c) => c.id !== commentId);
+
+		try {
+			const token = localStorage.getItem('auth_token');
+			const response = await fetch(`http://localhost:8080/api/messages/${commentId}`, {
+				method: 'DELETE',
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
+
+			if (response.ok) {
+				console.log('Message deleted successfully');
+				// WebSocket will handle broadcasting the delete event to other users
+			} else {
+				// If the request failed, revert the optimistic update
+				comments = [currentComment, ...comments];
+				console.error('Failed to delete message');
+			}
+		} catch (err) {
+			// If there was an error, revert the optimistic update
+			comments = [currentComment, ...comments];
+			console.error('Error deleting message:', err);
 		}
 	}
 
@@ -287,12 +340,12 @@
 	}
 </script>
 
-<div class="mt-6 font-serif not-prose">
-	<div class="flex justify-between items-center mb-4">
+<div class="not-prose mt-6 font-serif">
+	<div class="mb-4 flex items-center justify-between">
 		<h3 class="text-lg font-semibold text-gray-800">
 			Comments ({comments.length})
 		</h3>
-		
+
 		{#if comments.length > 1}
 			<div class="flex items-center space-x-2">
 				<label for="sort" class="text-sm text-gray-600">Sort by:</label>
@@ -300,7 +353,7 @@
 					id="sort"
 					value={sortBy}
 					onchange={handleSortChange}
-					class="text-sm border border-gray-300 rounded-md py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+					class="rounded-md border border-gray-300 bg-white py-1 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 				>
 					<option value="time">Newest</option>
 					<option value="likes">Likes</option>
@@ -311,50 +364,58 @@
 
 	{#if isLoading}
 		<div class="flex items-center justify-center py-8">
-			<div class="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-			<span class="ml-2 text-gray-600 text-sm">Loading comments...</span>
+			<div
+				class="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"
+			></div>
+			<span class="ml-2 text-sm text-gray-600">Loading comments...</span>
 		</div>
 	{:else if error}
-		<div class="rounded-lg p-4 flex flex-col items-center justify-center border border-gray-300">
+		<div class="flex flex-col items-center justify-center rounded-lg border border-gray-300 p-4">
 			<p class="text-sm">{error}</p>
 			<button
 				onclick={loadComments}
-				class="mt-2 text-sm text-gray-500 hover:text-gray-700 underline cursor-pointer"
+				class="mt-2 cursor-pointer text-sm text-gray-500 underline hover:text-gray-700"
 			>
 				Try again
 			</button>
 		</div>
 	{:else if comments.length === 0}
-		<div class="text-center py-8">
-			<div class="text-gray-400 mb-2">
-				<svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+		<div class="py-8 text-center">
+			<div class="mb-2 text-gray-400">
+				<svg class="mx-auto h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="1.5"
+						d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+					/>
 				</svg>
 			</div>
-			<p class="text-gray-500 text-sm">No comments yet. Be the first to share your thoughts!</p>
+			<p class="text-sm text-gray-500">No comments yet. Be the first to share your thoughts!</p>
 		</div>
 	{:else}
 		<!-- Chat-like comment container -->
-		<div class="rounded-lg border border-gray-300 max-h-96 overflow-y-auto">
+		<div class="max-h-96 overflow-y-auto rounded-lg border border-gray-300">
 			<div class="divide-y divide-gray-100">
 				{#each sortedComments() as comment (comment.id)}
-					<CommentItem 
-						{comment} 
+					<CommentItem
+						{comment}
 						onLikeToggle={() => handleLikeToggle(comment.id)}
+						onDeleteMessage={() => handleDeleteMessage(comment.id)}
 						currentUserId={authState.user?.id}
 					/>
 				{/each}
 			</div>
 		</div>
-		
+
 		<!-- WebSocket connection status indicator -->
 		{#if authState.isAuthenticated}
-			<div class="mt-2 text-xs text-gray-500 flex items-center space-x-2">
-				<div class="w-2 h-2 rounded-full {getStatusColor()}"></div>
+			<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
+				<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
 				<span>{getConnectionStatusDisplay()}</span>
 			</div>
 		{/if}
 	{/if}
-	
+
 	<!-- Comment Form should be imported and used here with the callback -->
-</div> 
+</div>

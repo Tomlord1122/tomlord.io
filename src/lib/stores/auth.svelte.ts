@@ -49,7 +49,7 @@ function createAuthStore() {
 		try {
 			const response = await fetch('http://localhost:8080/auth/me', {
 				headers: {
-					'Authorization': `Bearer ${token}`
+					Authorization: `Bearer ${token}`
 				}
 			});
 
@@ -75,7 +75,7 @@ function createAuthStore() {
 
 	function login() {
 		if (!browser) return;
-		
+
 		// Redirect to backend OAuth endpoint
 		window.location.href = 'http://localhost:8080/auth/google';
 	}
@@ -107,7 +107,9 @@ function createAuthStore() {
 
 	// Return readonly state and methods
 	return {
-		get state() { return state; },
+		get state() {
+			return state;
+		},
 		login,
 		logout,
 		setToken,
@@ -117,4 +119,4 @@ function createAuthStore() {
 }
 
 // Create and export the auth store instance
-export const authStore = createAuthStore(); 
+export const authStore = createAuthStore();

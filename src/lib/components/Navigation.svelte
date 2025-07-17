@@ -57,9 +57,7 @@
 					{@const isNavigatingTo = navigating.to?.url.pathname === item.href}
 					<a
 						href={item.href}
-						class={`nav-link relative  ${
-							active ? 'text-gray-900' : ''
-						} `}
+						class={`nav-link relative  ${active ? 'text-gray-900' : ''} `}
 						onmouseenter={() => handleMouseEnter(item.href)}
 						data-sveltekit-preload-data="hover"
 						aria-current={active ? 'page' : undefined}

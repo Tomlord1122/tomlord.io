@@ -16,7 +16,7 @@ export async function POST({ request }) {
 
 	// Parse frontmatter to extract blog metadata
 	const frontmatterData: Record<string, any> = {};
-	frontmatterString.split('\n').forEach(line => {
+	frontmatterString.split('\n').forEach((line) => {
 		const [key, ...valueParts] = line.split(':');
 		if (key && valueParts.length > 0) {
 			const value = valueParts.join(':').trim();
@@ -29,8 +29,8 @@ export async function POST({ request }) {
 				if (tagsContent.trim()) {
 					frontmatterData[key.trim()] = tagsContent
 						.split(',')
-						.map(tag => tag.trim().replace(/'/g, ''))
-						.filter(tag => tag);
+						.map((tag) => tag.trim().replace(/'/g, ''))
+						.filter((tag) => tag);
 				} else {
 					frontmatterData[key.trim()] = [];
 				}
@@ -58,7 +58,7 @@ export async function POST({ request }) {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
+				Authorization: `Bearer ${request.headers.get('authorization')?.replace('Bearer ', '') || ''}`
 			},
 			body: JSON.stringify(blogData)
 		});
@@ -66,18 +66,24 @@ export async function POST({ request }) {
 		if (!blogResponse.ok) {
 			const errorData = await blogResponse.json().catch(() => ({}));
 			console.error('Backend blog creation failed:', errorData);
-			
+
 			// If it's an auth error, still save the file but inform user
 			if (blogResponse.status === 401) {
-				return json({ 
-					error: 'Authentication required to save blog to database. File saved locally only.',
-					requiresAuth: true 
-				}, { status: 401 });
+				return json(
+					{
+						error: 'Authentication required to save blog to database. File saved locally only.',
+						requiresAuth: true
+					},
+					{ status: 401 }
+				);
 			}
-			
-			return json({ 
-				error: `Failed to create blog in database: ${errorData.error || 'Unknown error'}` 
-			}, { status: 500 });
+
+			return json(
+				{
+					error: `Failed to create blog in database: ${errorData.error || 'Unknown error'}`
+				},
+				{ status: 500 }
+			);
 		}
 
 		const blogResult = await blogResponse.json();
@@ -95,16 +101,15 @@ export async function POST({ request }) {
 		const filePath = path.join(postsDir, filename);
 		fs.writeFileSync(filePath, content);
 
-		return json({ 
-			success: true, 
+		return json({
+			success: true,
 			path: filePath,
 			blog: blogResult.blog,
 			message: 'Blog created successfully in database and file system'
 		});
-
 	} catch (error) {
 		console.error('Error creating blog:', error);
-		
+
 		// Fallback: just save the file locally
 		try {
 			const postsDir = path.join(process.cwd(), 'src', 'markdown', 'posts');
@@ -113,21 +118,24 @@ export async function POST({ request }) {
 			}
 			const filePath = path.join(postsDir, filename);
 			fs.writeFileSync(filePath, content);
-			
-			return json({ 
-				success: true, 
+
+			return json({
+				success: true,
 				path: filePath,
 				warning: 'Blog saved locally but failed to create database record',
 				error: error instanceof Error ? error.message : 'Unknown error'
 			});
 		} catch (fileError) {
-			return json({ 
-				error: 'Failed to save blog both to database and file system',
-				details: {
-					databaseError: error instanceof Error ? error.message : 'Unknown error',
-					fileError: fileError instanceof Error ? fileError.message : 'Unknown error'
-				}
-			}, { status: 500 });
+			return json(
+				{
+					error: 'Failed to save blog both to database and file system',
+					details: {
+						databaseError: error instanceof Error ? error.message : 'Unknown error',
+						fileError: fileError instanceof Error ? fileError.message : 'Unknown error'
+					}
+				},
+				{ status: 500 }
+			);
 		}
 	}
 }

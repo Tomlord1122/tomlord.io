@@ -224,26 +224,30 @@
 						class="scrollbar-hide flex min-h-[40px] items-center gap-2 overflow-x-auto scroll-smooth px-4 py-2"
 						style="scrollbar-width: none; -ms-overflow-style: none;"
 					>
-					{#if filteredTags.length > 0}
-						{#each filteredTags as tag}
-							{@const isSelected = selectedTags.includes(tag)}
-							<button
-								transition:blur={{duration: 200 }}
-								type="button"
-								onclick={() => toggleTag(tag)}
-								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
+						{#if filteredTags.length > 0}
+							{#each filteredTags as tag}
+								{@const isSelected = selectedTags.includes(tag)}
+								<button
+									transition:blur={{ duration: 200 }}
+									type="button"
+									onclick={() => toggleTag(tag)}
+									class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
 										${
 											isSelected
 												? 'border-gray-400 bg-gray-300 '
 												: 'border-gray-300 bg-gray-100 hover:bg-gray-200'
 										} transition-colors duration-150`}
-							>
+								>
 									{tag}
 								</button>
 							{/each}
 						{:else}
-							<p transition:fade={{duration: 200 }}
-							class="flex-shrink-0 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs whitespace-nowrap text-gray-500">No tags found</p>
+							<p
+								transition:fade={{ duration: 200 }}
+								class="flex-shrink-0 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs whitespace-nowrap text-gray-500"
+							>
+								No tags found
+							</p>
 						{/if}
 					</div>
 				</div>

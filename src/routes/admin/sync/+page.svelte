@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	
+
 	let isLoading = $state(false);
 	let result = $state<any>(null);
 	let error = $state('');
 
 	async function syncBlogs() {
 		if (!browser) return;
-		
+
 		isLoading = true;
 		error = '';
 		result = null;
@@ -18,7 +18,7 @@
 			const headers: Record<string, string> = {
 				'Content-Type': 'application/json'
 			};
-			
+
 			if (token) {
 				headers['Authorization'] = `Bearer ${token}`;
 			}
@@ -47,22 +47,24 @@
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl p-6">
-	<h1 class="text-3xl font-bold mb-6 text-gray-800">Blog Database Sync</h1>
-	
-	<div class="bg-white rounded-lg shadow-md p-6">
-		<p class="text-gray-600 mb-4">
-			This page will sync all existing markdown blog posts to the database.
-			This is needed when migrating from file-based to database-based blog storage.
+	<h1 class="mb-6 text-3xl font-bold text-gray-800">Blog Database Sync</h1>
+
+	<div class="rounded-lg bg-white p-6 shadow-md">
+		<p class="mb-4 text-gray-600">
+			This page will sync all existing markdown blog posts to the database. This is needed when
+			migrating from file-based to database-based blog storage.
 		</p>
-		
+
 		<button
 			onclick={syncBlogs}
 			disabled={isLoading}
-			class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+			class="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
 		>
 			{#if isLoading}
 				<span class="flex items-center">
-					<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+					<div
+						class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+					></div>
 					Syncing...
 				</span>
 			{:else}
@@ -72,17 +74,17 @@
 	</div>
 
 	{#if error}
-		<div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
-			<h3 class="text-red-800 font-semibold mb-2">Error</h3>
+		<div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
+			<h3 class="mb-2 font-semibold text-red-800">Error</h3>
 			<p class="text-red-700">{error}</p>
 		</div>
 	{/if}
 
 	{#if result}
-		<div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-			<h3 class="text-green-800 font-semibold mb-4">Sync Results</h3>
-			
-			<div class="grid grid-cols-3 gap-4 mb-4">
+		<div class="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
+			<h3 class="mb-4 font-semibold text-green-800">Sync Results</h3>
+
+			<div class="mb-4 grid grid-cols-3 gap-4">
 				<div class="text-center">
 					<div class="text-2xl font-bold text-gray-700">{result.summary?.total || 0}</div>
 					<div class="text-sm text-gray-600">Total Files</div>
@@ -99,11 +101,11 @@
 
 			{#if result.results && result.results.length > 0}
 				<div class="mb-4">
-					<h4 class="font-semibold text-green-700 mb-2">Successfully Processed:</h4>
+					<h4 class="mb-2 font-semibold text-green-700">Successfully Processed:</h4>
 					<ul class="space-y-1">
 						{#each result.results as item}
 							<li class="text-sm">
-								<span class="font-mono bg-gray-100 px-2 py-1 rounded">{item.filename}</span>
+								<span class="rounded bg-gray-100 px-2 py-1 font-mono">{item.filename}</span>
 								<span class="ml-2 text-green-600">({item.action})</span>
 								<span class="ml-2 text-gray-600">{item.blog?.title}</span>
 							</li>
@@ -114,7 +116,7 @@
 
 			{#if result.errors && result.errors.length > 0}
 				<div>
-					<h4 class="font-semibold text-red-700 mb-2">Errors:</h4>
+					<h4 class="mb-2 font-semibold text-red-700">Errors:</h4>
 					<ul class="space-y-1">
 						{#each result.errors as errorMsg}
 							<li class="text-sm text-red-600">{errorMsg}</li>
@@ -126,8 +128,6 @@
 	{/if}
 
 	<div class="mt-8 text-center">
-		<a href="/blog" class="text-blue-600 hover:text-blue-800 underline">
-			← Go to Blog
-		</a>
+		<a href="/blog" class="text-blue-600 underline hover:text-blue-800"> ← Go to Blog </a>
 	</div>
-</div> 
+</div>

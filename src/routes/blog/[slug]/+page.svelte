@@ -126,14 +126,8 @@
 
 	<!-- Comments Section -->
 	<div in:fly={{ y: 50, duration: 600, delay: 400 }} class="mt-12">
-		<CommentList 
-			postSlug={slug} 
-			refreshTrigger={commentRefreshTrigger}
-		/>
-		<CommentForm 
-			postSlug={slug} 
-			onCommentAdded={handleCommentAdded}
-		/>
+		<CommentList postSlug={slug} refreshTrigger={commentRefreshTrigger} />
+		<CommentForm postSlug={slug} onCommentAdded={handleCommentAdded} />
 	</div>
 
 	<div in:fly={{ y: 50, duration: 600, delay: 500 }} class="mt-12 border-t border-gray-200 pt-8">

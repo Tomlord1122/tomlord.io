@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 	try {
 		// First, try to get blog metadata from backend API
 		const blogResponse = await fetch(`http://localhost:8080/api/blogs/${slug}`);
-		
+
 		if (!blogResponse.ok) {
 			if (blogResponse.status === 404) {
 				error(404, 'Blog post not found');
@@ -92,13 +92,12 @@ export const load: PageLoad = async ({ params, fetch }) => {
 			},
 			availablePhotos
 		};
-
 	} catch (apiError) {
 		console.error('Failed to load blog from API:', apiError);
-		
+
 		// Fallback: try to load from local markdown file
 		console.log('Falling back to local markdown file...');
-		
+
 		try {
 			const postModule = await import(`../../../markdown/posts/${slug}.svx`);
 

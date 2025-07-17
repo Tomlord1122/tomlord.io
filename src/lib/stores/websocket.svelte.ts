@@ -1,7 +1,13 @@
 import { authStore } from './auth.svelte';
 
 // WebSocket message types - matching backend
-type MessageType = 'new_comment' | 'thumb_update' | 'comment_update' | 'comment_delete' | 'ping' | 'pong';
+type MessageType =
+	| 'new_comment'
+	| 'thumb_update'
+	| 'comment_update'
+	| 'comment_delete'
+	| 'ping'
+	| 'pong';
 
 // WebSocket message structure
 interface WSMessage {
@@ -30,7 +36,7 @@ class WebSocketManager {
 	private connectionState = ConnectionState.DISCONNECTED;
 	private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 	private connectionCheckTimer: ReturnType<typeof setInterval> | null = null;
-	
+
 	// Event listeners for different message types
 	private listeners: Map<MessageType, Set<(payload: any) => void>> = new Map();
 
@@ -50,13 +56,13 @@ class WebSocketManager {
 			console.log('WebSocket manager already initialized');
 			return;
 		}
-		
+
 		this.isInitialized = true;
 		console.log('Initializing WebSocket manager');
-		
+
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
-		
+
 		// Check auth state and connect if authenticated
 		const authState = authStore.state;
 		if (authState.isAuthenticated) {
@@ -67,8 +73,10 @@ class WebSocketManager {
 	// Connect to WebSocket with improved error handling
 	connect(rooms: string[] = []) {
 		// Prevent multiple simultaneous connection attempts
-		if (this.connectionState === ConnectionState.CONNECTING || 
-			this.connectionState === ConnectionState.RECONNECTING) {
+		if (
+			this.connectionState === ConnectionState.CONNECTING ||
+			this.connectionState === ConnectionState.RECONNECTING
+		) {
 			console.log('Connection attempt already in progress, skipping...');
 			return;
 		}
@@ -82,19 +90,21 @@ class WebSocketManager {
 			return;
 		}
 
-		this.connectionState = this.reconnectAttempts > 0 ? 
-			ConnectionState.RECONNECTING : ConnectionState.CONNECTING;
+		this.connectionState =
+			this.reconnectAttempts > 0 ? ConnectionState.RECONNECTING : ConnectionState.CONNECTING;
 
 		try {
-			console.log(`${this.connectionState === ConnectionState.RECONNECTING ? 'Reconnecting' : 'Connecting'} to WebSocket...`);
-			
+			console.log(
+				`${this.connectionState === ConnectionState.RECONNECTING ? 'Reconnecting' : 'Connecting'} to WebSocket...`
+			);
+
 			// Clean up any existing connection
 			this.cleanup();
 
 			// Include auth token if available
 			const token = localStorage.getItem('auth_token');
 			let wsUrl = 'ws://localhost:8080/ws';
-			
+
 			// Add rooms as query parameter if provided
 			if (rooms.length > 0) {
 				const roomsParam = encodeURIComponent(JSON.stringify(rooms));
@@ -107,13 +117,13 @@ class WebSocketManager {
 				console.log('WebSocket connected successfully');
 				this.connectionState = ConnectionState.CONNECTED;
 				this.reconnectAttempts = 0;
-				
+
 				// Clear any existing reconnect timer
 				if (this.reconnectTimer) {
 					clearTimeout(this.reconnectTimer);
 					this.reconnectTimer = null;
 				}
-				
+
 				// Subscribe to rooms if any
 				const allRooms = rooms.length > 0 ? rooms : Array.from(this.subscribedRooms);
 				if (allRooms.length > 0) {
@@ -137,7 +147,7 @@ class WebSocketManager {
 				console.log(`WebSocket disconnected - Code: ${event.code}, Reason: ${event.reason}`);
 				this.connectionState = ConnectionState.DISCONNECTED;
 				this.ws = null;
-				
+
 				// Only attempt reconnect if it wasn't a clean close and we haven't exceeded max attempts
 				if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
 					this.attemptReconnect();
@@ -159,7 +169,6 @@ class WebSocketManager {
 					this.ws.close();
 				}
 			}, 10000); // 10 second timeout
-
 		} catch (error) {
 			console.error('Failed to create WebSocket connection:', error);
 			this.connectionState = ConnectionState.DISCONNECTED;
@@ -172,19 +181,21 @@ class WebSocketManager {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.warn('WebSocket not connected, queuing rooms for subscription:', rooms);
 			// Add to subscribed rooms for when connection is restored
-			rooms.forEach(room => this.subscribedRooms.add(room));
+			rooms.forEach((room) => this.subscribedRooms.add(room));
 			return;
 		}
 
 		// Add to subscribed rooms
-		rooms.forEach(room => this.subscribedRooms.add(room));
+		rooms.forEach((room) => this.subscribedRooms.add(room));
 
 		// Send subscription message
 		try {
-			this.ws.send(JSON.stringify({
-				action: 'subscribe',
-				rooms: rooms
-			}));
+			this.ws.send(
+				JSON.stringify({
+					action: 'subscribe',
+					rooms: rooms
+				})
+			);
 			console.log('Subscribed to rooms:', rooms);
 		} catch (error) {
 			console.error('Failed to send subscription message:', error);
@@ -196,19 +207,21 @@ class WebSocketManager {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.warn('WebSocket not connected, removing rooms from queue:', rooms);
 			// Remove from subscribed rooms anyway
-			rooms.forEach(room => this.subscribedRooms.delete(room));
+			rooms.forEach((room) => this.subscribedRooms.delete(room));
 			return;
 		}
 
 		// Remove from subscribed rooms
-		rooms.forEach(room => this.subscribedRooms.delete(room));
+		rooms.forEach((room) => this.subscribedRooms.delete(room));
 
 		// Send unsubscription message
 		try {
-			this.ws.send(JSON.stringify({
-				action: 'unsubscribe',
-				rooms: rooms
-			}));
+			this.ws.send(
+				JSON.stringify({
+					action: 'unsubscribe',
+					rooms: rooms
+				})
+			);
 			console.log('Unsubscribed from rooms:', rooms);
 		} catch (error) {
 			console.error('Failed to send unsubscription message:', error);
@@ -218,13 +231,13 @@ class WebSocketManager {
 	// Disconnect from WebSocket
 	disconnect() {
 		console.log('Disconnecting WebSocket...');
-		
+
 		// Clear timers
 		if (this.reconnectTimer) {
 			clearTimeout(this.reconnectTimer);
 			this.reconnectTimer = null;
 		}
-		
+
 		if (this.connectionCheckTimer) {
 			clearInterval(this.connectionCheckTimer);
 			this.connectionCheckTimer = null;
@@ -232,7 +245,7 @@ class WebSocketManager {
 
 		// Clean up connection
 		this.cleanup();
-		
+
 		// Reset state
 		this.connectionState = ConnectionState.DISCONNECTED;
 		this.reconnectAttempts = 0;
@@ -247,12 +260,12 @@ class WebSocketManager {
 			this.ws.onmessage = null;
 			this.ws.onclose = null;
 			this.ws.onerror = null;
-			
+
 			// Close connection if it's open
 			if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
 				this.ws.close(1000, 'Client disconnect');
 			}
-			
+
 			this.ws = null;
 		}
 	}
@@ -276,10 +289,10 @@ class WebSocketManager {
 	// Handle incoming messages
 	private handleMessage(message: WSMessage) {
 		console.log('Received WebSocket message:', message);
-		
+
 		const listeners = this.listeners.get(message.type);
 		if (listeners) {
-			listeners.forEach(callback => {
+			listeners.forEach((callback) => {
 				try {
 					callback(message.payload);
 				} catch (error) {
@@ -299,8 +312,10 @@ class WebSocketManager {
 
 		this.reconnectAttempts++;
 		const delay = Math.min(this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1), 30000); // Max 30 seconds
-		
-		console.log(`Attempting to reconnect in ${delay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
+		console.log(
+			`Attempting to reconnect in ${delay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+		);
 
 		this.reconnectTimer = setTimeout(() => {
 			if (this.connectionState !== ConnectionState.CONNECTED) {
@@ -332,9 +347,11 @@ class WebSocketManager {
 
 	// Get connection status
 	get isConnected(): boolean {
-		return this.ws !== null && 
-			   this.ws.readyState === WebSocket.OPEN && 
-			   this.connectionState === ConnectionState.CONNECTED;
+		return (
+			this.ws !== null &&
+			this.ws.readyState === WebSocket.OPEN &&
+			this.connectionState === ConnectionState.CONNECTED
+		);
 	}
 
 	// Get connection state
@@ -350,7 +367,7 @@ class WebSocketManager {
 	// Handle authentication state changes
 	onAuthChange(isAuthenticated: boolean) {
 		console.log('Auth state changed:', isAuthenticated);
-		
+
 		if (isAuthenticated) {
 			// User logged in, connect to WebSocket
 			if (!this.isConnected) {
@@ -373,4 +390,4 @@ class WebSocketManager {
 export const wsManager = new WebSocketManager();
 
 // Export for use in components
-export { type MessageType, type WSMessage, ConnectionState }; 
+export { type MessageType, type WSMessage, ConnectionState };
