@@ -44,7 +44,6 @@
 			if (wsConnected !== connected || wsState !== state) {
 				wsConnected = connected;
 				wsState = state;
-				console.log(`WebSocket status updated: connected=${connected}, state=${state}`);
 			}
 		};
 
@@ -74,14 +73,11 @@
 	$effect(() => {
 		const room = postSlug; // Always use postSlug as the room name for consistency
 
-		console.log(`Setting up WebSocket subscription for room: ${room}`);
-
 		// Subscribe to this room
 		wsManager.subscribeToRooms([room]);
 
 		// Set up event listeners for real-time updates
 		const handleNewComment = (payload: unknown) => {
-			console.log('New comment received via WebSocket:', payload);
 			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
 				comments = [payload as Comment, ...comments];
@@ -89,8 +85,6 @@
 		};
 
 		const handleThumbUpdate = (payload: unknown) => {
-			console.log('Thumb update received via WebSocket:', payload);
-
 			// Only update if this change came from a different user and payload is valid
 			// (to avoid duplicate updates from our own actions)
 			if (
@@ -122,8 +116,6 @@
 
 		// Add handler for comment deletion
 		const handleCommentDelete = (payload: unknown) => {
-			console.log('Comment delete received via WebSocket:', payload);
-
 			// Remove the deleted comment from the list if payload is valid
 			if (payload && typeof payload === 'object' && 'message_id' in payload) {
 				const deletePayload = payload as { message_id: string };
@@ -139,7 +131,6 @@
 		// Cleanup function with better error handling
 		return () => {
 			try {
-				console.log(`Cleaning up WebSocket subscription for room: ${room}`);
 				wsManager.removeEventListener('new_comment', handleNewComment);
 				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
 				wsManager.removeEventListener('comment_delete', handleCommentDelete);
@@ -171,8 +162,6 @@
 				? `${config.API.BLOGS}/${postSlug}/messages`
 				: `${config.API.MESSAGES}/post/${postSlug}`;
 
-			console.log('Loading comments from:', url);
-
 			const headers: HeadersInit = {};
 			if (token) {
 				headers['Authorization'] = `Bearer ${token}`;
@@ -182,7 +171,6 @@
 
 			if (response.ok) {
 				const data = await response.json();
-				console.log('Comments loaded:', data.messages?.length || 0, 'comments');
 				comments = data.messages || [];
 			} else {
 				error = 'Failed to load comments';
@@ -309,7 +297,6 @@
 
 			if (response.ok) {
 				console.log('Message deleted successfully');
-				// WebSocket will handle broadcasting the delete event to other users
 			} else {
 				// If the request failed, revert the optimistic update
 				comments = [currentComment, ...comments];

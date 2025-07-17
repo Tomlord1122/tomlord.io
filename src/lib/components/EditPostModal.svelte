@@ -37,11 +37,6 @@
 
 	// Function to handle post update
 	async function handleUpdatePost() {
-		// Log the postData to see what's being used
-		console.log('Attempting to update post. Current postData:', postData);
-		console.log('Original slug to be sent:', postData?.slug);
-		console.log('New slug to be sent:', slug);
-
 		// Ensure originalSlug is present and valid
 		if (!postData || typeof postData.slug !== 'string' || !postData.slug.trim()) {
 			alert(
@@ -96,7 +91,6 @@ ${content}`;
 			newSlug: finalSlug,
 			content: frontmatter
 		};
-		console.log('Payload being sent to /api/edit-post:', payload);
 
 		try {
 			const response = await fetch('/api/edit-post', {

@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { navigating } from '$app/state';
 	import { preloadData } from '$app/navigation';
-	import { fly, fade } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 
 	// Navigation items configuration
 	const navItems = $state([
@@ -54,7 +54,7 @@
 			<div class="flex items-center gap-3 font-serif text-lg">
 				{#each navItems as item (item.href)}
 					{@const active = isActive(item.href)}
-					{@const isNavigatingTo = navigating.to?.url.pathname === item.href}
+					{@const isNavigatingTo = navigating?.to?.url.pathname === item.href}
 					<a
 						href={item.href}
 						class={`nav-link relative  ${active ? 'text-gray-900' : ''} `}
@@ -76,45 +76,4 @@
 			</div>
 		</div>
 	</div>
-
-	<!-- Global loading indicator -->
-	{#if navigating.to}
-		<div
-			class="fixed top-0 right-0 left-0 z-50"
-			in:fade={{ duration: 150 }}
-			out:fade={{ duration: 300 }}
-		>
-			<div class="progress-bar h-1 bg-gray-900"></div>
-		</div>
-	{/if}
 </nav>
-
-<style>
-	/* Progress bar animation */
-	.progress-bar {
-		animation: progress 1s ease-in-out infinite;
-		transform-origin: left;
-	}
-
-	@keyframes progress {
-		0% {
-			transform: scaleX(0);
-		}
-		50% {
-			transform: scaleX(0.6);
-		}
-		100% {
-			transform: scaleX(1);
-		}
-	}
-
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
-		}
-	}
-</style>

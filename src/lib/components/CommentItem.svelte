@@ -34,21 +34,12 @@
 	// Handle image error and fallback
 	function handleImageError(event: Event) {
 		const img = event.target as HTMLImageElement;
-		console.log('Image failed to load:', img.src);
-		console.log('Comment user_picture:', comment.user_picture);
 		img.style.display = 'none';
 		// Show fallback avatar
 		if (img.nextElementSibling) {
 			(img.nextElementSibling as HTMLElement).style.display = 'flex';
 		}
 	}
-
-	// Debug logging for picture URL
-	$effect(() => {
-		if (comment.user_picture) {
-			console.log(`User ${comment.user_name} picture URL:`, comment.user_picture);
-		}
-	});
 </script>
 
 <!-- 

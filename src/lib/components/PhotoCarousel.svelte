@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { fade } from 'svelte/transition';
 
 	// Props
 	let {
@@ -24,8 +24,8 @@
 	const ROTATION_FACTOR = 2;
 	const Y_OFFSET_FACTOR = 8;
 
-	// Optimization: Use SvelteMap to cache calculation results
-	const transformCache = new SvelteMap<string, string>();
+	// State for pre-computed styles
+	let photoStyles = $state<Map<number, string>>(new Map());
 
 	// Optimization: Batch event handler to avoid creating separate handlers for each thumbnail
 	function handleThumbnailClick(event: Event) {
@@ -134,14 +134,8 @@
 		};
 	});
 
-	// Optimization: Pre-compute style strings
-	function getPhotoStyle(wrappedOffset: number): string {
-		const cacheKey = `${wrappedOffset}`;
-
-		if (transformCache.has(cacheKey)) {
-			return transformCache.get(cacheKey)!;
-		}
-
+	// Helper function to calculate photo style (pure function)
+	function calculatePhotoStyle(wrappedOffset: number): string {
 		const translateX = wrappedOffset * TRANSLATE_DISTANCE;
 		const translateY = Math.abs(wrappedOffset) * Y_OFFSET_FACTOR;
 		const rotate = wrappedOffset * ROTATION_FACTOR;
@@ -149,22 +143,29 @@
 		const zIndex = 10 - Math.abs(wrappedOffset);
 		const opacity = wrappedOffset === 0 ? 1 : 0.4 - Math.abs(wrappedOffset) * 0.15;
 
-		const style = `
+		return `
 			transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(${scale});
 			z-index: ${zIndex};
 			opacity: ${opacity};
 		`;
-
-		transformCache.set(cacheKey, style);
-		return style;
 	}
 
-	// Optimization: Clear cache to prevent memory leaks
+	// Pre-compute styles for visible photos
 	$effect(() => {
-		return () => {
-			transformCache.clear();
-		};
+		const newStyles = new SvelteMap<number, string>();
+		const offsets = [-1, 0, 1];
+
+		offsets.forEach((offset) => {
+			newStyles.set(offset, calculatePhotoStyle(offset));
+		});
+
+		photoStyles = newStyles;
 	});
+
+	// Function to get photo style (now just returns pre-computed value)
+	function getPhotoStyle(wrappedOffset: number): string {
+		return photoStyles.get(wrappedOffset) || calculatePhotoStyle(wrappedOffset);
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

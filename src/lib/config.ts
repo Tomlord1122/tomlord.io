@@ -2,10 +2,6 @@ import {
 	PUBLIC_BACKEND_URL,
 	PUBLIC_BACKEND_WS_URL,
 	PUBLIC_APP_ENV,
-	PUBLIC_ENABLE_EDIT_MODE,
-	PUBLIC_ENABLE_COMMENTS,
-	PUBLIC_ENABLE_WEBSOCKET,
-	PUBLIC_OAUTH_REDIRECT_URL
 } from '$env/static/public';
 import { browser } from '$app/environment';
 
@@ -17,14 +13,6 @@ export const config = {
 
 	// Environment detection
 	APP_ENV: PUBLIC_APP_ENV || 'development',
-
-	// OAuth Configuration
-	OAUTH_REDIRECT_URL: PUBLIC_OAUTH_REDIRECT_URL || 'http://localhost:5173',
-
-	// Feature flags
-	ENABLE_EDIT_MODE: PUBLIC_ENABLE_EDIT_MODE === 'true',
-	ENABLE_COMMENTS: PUBLIC_ENABLE_COMMENTS === 'true',
-	ENABLE_WEBSOCKET: PUBLIC_ENABLE_WEBSOCKET === 'true',
 
 	// Computed properties
 	get isDevelopment() {
@@ -53,8 +41,4 @@ export const {
 	BACKEND_URL,
 	BACKEND_WS_URL,
 	APP_ENV,
-	ENABLE_EDIT_MODE,
-	ENABLE_COMMENTS,
-	ENABLE_WEBSOCKET,
-	OAUTH_REDIRECT_URL
 } = config;

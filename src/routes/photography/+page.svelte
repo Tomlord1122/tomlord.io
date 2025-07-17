@@ -11,7 +11,7 @@
 
 	// Performance optimization: Add stable photo IDs and enhanced photo objects
 	let photos = $derived(
-		data.availablePhotos
+		data?.availablePhotos && Array.isArray(data.availablePhotos)
 			? data.availablePhotos.map((photoUrl: string, index: number) => {
 					const filename = photoUrl.substring(photoUrl.lastIndexOf('/') + 1);
 					// Create stable ID based on filename and index for better key performance
@@ -42,7 +42,9 @@
 	let loadMoreRequestPending = $state(false);
 
 	// Derived state for displayed photos with virtual scrolling optimization
-	let displayedPhotos = $derived(photos ? photos.slice(0, visiblePhotosCount) : []);
+	let displayedPhotos = $derived(
+		photos && photos.length > 0 ? photos.slice(0, visiblePhotosCount) : []
+	);
 
 	// Carousel view state
 	let showCarouselView = $state(false);
@@ -160,23 +162,25 @@
 		}, 1000); // Batch invalidations within 1 second
 	}
 
-	// Browser-specific initialization with memory management
-	if (browser) {
-		// Development mode detection
-		isDev = window.location.hostname === 'localhost';
+	// Browser-specific initialization with memory management using $effect
+	$effect(() => {
+		if (browser) {
+			// Development mode detection
+			isDev = window.location.hostname === 'localhost';
 
-		// Initial mobile detection
-		isMobile = window.innerWidth < 768;
+			// Initial mobile detection
+			isMobile = window.innerWidth < 768;
 
-		// Setup debounced resize handler
-		const resizeCleanup = createDebouncedResize();
-		cleanupFunctions.push(resizeCleanup);
+			// Setup debounced resize handler
+			const resizeCleanup = createDebouncedResize();
+			cleanupFunctions.push(resizeCleanup);
 
-		// Cleanup invalidation timeout
-		cleanupFunctions.push(() => {
-			clearTimeout(invalidationTimeout);
-		});
-	}
+			// Cleanup invalidation timeout
+			cleanupFunctions.push(() => {
+				clearTimeout(invalidationTimeout);
+			});
+		}
+	});
 
 	// Memory management: Cleanup all timers and listeners on component destroy
 	$effect(() => {
@@ -186,9 +190,19 @@
 		};
 	});
 
+	// Debug effect to track photos state changes
+	$effect(() => {
+		console.log('Photos state changed:', {
+			hasData: !!data?.availablePhotos,
+			photosLength: photos?.length || 0,
+			displayedLength: displayedPhotos?.length || 0,
+			visibleCount: visiblePhotosCount
+		});
+	});
+
 	// Performance optimization: Auto-preload when approaching end
 	$effect(() => {
-		if (photos && displayedPhotos.length > 0) {
+		if (photos && photos.length > 0 && displayedPhotos.length > 0) {
 			const remainingPhotos = photos.length - displayedPhotos.length;
 
 			// Auto-load more when approaching the end
@@ -216,7 +230,7 @@
 
 	// Enhanced carousel functions with preloading
 	function openCarouselView(index = 0) {
-		if (isMobile) return; // Prevent carousel on mobile
+		console.log('openCarouselView', index);
 		currentCarouselIndex = index;
 		showCarouselView = true;
 		preloadAdjacentImages(index);
@@ -309,7 +323,7 @@
 		</div>
 
 		<!-- Optimized "Load More" Button with throttling -->
-		{#if photos && displayedPhotos.length < photos.length}
+		{#if photos && photos.length > 0 && displayedPhotos.length < photos.length}
 			<div class="mt-8 mb-8 text-center" in:fly|global={{ y: 50, duration: 600, delay: 800 }}>
 				{#if isLoadingMore}
 					<div class="flex items-center justify-center gap-2 px-6 py-3">

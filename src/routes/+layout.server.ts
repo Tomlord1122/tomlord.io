@@ -30,8 +30,10 @@ export const load: LayoutServerLoad = async () => {
 				};
 				return getNumber(b) - getNumber(a);
 			});
-
-		// console.log(`Loaded ${availablePhotos.length} photography assets:`, availablePhotos);
+		console.log(
+			`Loaded ${availablePhotos.length} photography assets:`,
+			availablePhotos.slice(0, 5)
+		);
 	} catch (err) {
 		console.error('Error loading photos in layout:', err);
 	}
