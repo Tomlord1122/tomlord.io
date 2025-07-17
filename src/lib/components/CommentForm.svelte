@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-import { wsManager } from '$lib/stores/websocket.svelte';
-import { config } from '$lib/config';
-import type { CreateCommentRequest } from '$lib/types/comment.js';
+	import { config } from '$lib/config.js';
+	import type { CreateCommentRequest } from '$lib/types/comment.js';
 
 	interface Props {
 		postSlug: string;

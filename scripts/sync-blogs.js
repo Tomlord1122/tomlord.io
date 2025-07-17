@@ -1,12 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Backend API base URL
-const API_BASE = 'http://localhost:8080';
+// Load environment variables
+config();
+
+// Backend API base URL - use environment variable or fallback to localhost
+const API_BASE = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+// Frontend URL for console messages
+const FRONTEND_URL = process.env.PUBLIC_OAUTH_REDIRECT_URL || 'http://localhost:5173';
 
 // Helper function to parse frontmatter
 function parseFrontmatter(content) {
@@ -173,7 +179,7 @@ async function syncBlogs() {
 
 			if (errors.length === 0) {
 				console.log('✨ All blogs have been successfully synchronized to the database.');
-				console.log('You can now visit http://localhost:5173/blog to see your posts!');
+				console.log(`You can now visit ${FRONTEND_URL}/blog to see your posts!`);
 			}
 		} catch (syncError) {
 			console.error('💥 Failed to sync blogs:', syncError.message);

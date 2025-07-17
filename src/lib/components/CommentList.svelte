@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
-import { config } from '$lib/config';
-import CommentItem from './CommentItem.svelte';
-import type { Comment } from '$lib/types/comment.js';
+	import { wsManager, ConnectionState } from '$lib/stores/websocket.svelte';
+	import { config } from '$lib/config.js';
+	import CommentItem from './CommentItem.svelte';
+	import type { Comment } from '$lib/types/comment.js';
 
 	interface Props {
 		postSlug: string;
@@ -108,7 +108,7 @@ import type { Comment } from '$lib/types/comment.js';
 		// Add handler for comment deletion
 		const handleCommentDelete = (payload: any) => {
 			console.log('Comment delete received via WebSocket:', payload);
-			
+
 			// Remove the deleted comment from the list
 			comments = comments.filter((comment) => comment.id !== payload.message_id);
 		};

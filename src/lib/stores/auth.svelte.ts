@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { config } from '$lib/config';
+import { config } from '$lib/config.js';
 
 export interface User {
 	id: string;

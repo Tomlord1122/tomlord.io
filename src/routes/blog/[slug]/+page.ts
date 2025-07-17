@@ -1,14 +1,14 @@
 import type { PageLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
+import { config } from '$lib/config.js';
 
 export const load: PageLoad = async ({ params, fetch }) => {
 	const { slug } = params;
 
 	try {
 		// First, try to get blog metadata from backend API
-		const backendUrl = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
-		const blogResponse = await fetch(`${backendUrl}/api/blogs/${slug}`);
+		const blogResponse = await fetch(`${config.API.BLOGS}/${slug}`);
 
 		if (!blogResponse.ok) {
 			if (blogResponse.status === 404) {

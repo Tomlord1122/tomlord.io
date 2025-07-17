@@ -1,13 +1,13 @@
 import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata } from '$lib/types/post.js';
+import { config } from '$lib/config.js';
 
 export const load: LayoutServerLoad = async () => {
 	let posts: PostMetadata[] = [];
 
 	try {
 		// First, try to load from backend API
-		const backendUrl = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
-		const response = await fetch(`${backendUrl}/api/blogs?limit=100&published=true`);
+		const response = await fetch(`${config.API.BLOGS}?limit=100&published=true`);
 
 		if (response.ok) {
 			const data = await response.json();

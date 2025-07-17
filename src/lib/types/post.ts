@@ -5,6 +5,7 @@ export interface PostMetadata {
 	description: string;
 	tags: string[];
 	lang: string;
+	duration: string;
 }
 
 // Using Omit to define Post based on PostMetadata

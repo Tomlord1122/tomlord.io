@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import fs from 'fs';
 import path from 'path';
+import { config } from '$lib/config.js';
 
 export async function POST({ request }) {
 	try {
@@ -68,11 +69,11 @@ export async function POST({ request }) {
 				};
 
 				// Check if blog already exists
-				const checkResponse = await fetch(`http://localhost:8080/api/blogs/${blogData.slug}`);
+				const checkResponse = await fetch(`${config.API.BLOGS}/${blogData.slug}`);
 
 				if (checkResponse.ok) {
 					// Blog exists, update it
-					const updateResponse = await fetch(`http://localhost:8080/api/blogs/${blogData.slug}`, {
+					const updateResponse = await fetch(`${config.API.BLOGS}/${blogData.slug}`, {
 						method: 'PUT',
 						headers: {
 							'Content-Type': 'application/json',
@@ -94,7 +95,7 @@ export async function POST({ request }) {
 					}
 				} else {
 					// Blog doesn't exist, create it
-					const createResponse = await fetch('http://localhost:8080/api/blogs', {
+					const createResponse = await fetch(config.API.BLOGS, {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',

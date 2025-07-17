@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import fs from 'fs';
 import path from 'path';
+import { config } from '$lib/config.js';
 
 export async function POST({ request }) {
 	const { filename, content } = await request.json();
@@ -16,7 +17,7 @@ export async function POST({ request }) {
 
 	// Parse frontmatter to extract blog metadata
 	const frontmatterData: Record<string, any> = {};
-	frontmatterString.split('\n').forEach((line) => {
+	frontmatterString.split('\n').forEach((line: string) => {
 		const [key, ...valueParts] = line.split(':');
 		if (key && valueParts.length > 0) {
 			const value = valueParts.join(':').trim();
@@ -54,7 +55,7 @@ export async function POST({ request }) {
 		};
 
 		// Call backend API to create blog record
-		const blogResponse = await fetch('http://localhost:8080/api/blogs', {
+		const blogResponse = await fetch(`${config.API.BLOGS}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
