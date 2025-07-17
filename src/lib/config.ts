@@ -15,8 +15,8 @@ export const config = {
 	APP_ENV: PUBLIC_APP_ENV || 'development',
 
 	// Performance and reliability settings
-	FETCH_TIMEOUT: 3000, // 3 seconds timeout for API calls
-	WEBSOCKET_TIMEOUT: 2000, // 2 seconds timeout for WebSocket connection
+	FETCH_TIMEOUT: 1000, // 1 seconds timeout for API calls
+	WEBSOCKET_TIMEOUT: 1000, // 1 seconds timeout for WebSocket connection
 	RETRY_ATTEMPTS: 2,
 
 	// Computed properties
