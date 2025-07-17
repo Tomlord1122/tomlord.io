@@ -50,7 +50,7 @@
 				commentData.blog_id = blogId;
 			}
 
-			const response = await fetch(`${config.API.MESSAGES}`, {
+			const response = await fetch(`${config.API.MESSAGES}/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -60,9 +60,7 @@
 			});
 
 			if (response.ok) {
-				const responseData = await response.json();
 				message = '';
-
 				// Call the callback once for immediate feedback
 				// WebSocket will handle real-time updates for other users
 				if (onCommentAdded) {

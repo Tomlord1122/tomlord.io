@@ -1,5 +1,6 @@
 import { authStore } from './auth.svelte';
 import { PUBLIC_BACKEND_WS_URL } from '$env/static/public';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -10,10 +11,38 @@ type MessageType =
 	| 'ping'
 	| 'pong';
 
+// Payload types for different message types
+interface CommentPayload {
+	id: string;
+	content: string;
+	author: string;
+	created_at: string;
+	post_slug?: string;
+}
+
+interface ThumbPayload {
+	comment_id: string;
+	is_thumb_up: boolean;
+	count: number;
+}
+
+interface ConnectionPayload {
+	message: string;
+	count?: number;
+}
+
+// Union type for all possible payloads
+type MessagePayload =
+	| CommentPayload
+	| ThumbPayload
+	| ConnectionPayload
+	| string
+	| Record<string, unknown>;
+
 // WebSocket message structure
 interface WSMessage {
 	type: MessageType;
-	payload: any;
+	payload: MessagePayload;
 	room?: string;
 }
 
@@ -39,7 +68,7 @@ class WebSocketManager {
 	private connectionCheckTimer: ReturnType<typeof setInterval> | null = null;
 
 	// Event listeners for different message types
-	private listeners: Map<MessageType, Set<(payload: any) => void>> = new Map();
+	private listeners: Map<MessageType, Set<(payload: MessagePayload) => void>> = new Map();
 
 	constructor() {
 		// Initialize listeners map
@@ -107,10 +136,21 @@ class WebSocketManager {
 			// Use environment variable for WebSocket URL (supports Minikube/production)
 			let wsUrl = PUBLIC_BACKEND_WS_URL + '/ws';
 
+			// Add query parameters
+			const params = new SvelteURLSearchParams();
+
 			// Add rooms as query parameter if provided
 			if (rooms.length > 0) {
-				const roomsParam = encodeURIComponent(JSON.stringify(rooms));
-				wsUrl += `?rooms=${roomsParam}`;
+				params.set('rooms', JSON.stringify(rooms));
+			}
+
+			// Add auth token if available
+			if (token) {
+				params.set('token', token);
+			}
+
+			if (params.toString()) {
+				wsUrl += `?${params.toString()}`;
 			}
 
 			this.ws = new WebSocket(wsUrl);
@@ -273,7 +313,7 @@ class WebSocketManager {
 	}
 
 	// Add event listener for specific message type
-	addEventListener(type: MessageType, callback: (payload: any) => void) {
+	addEventListener(type: MessageType, callback: (payload: MessagePayload) => void) {
 		const listeners = this.listeners.get(type);
 		if (listeners) {
 			listeners.add(callback);
@@ -281,7 +321,7 @@ class WebSocketManager {
 	}
 
 	// Remove event listener
-	removeEventListener(type: MessageType, callback: (payload: any) => void) {
+	removeEventListener(type: MessageType, callback: (payload: MessagePayload) => void) {
 		const listeners = this.listeners.get(type);
 		if (listeners) {
 			listeners.delete(callback);

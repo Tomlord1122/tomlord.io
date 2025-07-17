@@ -10,7 +10,7 @@ const uploadDir = path.join(process.cwd(), 'static', 'photography_assets');
 async function ensureUploadDir() {
 	try {
 		await fs.access(uploadDir);
-	} catch (e) {
+	} catch {
 		await fs.mkdir(uploadDir, { recursive: true });
 	}
 }
@@ -70,11 +70,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			},
 			{ status: 201 }
 		);
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('File upload error:', err);
-		if (err.status && err.body) {
-			throw error(err.status, err.body.message || 'File upload failed.');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const errorObj = err as { status: number; body: { message?: string } };
+			throw error(errorObj.status, errorObj.body.message || 'File upload failed.');
 		}
-		throw error(500, err.message || 'File upload failed due to an internal server error.');
+		const message =
+			err instanceof Error ? err.message : 'File upload failed due to an internal server error.';
+		throw error(500, message);
 	}
 };

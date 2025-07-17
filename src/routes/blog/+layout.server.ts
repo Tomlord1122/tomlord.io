@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from '../$types.js';
-import type { PostMetadata } from '$lib/types/post.js';
+import type { PostMetadata, PostData } from '$lib/types/post.js';
 import { config } from '$lib/config.js';
 
 export const load: LayoutServerLoad = async () => {
@@ -7,12 +7,12 @@ export const load: LayoutServerLoad = async () => {
 
 	try {
 		// First, try to load from backend API
-		const response = await fetch(`${config.API.BLOGS}?limit=100&published=true`);
+		const response = await fetch(`${config.API.BLOGS}/?limit=100&published=true`);
 
 		if (response.ok) {
-			const data = await response.json();
+			const data: { blogs: PostData[] } = await response.json();
 			// Transform backend blog data to PostMetadata format
-			posts = data.blogs.map((blog: any) => ({
+			posts = data.blogs.map((blog: PostData) => ({
 				title: blog.title,
 				date: blog.date,
 				slug: blog.slug,

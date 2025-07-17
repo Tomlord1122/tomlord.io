@@ -8,11 +8,35 @@ export interface PostMetadata {
 	duration: string;
 }
 
+// Frontmatter data interface for blog posts
+export interface Frontmatter {
+	title?: string;
+	date?: string;
+	slug?: string;
+	description?: string;
+	tags?: string[];
+	lang?: string;
+	duration?: string;
+	[key: string]: string | string[] | undefined;
+}
+
 // Using Omit to define Post based on PostMetadata
 export interface Post extends Omit<PostMetadata, 'description'> {
-	content: any; // or more precisely SvelteComponent type, if easily available
+	content: string; // Markdown/HTML content as string
 	duration: string;
 	description: string;
+}
+
+export interface PostData {
+	title: string;
+	slug: string;
+	content: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description: string;
+	is_published: boolean;
 }
 
 export interface NewPostModalType {
@@ -26,5 +50,5 @@ export interface NewPostModalType {
 }
 
 export interface EditPostModalType extends NewPostModalType {
-	postData: any;
+	postData: PostData;
 }

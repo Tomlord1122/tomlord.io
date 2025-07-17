@@ -10,7 +10,7 @@ const contentDir = path.join(process.cwd(), 'src', 'content');
 async function ensureContentDir() {
 	try {
 		await fs.access(contentDir);
-	} catch (e) {
+	} catch {
 		await fs.mkdir(contentDir, { recursive: true });
 	}
 }
@@ -50,12 +50,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			},
 			{ status: 200 }
 		);
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Page save error:', err);
-		if (err.status && err.body) {
-			throw error(err.status, err.body.message || 'Failed to save page content.');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const errorObj = err as { status: number; body: { message?: string } };
+			throw error(errorObj.status, errorObj.body.message || 'Failed to save page content.');
 		}
-		throw error(500, err.message || 'Failed to save page content due to an internal server error.');
+		const message =
+			err instanceof Error
+				? err.message
+				: 'Failed to save page content due to an internal server error.';
+		throw error(500, message);
 	}
 };
 
@@ -84,18 +89,28 @@ export const GET: RequestHandler = async ({ url }) => {
 		try {
 			const content = await fs.readFile(filePath, 'utf-8');
 			return json({ content });
-		} catch (readError: any) {
-			if (readError.code === 'ENOENT') {
+		} catch (readError: unknown) {
+			if (
+				readError &&
+				typeof readError === 'object' &&
+				'code' in readError &&
+				readError.code === 'ENOENT'
+			) {
 				// File doesn't exist, return empty content
 				return json({ content: '' });
 			}
 			throw readError;
 		}
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Page load error:', err);
-		if (err.status && err.body) {
-			throw error(err.status, err.body.message || 'Failed to load page content.');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const errorObj = err as { status: number; body: { message?: string } };
+			throw error(errorObj.status, errorObj.body.message || 'Failed to load page content.');
 		}
-		throw error(500, err.message || 'Failed to load page content due to an internal server error.');
+		const message =
+			err instanceof Error
+				? err.message
+				: 'Failed to load page content due to an internal server error.';
+		throw error(500, message);
 	}
 };

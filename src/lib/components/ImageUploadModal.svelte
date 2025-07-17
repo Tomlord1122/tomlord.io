@@ -4,7 +4,8 @@
 	// Props for the modal
 	let {
 		show = $bindable(),
-		onUploadSuccess = (filePaths: string[]) => {},
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		onUploadSuccess = (_filePaths: string[]) => {},
 		onCancel = () => {}
 	}: ImageUploadModalType = $props();
 
@@ -86,10 +87,11 @@
 				if (result.fileName) {
 					successfulUploadPaths.push(result.fileName);
 				}
-			} catch (err: any) {
+			} catch (err: unknown) {
 				console.error(`Upload error for ${file.name}:`, err);
+				const message = err instanceof Error ? err.message : 'Unknown error';
 				currentErrorMessages +=
-					(currentErrorMessages ? '\n' : '') + `Error with ${file.name}: ${err.message}`;
+					(currentErrorMessages ? '\n' : '') + `Error with ${file.name}: ${message}`;
 				errorOccurred = true;
 			}
 		}

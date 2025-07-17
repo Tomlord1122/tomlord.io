@@ -4,7 +4,7 @@
 	import EditPostModal from '$lib/components/EditPostModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
-
+	import type { PostData } from '$lib/types/post.js';
 	// export let data; // 從 load 函數接收資料 (data.post)
 	let { data } = $props(); // Using $props() instead of export let data
 
@@ -14,7 +14,7 @@
 	// Check if we're in development mode
 	let isDev = $state(false);
 	let showEditModal = $state(false);
-	let postData = $state({});
+	let postData = $state<PostData>({} as PostData);
 	let allTags = $state<string[]>([]);
 	let commentRefreshTrigger = $state(0);
 
@@ -40,7 +40,10 @@
 					content: data.content,
 					tags: data.metadata.tags || [],
 					date: data.metadata.date,
-					lang: data.metadata.lang || 'en'
+					lang: data.metadata.lang || 'en',
+					duration: data.metadata.duration || '5min',
+					description: data.metadata.description || '',
+					is_published: data.metadata.is_published || false
 				};
 				showEditModal = true;
 			} else {
@@ -109,7 +112,7 @@
 		</p>
 		{#if tags && tags.length > 0}
 			<div class="mt-4 flex flex-wrap gap-2">
-				{#each tags as tag}
+				{#each tags as tag (tag)}
 					<span class="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700"
 						>{tag}</span
 					>

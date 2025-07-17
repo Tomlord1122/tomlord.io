@@ -25,7 +25,7 @@
 	async function handleMouseEnter(href: string) {
 		try {
 			await preloadData(href);
-		} catch (error) {
+		} catch {
 			// Silently handle preload errors
 			console.debug('Preload failed for:', href);
 		}
@@ -52,7 +52,7 @@
 
 			<!-- Navigation Links -->
 			<div class="flex items-center gap-3 font-serif text-lg">
-				{#each navItems as item}
+				{#each navItems as item (item.href)}
 					{@const active = isActive(item.href)}
 					{@const isNavigatingTo = navigating.to?.url.pathname === item.href}
 					<a
@@ -84,7 +84,7 @@
 			in:fade={{ duration: 150 }}
 			out:fade={{ duration: 300 }}
 		>
-			<div class="progress-bar h-1 bg-blue-500"></div>
+			<div class="progress-bar h-1 bg-gray-900"></div>
 		</div>
 	{/if}
 </nav>

@@ -3,13 +3,14 @@ import type { RequestHandler } from './$types.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { dev } from '$app/environment';
+import type { Frontmatter } from '$lib/types/post.js';
 
 const postsDir = path.join(process.cwd(), 'src', 'markdown', 'posts');
 
 async function ensurePostsDir() {
 	try {
 		await fs.access(postsDir);
-	} catch (e) {
+	} catch {
 		await fs.mkdir(postsDir, { recursive: true });
 	}
 }
@@ -44,7 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Check if the original file exists
 		try {
 			await fs.access(originalFilePath);
-		} catch (e) {
+		} catch {
 			throw error(404, 'Original post file not found.');
 		}
 
@@ -56,7 +57,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				throw error(409, 'A post with the new slug already exists.');
 			} catch (e) {
 				// File doesn't exist, which is what we want
-				if ((e as any).code !== 'ENOENT') {
+				if ((e as { code?: string }).code !== 'ENOENT') {
 					throw e;
 				}
 			}
@@ -79,12 +80,15 @@ export const POST: RequestHandler = async ({ request }) => {
 			},
 			{ status: 200 }
 		);
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Post update error:', err);
-		if (err.status && err.body) {
-			throw error(err.status, err.body.message || 'Failed to update post.');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const errorObj = err as { status: number; body: { message?: string } };
+			throw error(errorObj.status, errorObj.body.message || 'Failed to update post.');
 		}
-		throw error(500, err.message || 'Failed to update post due to an internal server error.');
+		const message =
+			err instanceof Error ? err.message : 'Failed to update post due to an internal server error.';
+		throw error(500, message);
 	}
 };
 
@@ -124,7 +128,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			const postContent = frontmatterMatch[2];
 
 			// Parse frontmatter (simple YAML parsing for our use case)
-			const metadata: any = {};
+			const metadata: Frontmatter = {};
 			frontmatterText.split('\n').forEach((line) => {
 				const match = line.match(/^(\w+):\s*(.+)$/);
 				if (match) {
@@ -152,17 +156,25 @@ export const GET: RequestHandler = async ({ url }) => {
 				content: postContent.trim(),
 				fullContent: content
 			});
-		} catch (readError: any) {
-			if (readError.code === 'ENOENT') {
+		} catch (readError: unknown) {
+			if (
+				readError &&
+				typeof readError === 'object' &&
+				'code' in readError &&
+				readError.code === 'ENOENT'
+			) {
 				throw error(404, 'Post not found.');
 			}
 			throw readError;
 		}
-	} catch (err: any) {
+	} catch (err: unknown) {
 		console.error('Post load error:', err);
-		if (err.status && err.body) {
-			throw error(err.status, err.body.message || 'Failed to load post.');
+		if (err && typeof err === 'object' && 'status' in err && 'body' in err) {
+			const errorObj = err as { status: number; body: { message?: string } };
+			throw error(errorObj.status, errorObj.body.message || 'Failed to load post.');
 		}
-		throw error(500, err.message || 'Failed to load post due to an internal server error.');
+		const message =
+			err instanceof Error ? err.message : 'Failed to load post due to an internal server error.';
+		throw error(500, message);
 	}
 };

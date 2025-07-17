@@ -18,7 +18,7 @@ export interface AuthState {
 
 // Create auth state using Svelte 5 runes
 function createAuthStore() {
-	let state = $state<AuthState>({
+	const state = $state<AuthState>({
 		user: null,
 		isAuthenticated: false,
 		isLoading: false,

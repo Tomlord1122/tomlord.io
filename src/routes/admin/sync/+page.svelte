@@ -2,7 +2,14 @@
 	import { browser } from '$app/environment';
 
 	let isLoading = $state(false);
-	let result = $state<any>(null);
+
+	let result = $state<{
+		success: boolean;
+		message?: string;
+		results?: Array<{ filename: string; action: string; blog?: { title: string } }>;
+		errors?: string[];
+		summary?: { total: number; success: number; failed: number };
+	} | null>(null);
 	let error = $state('');
 
 	async function syncBlogs() {
@@ -103,7 +110,7 @@
 				<div class="mb-4">
 					<h4 class="mb-2 font-semibold text-green-700">Successfully Processed:</h4>
 					<ul class="space-y-1">
-						{#each result.results as item}
+						{#each result.results as item (item.filename)}
 							<li class="text-sm">
 								<span class="rounded bg-gray-100 px-2 py-1 font-mono">{item.filename}</span>
 								<span class="ml-2 text-green-600">({item.action})</span>
@@ -118,7 +125,7 @@
 				<div>
 					<h4 class="mb-2 font-semibold text-red-700">Errors:</h4>
 					<ul class="space-y-1">
-						{#each result.errors as errorMsg}
+						{#each result.errors as errorMsg, index (index)}
 							<li class="text-sm text-red-600">{errorMsg}</li>
 						{/each}
 					</ul>

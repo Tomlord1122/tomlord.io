@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { blur, fade, fly, slide } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
+	import { SvelteSet } from 'svelte/reactivity';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
 	import { browser } from '$app/environment';
 
@@ -25,8 +26,8 @@
 	let allTags = $state(initialTags);
 
 	$effect(() => {
-		const tagsFromCurrentPosts = [...new Set(data.posts.flatMap((post) => post.tags || []))];
-		const combinedTagsSet = new Set(tagsFromCurrentPosts);
+		const tagsFromCurrentPosts = [...new SvelteSet(data.posts.flatMap((post) => post.tags || []))];
+		const combinedTagsSet = new SvelteSet(tagsFromCurrentPosts);
 		allTags.forEach((tag) => combinedTagsSet.add(tag));
 		const mergedSortedTags = Array.from(combinedTagsSet).sort();
 
@@ -156,7 +157,7 @@
 							type="checkbox"
 							checked={language === 'en'}
 							onclick={() => {
-								language === 'en' ? (language = '') : (language = 'en');
+								language = language === 'en' ? '' : 'en';
 							}}
 							class="form-checkbox h-4 w-4 rounded border-gray-300 text-gray-400 focus:ring-gray-500"
 						/>
@@ -197,7 +198,7 @@
 
 				<div class="group relative">
 					<!-- 左箭頭按鈕 -->
-					{#each [{ direction: 'left' as const, canScroll: canScrollLeft, path: 'M15 19l-7-7 7-7' }, { direction: 'right' as const, canScroll: canScrollRight, path: 'M9 5l7 7-7 7' }] as { direction, canScroll, path }}
+					{#each [{ direction: 'left' as const, canScroll: canScrollLeft, path: 'M15 19l-7-7 7-7' }, { direction: 'right' as const, canScroll: canScrollRight, path: 'M9 5l7 7-7 7' }] as { direction, canScroll, path } (direction)}
 						{#if canScroll}
 							<button
 								type="button"
@@ -225,10 +226,10 @@
 						style="scrollbar-width: none; -ms-overflow-style: none;"
 					>
 						{#if filteredTags.length > 0}
-							{#each filteredTags as tag}
+							{#each filteredTags as tag (tag)}
 								{@const isSelected = selectedTags.includes(tag)}
 								<button
-									transition:blur={{ duration: 200 }}
+									transition:fade={{ duration: 300 }}
 									type="button"
 									onclick={() => toggleTag(tag)}
 									class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
@@ -283,7 +284,7 @@
 										class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth"
 										style="scrollbar-width: none; -ms-overflow-style: none;"
 									>
-										{#each post.tags as tag}
+										{#each post.tags as tag (tag)}
 											<span
 												class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
 											>

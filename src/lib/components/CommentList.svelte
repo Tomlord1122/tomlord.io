@@ -80,37 +80,55 @@
 		wsManager.subscribeToRooms([room]);
 
 		// Set up event listeners for real-time updates
-		const handleNewComment = (payload: any) => {
+		const handleNewComment = (payload: unknown) => {
 			console.log('New comment received via WebSocket:', payload);
-			// Add new comment to the list
-			comments = [payload, ...comments];
+			// Add new comment to the list if it's a valid comment
+			if (payload && typeof payload === 'object' && 'id' in payload) {
+				comments = [payload as Comment, ...comments];
+			}
 		};
 
-		const handleThumbUpdate = (payload: any) => {
+		const handleThumbUpdate = (payload: unknown) => {
 			console.log('Thumb update received via WebSocket:', payload);
 
-			// Only update if this change came from a different user
+			// Only update if this change came from a different user and payload is valid
 			// (to avoid duplicate updates from our own actions)
-			if (authState.user?.id !== payload.user_id) {
-				comments = comments.map((comment) => {
-					if (comment.id === payload.message_id) {
-						return {
-							...comment,
-							thumb_count: payload.thumb_count
-							// Keep our own user_thumbed status unchanged
-						};
-					}
-					return comment;
-				});
+			if (
+				payload &&
+				typeof payload === 'object' &&
+				'user_id' in payload &&
+				'message_id' in payload &&
+				'thumb_count' in payload
+			) {
+				const thumbPayload = payload as {
+					user_id: string;
+					message_id: string;
+					thumb_count: number;
+				};
+				if (authState.user?.id !== thumbPayload.user_id) {
+					comments = comments.map((comment) => {
+						if (comment.id === thumbPayload.message_id) {
+							return {
+								...comment,
+								thumb_count: thumbPayload.thumb_count
+								// Keep our own user_thumbed status unchanged
+							};
+						}
+						return comment;
+					});
+				}
 			}
 		};
 
 		// Add handler for comment deletion
-		const handleCommentDelete = (payload: any) => {
+		const handleCommentDelete = (payload: unknown) => {
 			console.log('Comment delete received via WebSocket:', payload);
 
-			// Remove the deleted comment from the list
-			comments = comments.filter((comment) => comment.id !== payload.message_id);
+			// Remove the deleted comment from the list if payload is valid
+			if (payload && typeof payload === 'object' && 'message_id' in payload) {
+				const deletePayload = payload as { message_id: string };
+				comments = comments.filter((comment) => comment.id !== deletePayload.message_id);
+			}
 		};
 
 		// Add event listeners

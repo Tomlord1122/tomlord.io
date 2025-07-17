@@ -132,6 +132,7 @@
 								class="prose prose-sm sm:prose-base max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
 								style="min-height: calc(25em + 40px);"
 							>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html markdownPreview}
 							</div>
 						{:else}

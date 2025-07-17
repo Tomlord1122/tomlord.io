@@ -8,22 +8,9 @@
 	let { data } = $props();
 
 	// Check if we're in development mode
-	let isDev = $state(false);
+	let isDev = $derived(browser && window.location.hostname === 'localhost');
 	let showEditModal = $state(false);
-	let pageContent = $state(data.pageContent);
-
-	// Check environment on client-side
-	$effect(() => {
-		if (browser) {
-			// Only localhost is considered development
-			isDev = window.location.hostname === 'localhost';
-		}
-	});
-
-	// Update pageContent when data changes (e.g., after editing)
-	$effect(() => {
-		pageContent = data.pageContent;
-	});
+	let pageContent = $derived(data.pageContent);
 
 	// Callback for successful save
 	function handlePageSaved() {
@@ -69,6 +56,7 @@
 
 	<main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area">
 		<div class="prose prose-sm sm:prose-lg max-w-none">
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html htmlContent}
 		</div>
 	</main>

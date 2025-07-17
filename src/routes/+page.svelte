@@ -10,19 +10,9 @@
 	let { data } = $props();
 
 	// Check if we're in development mode
-	let isDev = $state(false);
+	let isDev = $derived(browser && window.location.hostname === 'localhost');
 	let showEditModal = $state(false);
-	let pageContent = $state(data.pageContent);
-
-	$effect(() => {
-		if (browser) {
-			isDev = window.location.hostname === 'localhost';
-		}
-	});
-
-	$effect(() => {
-		pageContent = data.pageContent;
-	});
+	let pageContent = $derived(data.pageContent);
 
 	function handlePageSaved() {
 		console.log('Home page content saved successfully.');
@@ -59,6 +49,7 @@
 	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area">
 		{#if pageContent}
 			<div class="prose prose-sm sm:prose-lg max-w-none">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html htmlContent}
 			</div>
 		{:else}

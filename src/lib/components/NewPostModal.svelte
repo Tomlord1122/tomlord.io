@@ -225,7 +225,7 @@ ${content}`;
 						<div>
 							<p class="mb-1 block text-sm font-medium text-gray-700">Tags</p>
 							<div class="mb-1 flex flex-wrap gap-2">
-								{#each allCurrentTags as tag}
+								{#each allCurrentTags as tag (tag)}
 									{@const isSelected = postTags.includes(tag)}
 									<button
 										type="button"
@@ -267,7 +267,7 @@ ${content}`;
 							<div class="mt-1">
 								<p class="text-xs text-gray-600">Selected tags for this post:</p>
 								<div class="mt-1 flex flex-wrap gap-1">
-									{#each postTags as tag}
+									{#each postTags as tag (tag)}
 										<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700"
 											>{tag}</span
 										>
@@ -331,6 +331,7 @@ ${content}`;
 								class="prose prose-sm sm:prose-base z-20 max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
 								style="min-height: calc(20em + 40px);"
 							>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html marked(content)}
 							</div>
 						{:else}

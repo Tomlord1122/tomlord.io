@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import fs from 'fs';
 import path from 'path';
 import { config } from '$lib/config.js';
+import type { Frontmatter, PostData } from '$lib/types/post.js';
 
 export async function POST({ request }) {
 	const { filename, content } = await request.json();
@@ -13,10 +14,9 @@ export async function POST({ request }) {
 	}
 
 	const frontmatterString = frontmatterMatch[1];
-	const markdownContent = frontmatterMatch[2];
 
 	// Parse frontmatter to extract blog metadata
-	const frontmatterData: Record<string, any> = {};
+	const frontmatterData: Frontmatter = {};
 	frontmatterString.split('\n').forEach((line: string) => {
 		const [key, ...valueParts] = line.split(':');
 		if (key && valueParts.length > 0) {
@@ -43,13 +43,14 @@ export async function POST({ request }) {
 
 	try {
 		// 1. Create blog record in backend database
-		const blogData = {
+		const blogData: PostData = {
 			title: frontmatterData.title || 'Untitled',
 			slug: frontmatterData.slug || filename.replace('.svx', ''),
+			content: content,
 			date: frontmatterData.date || new Date().toISOString().split('T')[0],
 			lang: frontmatterData.lang || 'en',
 			duration: frontmatterData.duration || '5min',
-			tags: frontmatterData.tags || [],
+			tags: Array.isArray(frontmatterData.tags) ? frontmatterData.tags : [],
 			description: frontmatterData.description || '',
 			is_published: true
 		};

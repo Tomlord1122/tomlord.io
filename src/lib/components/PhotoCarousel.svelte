@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	// Props
 	let {
@@ -7,7 +8,8 @@
 		show = false,
 		currentIndex = 0,
 		onClose = () => {},
-		onIndexChange = (index: number) => {}
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		onIndexChange = (_index: number) => {}
 	}: {
 		photos: Array<{ src: string; alt: string; filename: string }>;
 		show: boolean;
@@ -22,8 +24,8 @@
 	const ROTATION_FACTOR = 2;
 	const Y_OFFSET_FACTOR = 8;
 
-	// Optimization: Use Map to cache calculation results
-	const transformCache = new Map<string, string>();
+	// Optimization: Use SvelteMap to cache calculation results
+	const transformCache = new SvelteMap<string, string>();
 
 	// Optimization: Batch event handler to avoid creating separate handlers for each thumbnail
 	function handleThumbnailClick(event: Event) {
@@ -308,7 +310,7 @@
 							{/if}
 						{/if}
 
-						{#each photos.slice(range.start, range.end) as photo, localIndex}
+						{#each photos.slice(range.start, range.end) as photo, localIndex (photo.src)}
 							{@const index = range.start + localIndex}
 							<button
 								data-index={index}
@@ -340,7 +342,7 @@
 							</button>
 						{/if}
 					{:else}
-						{#each photos as photo, index}
+						{#each photos as photo, index (photo.src)}
 							<button
 								data-index={index}
 								class="flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 {currentIndex ===
