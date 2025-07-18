@@ -1,9 +1,9 @@
 import type { PageLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
-import { config, fetchWithTimeout, fetchWithFallback } from '$lib/config.js';
+import { config, fetchWithTimeout, smartLoadWithFallback } from '$lib/config.js';
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ params }) => {
 	const { slug } = params;
 
 	// API 載入函數
@@ -31,7 +31,6 @@ export const load: PageLoad = async ({ params, fetch }) => {
 			content = createNoContentComponent();
 		}
 
-		console.log(`✅ Loaded blog post "${blog.title}" from API`);
 		return {
 			title: blog.title,
 			date: blog.date,
@@ -53,8 +52,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		}
 
 		const metadata = postModule.metadata as Omit<Post, 'content' | 'slug'>;
-		
-		console.log(`📁 Loaded blog post "${metadata.title}" from local file`);
+
 		return {
 			title: metadata.title,
 			date: metadata.date,
@@ -67,13 +65,17 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		};
 	};
 
-	// 載入文章資料
+	// 使用智能載入策略
 	let post: Post;
+	let loadSource: 'api' | 'local' = 'local';
+
 	try {
-		post = await fetchWithFallback(
-			loadFromAPI,
-			loadFromLocal,
-			1500 // 1.5秒超時
+		const result = await smartLoadWithFallback(loadFromAPI, loadFromLocal);
+		post = result.data;
+		loadSource = result.source;
+
+		console.log(
+			`📖 Loaded blog post "${post.title}" from ${loadSource === 'api' ? 'backend API' : 'local markdown file'}`
 		);
 	} catch (apiAndLocalError) {
 		console.error('Failed to load blog post from both API and local files:', apiAndLocalError);
@@ -102,7 +104,8 @@ export const load: PageLoad = async ({ params, fetch }) => {
 
 	return {
 		post,
-		availablePhotos
+		availablePhotos,
+		loadSource // 告訴前端是從哪裡載入的
 	};
 };
 

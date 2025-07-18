@@ -136,11 +136,11 @@ export class PerformanceTest {
 		this.results.forEach((result, index) => {
 			const status = result.success ? '✅ PASS' : '❌ FAIL';
 			const duration = `${result.duration}ms`;
-			
+
 			console.log(`${index + 1}. ${result.test}`);
 			console.log(`   Status: ${status}`);
 			console.log(`   Duration: ${duration}`);
-			
+
 			if (result.error) {
 				console.log(`   Error: ${result.error}`);
 			}
@@ -166,4 +166,4 @@ export class PerformanceTest {
 	clearResults(): void {
 		this.results = [];
 	}
-} 
+}

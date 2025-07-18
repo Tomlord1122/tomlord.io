@@ -169,7 +169,7 @@
 
 			// Use fetchWithTimeout to prevent hanging
 			const response = await fetchWithTimeout(
-				url, 
+				url,
 				{ headers },
 				2000 // 2 second timeout for comments
 			);
@@ -183,7 +183,7 @@
 				comments = []; // Empty comments array, don't block the page
 			}
 		} catch (err) {
-			console.warn('Error loading comments (this won\'t affect page functionality):', err);
+			console.warn("Error loading comments (this won't affect page functionality):", err);
 			// Set empty comments instead of error to not block the page
 			comments = [];
 			// Only show error in console, not to user
@@ -226,7 +226,7 @@
 
 		try {
 			const token = localStorage.getItem('auth_token');
-			
+
 			// Use fetchWithTimeout for like toggle as well
 			const response = await fetchWithTimeout(
 				`${config.API.MESSAGES}/${commentId}/thumb`,
@@ -270,7 +270,7 @@
 			}
 		} catch (error) {
 			console.warn('Error toggling like:', error);
-			
+
 			// Revert the optimistic update
 			comments = comments.map((comment) => {
 				if (comment.id === commentId) {

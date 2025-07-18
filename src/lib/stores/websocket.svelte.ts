@@ -1,7 +1,7 @@
 import { authStore } from './auth.svelte';
 import { PUBLIC_BACKEND_WS_URL } from '$env/static/public';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
-import { config } from '$lib/config.js';
+import { config, checkBackendHealth } from '$lib/config.js';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -95,16 +95,31 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Check auth state and connect if authenticated - but don't block page loading
+		// Check auth state and backend health before connecting
 		const authState = authStore.state;
 		if (authState.isAuthenticated) {
-			// Use setTimeout to make connection non-blocking
-			setTimeout(() => this.connect(), 100);
+			// Check backend health first, then connect if healthy
+			setTimeout(async () => {
+				const isBackendHealthy = await checkBackendHealth();
+				if (isBackendHealthy) {
+					this.connect();
+				} else {
+					console.log('🔴 Backend unhealthy, skipping WebSocket connection');
+				}
+			}, 100);
 		}
 	}
 
 	// Connect to WebSocket with improved error handling
-	connect(rooms: string[] = []) {
+	async connect(rooms: string[] = []) {
+		// Check backend health before attempting connection
+		const isBackendHealthy = await checkBackendHealth();
+		if (!isBackendHealthy) {
+			console.log('🔴 Backend unhealthy, skipping WebSocket connection');
+			this.connectionState = ConnectionState.FAILED;
+			return;
+		}
+
 		// Prevent multiple simultaneous connection attempts
 		if (
 			this.connectionState === ConnectionState.CONNECTING ||
@@ -165,7 +180,7 @@ class WebSocketManager {
 					this.ws.close();
 					this.handleConnectionFailure();
 				}
-			}, config.WEBSOCKET_TIMEOUT); // Use config timeout (2 seconds)
+			}, config.WEBSOCKET_TIMEOUT); // Use config timeout (1 second)
 
 			this.ws.onopen = () => {
 				console.log('WebSocket connected successfully');
@@ -219,16 +234,21 @@ class WebSocketManager {
 					this.attemptReconnect();
 				} else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 					this.connectionState = ConnectionState.FAILED;
-					console.warn('Max WebSocket reconnection attempts reached, giving up (this won\'t affect page functionality)');
+					console.warn(
+						"Max WebSocket reconnection attempts reached, giving up (this won't affect page functionality)"
+					);
 				}
 			};
 
 			this.ws.onerror = (error) => {
-				console.warn('WebSocket error (this won\'t affect page functionality):', error);
+				console.warn("WebSocket error (this won't affect page functionality):", error);
 				this.handleConnectionFailure();
 			};
 		} catch (error) {
-			console.warn('Failed to create WebSocket connection (this won\'t affect page functionality):', error);
+			console.warn(
+				"Failed to create WebSocket connection (this won't affect page functionality):",
+				error
+			);
 			this.handleConnectionFailure();
 		}
 	}
@@ -389,7 +409,7 @@ class WebSocketManager {
 	// Handle connection failures without blocking the application
 	private handleConnectionFailure() {
 		this.connectionState = ConnectionState.DISCONNECTED;
-		
+
 		// Clear connection timeout
 		if (this.connectionTimeout) {
 			clearTimeout(this.connectionTimeout);
@@ -401,7 +421,9 @@ class WebSocketManager {
 			this.attemptReconnect();
 		} else {
 			this.connectionState = ConnectionState.FAILED;
-			console.warn('WebSocket connection failed permanently (comments may not update in real-time)');
+			console.warn(
+				'WebSocket connection failed permanently (comments may not update in real-time)'
+			);
 		}
 	}
 

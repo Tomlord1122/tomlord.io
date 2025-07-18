@@ -1,12 +1,16 @@
 import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata, PostData } from '$lib/types/post.js';
-import { config, fetchWithTimeout, fetchWithFallback } from '$lib/config.js';
+import { config, fetchWithTimeout, smartLoadWithFallback } from '$lib/config.js';
 
-export const load: LayoutServerLoad = async () => {
+export const load: LayoutServerLoad = async (): Promise<{
+	posts: PostMetadata[];
+	availablePhotos: string[];
+	loadSource: 'api' | 'local';
+}> => {
 	// API 載入函數
 	const loadFromAPI = async (): Promise<PostMetadata[]> => {
 		const response = await fetchWithTimeout(`${config.API.BLOGS}/?limit=100&published=true`);
-		
+
 		if (!response.ok) {
 			throw new Error(`Backend API error: ${response.status}`);
 		}
@@ -22,7 +26,6 @@ export const load: LayoutServerLoad = async () => {
 			duration: blog.duration || '5min'
 		}));
 
-		console.log(`✅ Loaded ${posts.length} posts from backend API`);
 		return posts;
 	};
 
@@ -51,17 +54,20 @@ export const load: LayoutServerLoad = async () => {
 			}
 		}
 
-		console.log(`📁 Loaded ${posts.length} posts from local markdown files`);
 		return posts;
 	};
 
-	// 使用快速失敗機制
+	// 使用智能載入策略 - 先檢查健康狀態，再決定載入方式
 	let posts: PostMetadata[] = [];
+	let loadSource: 'api' | 'local' = 'local';
+
 	try {
-		posts = await fetchWithFallback(
-			loadFromAPI,
-			loadFromLocal,
-			1500 // 更短的超時時間，1.5秒
+		const result = await smartLoadWithFallback(loadFromAPI, loadFromLocal);
+		posts = result.data;
+		loadSource = result.source;
+
+		console.log(
+			`📚 Loaded ${posts.length} posts from ${loadSource === 'api' ? 'backend API' : 'local markdown files'}`
 		);
 	} catch (error) {
 		console.error('Both API and local loading failed:', error);
@@ -77,7 +83,8 @@ export const load: LayoutServerLoad = async () => {
 
 	return {
 		posts,
-		availablePhotos
+		availablePhotos,
+		loadSource // 告訴前端是從哪裡載入的
 	};
 };
 
