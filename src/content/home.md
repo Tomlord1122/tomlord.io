@@ -31,10 +31,11 @@
 
 Hi, it's Tomlord here!
 
-I am a software engineer who is passionate about distributed systems. FYI I am a Golang lover.
-In my free time, I also love to write frontend applications with Svelte.
+I am a software engineer passionate about systems—and a Golang lover. In my free time, I also enjoy building frontend applications with Svelte.
 
-This website contains some of my blog posts about my learning journey and topics of interest. I will share my projects and thoughts with you. Feel free to contact me via email!
+This website contains some of my blog posts about my learning journey and topics of interest. Here, I share my projects and reflections. Feel free to contact me via email.
+
+**Please note**: the comment feature on blog page is currently closed due to cost considerations 🥲
 
 ### Experience
 
