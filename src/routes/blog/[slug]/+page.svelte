@@ -4,12 +4,14 @@
 	import EditPostModal from '$lib/components/EditPostModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
+	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 	import type { PostData } from '$lib/types/post.js';
 	// export let data; // 從 load 函數接收資料 (data.post)
 	let { data } = $props(); // Using $props() instead of export let data
 
 	const { title, date, tags, content, duration, slug } = data.post;
-	const Component = $derived(content);
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const Component = $derived(content as any); // use any to avoid type error
 
 	// Check if we're in development mode
 	let isDev = $state(false);
@@ -82,6 +84,9 @@
 	<meta name="twitter:title" content={title} />
 </svelte:head>
 
+<!-- Reading Progress Bar -->
+<ReadingProgressBar />
+
 <article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	<header class="page-title mb-8">
 		<div class="prose prose-sm sm:prose-base">
@@ -122,9 +127,9 @@
 	</header>
 	<div
 		in:fly={{ y: 50, duration: 600, delay: 200 }}
-		class="prose prose-sm sm:prose-base max-w-none font-serif"
+		class="prose prose-sm sm:prose-base img-center max-w-none font-serif"
 	>
-		<Component class="img-center" />
+		<Component />
 	</div>
 
 	<!-- Comments Section -->
