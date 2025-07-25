@@ -2,6 +2,7 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { config, fetchWithTimeout } from '$lib/config.js';
 	import type { CreateCommentRequest } from '$lib/types/comment.js';
+	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
 		postSlug: string;
@@ -134,20 +135,21 @@
 				<label for="comment" class="mb-2 block text-sm font-medium text-gray-700">
 					Comment as {authState.user?.name}
 				</label>
-				<textarea
+				<TypewriterTextarea
 					id="comment"
 					bind:value={message}
 					placeholder="Share your thoughts..."
-					rows="4"
+					rows={4}
 					class="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-gray-500 focus:ring-2 focus:ring-gray-400"
 					disabled={isSubmitting}
-					oncompositionstart={() => {
+					resize="none"
+					onCompositionstart={() => {
 						isComposing = true;
 					}}
-					oncompositionend={() => {
+					onCompositionend={() => {
 						isComposing = false;
 					}}
-					onkeydown={(e) => {
+					onKeydown={(e) => {
 						// 只有在非輸入法狀態下才處理 Enter 鍵
 						if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
 							e.preventDefault();
@@ -156,7 +158,7 @@
 							}
 						}
 					}}
-				></textarea>
+				/>
 			</div>
 
 			{#if error}
