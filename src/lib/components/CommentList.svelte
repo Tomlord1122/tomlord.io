@@ -430,7 +430,7 @@
 			</div>
 		</div>
 
-		WebSocket connection status indicator
+		<!-- WebSocket connection status indicator -->
 		<!-- {#if authState.isAuthenticated}
 			<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
 				<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
