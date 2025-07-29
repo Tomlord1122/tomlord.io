@@ -96,9 +96,11 @@ async function syncBlogs() {
 		console.log('⚠️  No authentication token provided. Some operations may fail.');
 		console.log('Usage: node sync-blogs.js <jwt_token>');
 		console.log('Or set AUTH_TOKEN environment variable\n');
+		process.exit(1);
 	}
 
 	try {
+		console.log(`🔑 Using token: ${token}`);
 		const postsDir = path.join(__dirname, '..', 'src', 'markdown', 'posts');
 
 		if (!fs.existsSync(postsDir)) {
@@ -149,7 +151,13 @@ async function syncBlogs() {
 		console.log(`\n🚀 Syncing ${blogDataArray.length} blogs to database...`);
 
 		try {
-			const result = await apiCall('/api/sync-blogs', 'POST', blogDataArray);
+			// 檢查後端是否可用
+			const healthCheck = await fetch(`${API_BASE}/health`);
+			if (!healthCheck.ok) {
+				throw new Error('Backend is not available');
+			}
+
+			const result = await apiCall('/api/sync-blogs', 'POST', blogDataArray, token);
 
 			console.log('\n✅ Batch sync completed!');
 			console.log(`   Total: ${result.summary.total}`);
@@ -183,7 +191,14 @@ async function syncBlogs() {
 			}
 		} catch (syncError) {
 			console.error('💥 Failed to sync blogs:', syncError.message);
-			process.exit(1);
+
+			// 在生產環境中，我們可能想要讓構建繼續，只是警告
+			if (process.env.NODE_ENV === 'production') {
+				console.warn('⚠️  Production build continuing without blog sync');
+				return; // 不要 process.exit(1)
+			} else {
+				process.exit(1);
+			}
 		}
 	} catch (error) {
 		console.error('💥 Fatal error during synchronization:', error.message);
