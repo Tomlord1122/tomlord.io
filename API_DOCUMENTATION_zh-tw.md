@@ -1,47 +1,47 @@
-# Tomlord.io API Documentation
+# Tomlord.io API 文件
 
-This document provides comprehensive documentation for all public APIs, functions, and components in the Tomlord.io Svelte application.
+本文件提供 Tomlord.io Svelte 應用程式中所有公開 API、函數和元件的完整文件。
 
-## Table of Contents
+## 目錄
 
-1. [Configuration](#configuration)
-2. [Type Definitions](#type-definitions)
-3. [Components](#components)
-4. [Stores](#stores)
-5. [Utility Functions](#utility-functions)
-6. [Navigation](#navigation)
-7. [API Routes](#api-routes)
+1. [配置](#配置)
+2. [型別定義](#型別定義)
+3. [元件](#元件)
+4. [狀態管理](#狀態管理)
+5. [工具函數](#工具函數)
+6. [導航](#導航)
+7. [API 路由](#api-路由)
 
 ---
 
-## Configuration
+## 配置
 
-### `config` Object
+### `config` 物件
 
-The main configuration object that provides environment-specific settings and API endpoints.
+提供環境特定設定和 API 端點的主要配置物件。
 
 ```typescript
 import { config } from '$lib/config.js';
 ```
 
-#### Properties
+#### 屬性
 
-- `BACKEND_URL` (string): Backend API base URL
-- `BACKEND_WS_URL` (string): WebSocket backend URL
-- `APP_ENV` (string): Current environment ('development' | 'production')
-- `FETCH_TIMEOUT` (number): API call timeout in milliseconds (default: 1000)
-- `WEBSOCKET_TIMEOUT` (number): WebSocket connection timeout (default: 1000)
-- `RETRY_ATTEMPTS` (number): Number of retry attempts for failed requests (default: 2)
-- `HEALTH_CHECK_TIMEOUT` (number): Health check timeout (default: 500)
-- `HEALTH_CHECK_CACHE_DURATION` (number): Health check cache duration (default: 30000)
+- `BACKEND_URL` (string): 後端 API 基礎 URL
+- `BACKEND_WS_URL` (string): WebSocket 後端 URL
+- `APP_ENV` (string): 當前環境 ('development' | 'production')
+- `FETCH_TIMEOUT` (number): API 呼叫超時時間（毫秒，預設：1000）
+- `WEBSOCKET_TIMEOUT` (number): WebSocket 連線超時（預設：1000）
+- `RETRY_ATTEMPTS` (number): 失敗請求的重試次數（預設：2）
+- `HEALTH_CHECK_TIMEOUT` (number): 健康檢查超時（預設：500）
+- `HEALTH_CHECK_CACHE_DURATION` (number): 健康檢查快取時間（預設：30000）
 
-#### Computed Properties
+#### 計算屬性
 
-- `isDevelopment` (boolean): Returns true if in development environment
-- `isProduction` (boolean): Returns true if in production environment
-- `API` (object): Object containing all API endpoints
+- `isDevelopment` (boolean): 開發環境時返回 true
+- `isProduction` (boolean): 生產環境時返回 true
+- `API` (object): 包含所有 API 端點的物件
 
-#### API Endpoints
+#### API 端點
 
 ```typescript
 config.API = {
@@ -57,26 +57,26 @@ config.API = {
 
 ### `checkBackendHealth(useCache?: boolean): Promise<boolean>`
 
-Checks if the backend is healthy and responsive.
+檢查後端是否健康且響應正常。
 
 ```typescript
 import { checkBackendHealth } from '$lib/config.js';
 
-// Check backend health (uses cache by default)
+// 檢查後端健康狀態（預設使用快取）
 const isHealthy = await checkBackendHealth();
 
-// Force fresh health check
+// 強制重新健康檢查
 const isHealthy = await checkBackendHealth(false);
 ```
 
-**Parameters:**
-- `useCache` (boolean, optional): Whether to use cached health check result (default: true)
+**參數：**
+- `useCache` (boolean, 可選): 是否使用快取的健康檢查結果（預設：true）
 
-**Returns:** Promise<boolean> - True if backend is healthy
+**返回：** Promise<boolean> - 後端健康時返回 true
 
 ### `smartLoadWithFallback<T>(apiCall, fallbackCall, forceHealthCheck?): Promise<{data: T, source: 'api' | 'local'}>`
 
-Smart loading strategy that checks backend health first, then decides whether to use API or local fallback.
+智慧載入策略，先檢查後端健康狀態，然後決定使用 API 或本地備用方案。
 
 ```typescript
 import { smartLoadWithFallback } from '$lib/config.js';
@@ -87,20 +87,20 @@ const result = await smartLoadWithFallback(
   false
 );
 
-console.log(result.data); // The loaded data
-console.log(result.source); // 'api' or 'local'
+console.log(result.data); // 載入的資料
+console.log(result.source); // 'api' 或 'local'
 ```
 
-**Parameters:**
-- `apiCall` (() => Promise<T>): Function that calls the API
-- `fallbackCall` (() => Promise<T>): Function that loads local data
-- `forceHealthCheck` (boolean, optional): Force fresh health check (default: false)
+**參數：**
+- `apiCall` (() => Promise<T>): 呼叫 API 的函數
+- `fallbackCall` (() => Promise<T>): 載入本地資料的函數
+- `forceHealthCheck` (boolean, 可選): 強制重新健康檢查（預設：false）
 
-**Returns:** Promise<{data: T, source: 'api' | 'local'}>
+**返回：** Promise<{data: T, source: 'api' | 'local'}>
 
 ### `fetchWithTimeout(url, options?, timeout?): Promise<Response>`
 
-Utility function for fetch with timeout and retry capabilities.
+具有超時和重試功能的 fetch 工具函數。
 
 ```typescript
 import { fetchWithTimeout } from '$lib/config.js';
@@ -108,20 +108,20 @@ import { fetchWithTimeout } from '$lib/config.js';
 const response = await fetchWithTimeout(
   'https://api.example.com/data',
   { method: 'GET' },
-  5000 // 5 second timeout
+  5000 // 5 秒超時
 );
 ```
 
-**Parameters:**
-- `url` (string): The URL to fetch
-- `options` (RequestInit, optional): Fetch options
-- `timeout` (number, optional): Timeout in milliseconds (default: config.FETCH_TIMEOUT)
+**參數：**
+- `url` (string): 要獲取的 URL
+- `options` (RequestInit, 可選): Fetch 選項
+- `timeout` (number, 可選): 超時時間（毫秒，預設：config.FETCH_TIMEOUT）
 
-**Returns:** Promise<Response>
+**返回：** Promise<Response>
 
 ### `fetchWithFallback<T>(apiCall, fallbackCall, timeout?): Promise<T>`
 
-Attempts API call with immediate fallback if it fails or times out.
+嘗試 API 呼叫，如果失敗或超時則立即使用備用方案。
 
 ```typescript
 import { fetchWithFallback } from '$lib/config.js';
@@ -129,22 +129,22 @@ import { fetchWithFallback } from '$lib/config.js';
 const data = await fetchWithFallback(
   () => fetch('/api/data').then(r => r.json()),
   () => loadLocalData(),
-  3000 // 3 second timeout
+  3000 // 3 秒超時
 );
 ```
 
-**Parameters:**
-- `apiCall` (() => Promise<T>): Function that calls the API
-- `fallbackCall` (() => Promise<T>): Function that provides fallback data
-- `timeout` (number, optional): Timeout in milliseconds (default: config.FETCH_TIMEOUT)
+**參數：**
+- `apiCall` (() => Promise<T>): 呼叫 API 的函數
+- `fallbackCall` (() => Promise<T>): 提供備用資料的函數
+- `timeout` (number, 可選): 超時時間（毫秒，預設：config.FETCH_TIMEOUT）
 
-**Returns:** Promise<T>
+**返回：** Promise<T>
 
 ---
 
-## Type Definitions
+## 型別定義
 
-### Post Types
+### 文章型別
 
 #### `PostMetadata`
 
@@ -164,7 +164,7 @@ interface PostMetadata {
 
 ```typescript
 interface Post extends Omit<PostMetadata, 'description'> {
-  content: string; // Markdown/HTML content as string
+  content: string; // Markdown/HTML 內容字串
   duration: string;
   description: string;
 }
@@ -201,7 +201,7 @@ interface Frontmatter {
 }
 ```
 
-### Comment Types
+### 評論型別
 
 #### `Comment`
 
@@ -264,7 +264,7 @@ interface BlogPost {
 }
 ```
 
-### Auth Types
+### 認證型別
 
 #### `User`
 
@@ -291,45 +291,45 @@ interface AuthState {
 
 ---
 
-## Components
+## 元件
 
 ### TypewriterTextarea
 
-A textarea component with typewriter sound effects and visual feedback.
+具有打字機音效和視覺回饋的文字區域元件。
 
 ```typescript
 import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface Props {
-  value?: string;                    // Two-way binding for textarea value
-  placeholder?: string;              // Placeholder text
-  class?: string;                    // Additional CSS classes
-  id?: string;                       // HTML id attribute
-  required?: boolean;                // Required field
-  disabled?: boolean;                // Disabled state
-  readonly?: boolean;                // Read-only state
-  rows?: number;                     // Number of rows (default: 4)
-  cols?: number;                     // Number of columns
-  maxlength?: number;                // Maximum character length
-  minlength?: number;                // Minimum character length
-  wrap?: 'soft' | 'hard' | null;     // Text wrapping (default: 'soft')
-  resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // Resize behavior (default: 'vertical')
-  onKeydown?: (e: KeyboardEvent) => void;     // Keydown event handler
-  onInput?: (e: Event) => void;      // Input event handler
-  onFocus?: (e: FocusEvent) => void; // Focus event handler
-  onBlur?: (e: FocusEvent) => void;  // Blur event handler
-  onCompositionstart?: (e: CompositionEvent) => void; // Composition start handler
-  onCompositionend?: (e: CompositionEvent) => void;   // Composition end handler
-  enableSound?: boolean;             // Enable typewriter sounds (default: true)
-  soundVolume?: number;              // Sound volume 0-1 (default: 0.1)
+  value?: string;                    // 文字區域值的雙向綁定
+  placeholder?: string;              // 佔位符文字
+  class?: string;                    // 額外 CSS 類別
+  id?: string;                       // HTML id 屬性
+  required?: boolean;                // 必填欄位
+  disabled?: boolean;                // 禁用狀態
+  readonly?: boolean;                // 唯讀狀態
+  rows?: number;                     // 行數（預設：4）
+  cols?: number;                     // 列數
+  maxlength?: number;                // 最大字元長度
+  minlength?: number;                // 最小字元長度
+  wrap?: 'soft' | 'hard' | null;     // 文字換行（預設：'soft'）
+  resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // 調整大小行為（預設：'vertical'）
+  onKeydown?: (e: KeyboardEvent) => void;     // 按鍵按下事件處理器
+  onInput?: (e: Event) => void;      // 輸入事件處理器
+  onFocus?: (e: FocusEvent) => void; // 焦點事件處理器
+  onBlur?: (e: FocusEvent) => void;  // 失焦事件處理器
+  onCompositionstart?: (e: CompositionEvent) => void; // 組合開始處理器
+  onCompositionend?: (e: CompositionEvent) => void;   // 組合結束處理器
+  enableSound?: boolean;             // 啟用打字機音效（預設：true）
+  soundVolume?: number;              // 音效音量 0-1（預設：0.1）
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -338,13 +338,13 @@ interface Props {
   let content = '';
   
   function handleKeydown(e) {
-    console.log('Key pressed:', e.key);
+    console.log('按下的按鍵:', e.key);
   }
 </script>
 
 <TypewriterTextarea
   bind:value={content}
-  placeholder="Start typing..."
+  placeholder="開始輸入..."
   rows={6}
   enableSound={true}
   soundVolume={0.2}
@@ -353,24 +353,24 @@ interface Props {
 />
 ```
 
-#### Features
+#### 功能特色
 
-- **Typewriter Sounds**: Different sounds for normal keys, space, enter, and backspace
-- **Visual Feedback**: Subtle animations and visual cues during typing
-- **Accessibility**: Full keyboard navigation and screen reader support
-- **IME Support**: Proper handling of composition events for international input
-- **Responsive Design**: Adapts to different screen sizes
-- **Customizable**: Extensive prop options for customization
+- **打字機音效**: 一般按鍵、空格、換行和退格鍵的不同音效
+- **視覺回饋**: 輸入時的細微動畫和視覺提示
+- **無障礙支援**: 完整的鍵盤導航和螢幕閱讀器支援
+- **輸入法支援**: 正確處理國際輸入的組合事件
+- **響應式設計**: 適應不同螢幕尺寸
+- **可自訂**: 豐富的屬性選項供自訂
 
 ### Navigation
 
-Navigation component for site-wide navigation.
+網站導航元件。
 
 ```typescript
 import Navigation from '$lib/components/Navigation.svelte';
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -382,13 +382,13 @@ import Navigation from '$lib/components/Navigation.svelte';
 
 ### CommentForm
 
-Form component for creating new comments.
+建立新評論的表單元件。
 
 ```typescript
 import CommentForm from '$lib/components/CommentForm.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface CommentFormProps {
@@ -399,14 +399,14 @@ interface CommentFormProps {
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
   import CommentForm from '$lib/components/CommentForm.svelte';
   
   function handleSubmit(comment) {
-    console.log('New comment:', comment);
+    console.log('新評論:', comment);
   }
 </script>
 
@@ -419,13 +419,13 @@ interface CommentFormProps {
 
 ### CommentList
 
-Component for displaying a list of comments with sorting and pagination.
+顯示評論列表的元件，支援排序和分頁。
 
 ```typescript
 import CommentList from '$lib/components/CommentList.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface CommentListProps {
@@ -439,7 +439,7 @@ interface CommentListProps {
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -455,13 +455,13 @@ interface CommentListProps {
 
 ### PhotoCarousel
 
-Image carousel component for photography portfolio.
+攝影作品集的圖片輪播元件。
 
 ```typescript
 import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface PhotoCarouselProps {
@@ -474,7 +474,7 @@ interface PhotoCarouselProps {
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -498,13 +498,13 @@ interface PhotoCarouselProps {
 
 ### ResponsiveImage
 
-Responsive image component with lazy loading and optimization.
+具有延遲載入和最佳化的響應式圖片元件。
 
 ```typescript
 import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface ResponsiveImageProps {
@@ -518,7 +518,7 @@ interface ResponsiveImageProps {
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -527,7 +527,7 @@ interface ResponsiveImageProps {
 
 <ResponsiveImage
   src="/images/hero.jpg"
-  alt="Hero image"
+  alt="主要圖片"
   sizes="(max-width: 768px) 100vw, 50vw"
   loading="lazy"
   class="rounded-lg shadow-lg"
@@ -536,13 +536,13 @@ interface ResponsiveImageProps {
 
 ### ReadingProgressBar
 
-Progress bar component that shows reading progress through a page.
+顯示頁面閱讀進度的進度條元件。
 
 ```typescript
 import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -554,13 +554,13 @@ import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 
 ### InteractiveBackground
 
-Interactive background component with animated effects.
+具有動畫效果的互動背景元件。
 
 ```typescript
 import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
 ```
 
-#### Props
+#### 屬性
 
 ```typescript
 interface InteractiveBackgroundProps {
@@ -570,7 +570,7 @@ interface InteractiveBackgroundProps {
 }
 ```
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -586,17 +586,17 @@ interface InteractiveBackgroundProps {
 
 ---
 
-## Stores
+## 狀態管理
 
 ### Auth Store
 
-Authentication state management using Svelte 5 runes.
+使用 Svelte 5 runes 的認證狀態管理。
 
 ```typescript
 import { authStore } from '$lib/stores/auth.svelte';
 ```
 
-#### State
+#### 狀態
 
 ```typescript
 interface AuthState {
@@ -607,25 +607,25 @@ interface AuthState {
 }
 ```
 
-#### Methods
+#### 方法
 
-- `login()`: Redirects to Google OAuth login
-- `logout()`: Logs out user and clears local storage
-- `setToken(token: string)`: Sets authentication token
-- `checkAuthStatus()`: Checks current authentication status
-- `clearError()`: Clears any authentication errors
+- `login()`: 重定向到 Google OAuth 登入
+- `logout()`: 登出使用者並清除本地儲存
+- `setToken(token: string)`: 設定認證令牌
+- `checkAuthStatus()`: 檢查當前認證狀態
+- `clearError()`: 清除任何認證錯誤
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
   import { authStore } from '$lib/stores/auth.svelte';
   
-  // Access state
+  // 存取狀態
   $: user = authStore.state.user;
   $: isAuthenticated = authStore.state.isAuthenticated;
   
-  // Use methods
+  // 使用方法
   function handleLogin() {
     authStore.login();
   }
@@ -636,22 +636,22 @@ interface AuthState {
 </script>
 
 {#if isAuthenticated}
-  <p>Welcome, {user.name}!</p>
-  <button on:click={handleLogout}>Logout</button>
+  <p>歡迎，{user.name}！</p>
+  <button on:click={handleLogout}>登出</button>
 {:else}
-  <button on:click={handleLogin}>Login with Google</button>
+  <button on:click={handleLogin}>使用 Google 登入</button>
 {/if}
 ```
 
 ### WebSocket Store
 
-WebSocket connection management for real-time features.
+即時功能的 WebSocket 連線管理。
 
 ```typescript
 import { websocketStore } from '$lib/stores/websocket.svelte';
 ```
 
-#### Connection States
+#### 連線狀態
 
 ```typescript
 enum ConnectionState {
@@ -663,7 +663,7 @@ enum ConnectionState {
 }
 ```
 
-#### Message Types
+#### 訊息型別
 
 ```typescript
 type MessageType = 
@@ -675,17 +675,17 @@ type MessageType =
   | 'pong';
 ```
 
-#### Methods
+#### 方法
 
-- `init()`: Initialize WebSocket manager
-- `connect(rooms?: string[])`: Connect to WebSocket with optional room subscriptions
-- `disconnect()`: Disconnect from WebSocket
-- `subscribeToRooms(rooms: string[])`: Subscribe to specific rooms
-- `unsubscribeFromRooms(rooms: string[])`: Unsubscribe from rooms
-- `addEventListener(type: MessageType, callback)`: Add event listener for message types
-- `removeEventListener(type: MessageType, callback)`: Remove event listener
+- `init()`: 初始化 WebSocket 管理器
+- `connect(rooms?: string[])`: 連線到 WebSocket，可選房間訂閱
+- `disconnect()`: 斷開 WebSocket 連線
+- `subscribeToRooms(rooms: string[])`: 訂閱特定房間
+- `unsubscribeFromRooms(rooms: string[])`: 取消訂閱房間
+- `addEventListener(type: MessageType, callback)`: 為訊息型別新增事件監聽器
+- `removeEventListener(type: MessageType, callback)`: 移除事件監聽器
 
-#### Usage Example
+#### 使用範例
 
 ```svelte
 <script>
@@ -693,112 +693,112 @@ type MessageType =
   import { onMount } from 'svelte';
   
   onMount(() => {
-    // Initialize WebSocket
+    // 初始化 WebSocket
     websocketStore.init();
     
-    // Connect to specific rooms
+    // 連線到特定房間
     websocketStore.connect(['blog-comments', 'general']);
     
-    // Listen for new comments
+    // 監聽新評論
     websocketStore.addEventListener('new_comment', (payload) => {
-      console.log('New comment received:', payload);
+      console.log('收到新評論:', payload);
     });
     
-    // Listen for thumb updates
+    // 監聽按讚更新
     websocketStore.addEventListener('thumb_update', (payload) => {
-      console.log('Thumb update:', payload);
+      console.log('按讚更新:', payload);
     });
   });
 </script>
 
 <div>
-  Connection status: {websocketStore.state}
-  Connected rooms: {websocketStore.rooms.join(', ')}
+  連線狀態: {websocketStore.state}
+  已連線房間: {websocketStore.rooms.join(', ')}
 </div>
 ```
 
 ---
 
-## Utility Functions
+## 工具函數
 
 ### `calculateDuration(text: string, language: string): number`
 
-Calculates reading duration for text content based on language.
+根據語言計算文字內容的閱讀時間。
 
 ```typescript
 import { calculateDuration } from '$lib/util/helper.js';
 
-const duration = calculateDuration('This is a sample text for reading.', 'en');
-console.log(duration); // Output: 1 (in minutes)
+const duration = calculateDuration('這是一段用於閱讀的範例文字。', 'zh-tw');
+console.log(duration); // 輸出: 1 (分鐘)
 ```
 
-**Parameters:**
-- `text` (string): The text content to analyze
-- `language` (string): Language code ('en', 'zh-tw', etc.)
+**參數：**
+- `text` (string): 要分析的文字內容
+- `language` (string): 語言代碼 ('en', 'zh-tw', 等)
 
-**Returns:** number - Reading duration in minutes
+**返回：** number - 閱讀時間（分鐘）
 
-**Language-specific behavior:**
-- English: 180 words per minute
-- Chinese: 300 characters per minute
+**語言特定行為：**
+- 英文: 每分鐘 180 個單字
+- 中文: 每分鐘 300 個字元
 
 ### `copyImageMarkdown(imagePath: string): Promise<void>`
 
-Copies image markdown to clipboard.
+將圖片 Markdown 複製到剪貼簿。
 
 ```typescript
 import { copyImageMarkdown } from '$lib/util/helper.js';
 
 await copyImageMarkdown('/images/photo.jpg');
-// Copies: <div class="flex justify-center">
-//         <img src="/images/photo.jpg" alt="photo.jpg" class="photo-post">
-//         </div>
+// 複製: <div class="flex justify-center">
+//       <img src="/images/photo.jpg" alt="photo.jpg" class="photo-post">
+//       </div>
 ```
 
-**Parameters:**
-- `imagePath` (string): Path to the image file
+**參數：**
+- `imagePath` (string): 圖片檔案路徑
 
-**Returns:** Promise<void>
+**返回：** Promise<void>
 
 ---
 
-## Navigation
+## 導航
 
 ### `getCurrentRouteMetadata(): RouteMetadata | null`
 
-Gets metadata for the current route.
+獲取當前路由的元資料。
 
 ```typescript
 import { getCurrentRouteMetadata } from '$lib/navigation.js';
 
 const metadata = getCurrentRouteMetadata();
 if (metadata) {
-  console.log(metadata.title); // "Home - Tomlord"
+  console.log(metadata.title); // "首頁 - Tomlord"
   console.log(metadata.icon);  // "🏠"
 }
 ```
 
-**Returns:** RouteMetadata | null
+**返回：** RouteMetadata | null
 
 ### `getBreadcrumbs(): Array<{label: string, href: string, active: boolean}>`
 
-Generates breadcrumbs for the current route.
+為當前路由生成麵包屑導航。
 
 ```typescript
 import { getBreadcrumbs } from '$lib/navigation.js';
 
 const breadcrumbs = getBreadcrumbs();
-// Returns: [
-//   { label: 'Home', href: '/', active: false },
-//   { label: 'Blog', href: '/blog', active: true }
+// 返回: [
+//   { label: '首頁', href: '/', active: false },
+//   { label: '部落格', href: '/blog', active: true }
 // ]
 ```
 
-**Returns:** Array of breadcrumb objects
+**返回：** 麵包屑物件陣列
 
 ### `navigateTo(href: string, options?: NavigationOptions): Promise<void>`
 
-Enhanced navigation function with additional options.
+具有額外選項的增強導航函數。
 
 ```typescript
 import { navigateTo } from '$lib/navigation.js';
@@ -811,17 +811,17 @@ await navigateTo('/blog', {
 });
 ```
 
-**Parameters:**
-- `href` (string): Target URL
-- `options` (object, optional):
-  - `replaceState` (boolean): Replace current history entry
-  - `noScroll` (boolean): Prevent automatic scrolling
-  - `keepFocus` (boolean): Maintain focus state
-  - `trackHistory` (boolean): Track in navigation history
+**參數：**
+- `href` (string): 目標 URL
+- `options` (object, 可選):
+  - `replaceState` (boolean): 替換當前歷史記錄項目
+  - `noScroll` (boolean): 防止自動滾動
+  - `keepFocus` (boolean): 維持焦點狀態
+  - `trackHistory` (boolean): 在導航歷史中追蹤
 
 ### `goBack(): Promise<void>`
 
-Navigate back in history.
+在歷史記錄中向後導航。
 
 ```typescript
 import { goBack } from '$lib/navigation.js';
@@ -831,48 +831,48 @@ await goBack();
 
 ### `canGoBack(): boolean`
 
-Check if navigation back is possible.
+檢查是否可以向後導航。
 
 ```typescript
 import { canGoBack } from '$lib/navigation.js';
 
 if (canGoBack()) {
-  // Show back button
+  // 顯示返回按鈕
 }
 ```
 
-**Returns:** boolean
+**返回：** boolean
 
 ### `getNavigationSuggestions(): Array<{href: string, metadata: RouteMetadata}>`
 
-Get navigation suggestions for the current context.
+獲取當前上下文的導航建議。
 
 ```typescript
 import { getNavigationSuggestions } from '$lib/navigation.js';
 
 const suggestions = getNavigationSuggestions();
-// Returns array of suggested routes with metadata
+// 返回具有元資料的建議路由陣列
 ```
 
-**Returns:** Array of navigation suggestions
+**返回：** 導航建議陣列
 
 ---
 
-## API Routes
+## API 路由
 
 ### POST `/api/add-post`
 
-Creates a new blog post with both backend database and local file storage.
+建立新的部落格文章，同時儲存到後端資料庫和本地檔案。
 
-**Request Body:**
+**請求主體：**
 ```typescript
 {
   filename: string;
-  content: string; // Markdown content with frontmatter
+  content: string; // 包含前置資料的 Markdown 內容
 }
 ```
 
-**Response:**
+**回應：**
 ```typescript
 {
   success: boolean;
@@ -882,7 +882,7 @@ Creates a new blog post with both backend database and local file storage.
 }
 ```
 
-**Example:**
+**範例：**
 ```typescript
 const response = await fetch('/api/add-post', {
   method: 'POST',
@@ -893,18 +893,18 @@ const response = await fetch('/api/add-post', {
   body: JSON.stringify({
     filename: 'my-new-post.svx',
     content: `---
-title: My New Post
+title: 我的新文章
 date: 2024-01-15
 slug: my-new-post
-description: A great new post
+description: 一篇很棒的新文章
 tags: ['svelte', 'web']
-lang: en
+lang: zh-tw
 duration: 5min
 ---
 
-# My New Post
+# 我的新文章
 
-This is the content of my new post...
+這是我的新文章內容...
 `
   })
 });
@@ -912,9 +912,9 @@ This is the content of my new post...
 
 ### POST `/api/edit-post`
 
-Updates an existing blog post.
+更新現有的部落格文章。
 
-**Request Body:**
+**請求主體：**
 ```typescript
 {
   postId: string;
@@ -923,7 +923,7 @@ Updates an existing blog post.
 }
 ```
 
-**Response:**
+**回應：**
 ```typescript
 {
   success: boolean;
@@ -933,9 +933,9 @@ Updates an existing blog post.
 
 ### POST `/api/edit-page`
 
-Updates a static page.
+更新靜態頁面。
 
-**Request Body:**
+**請求主體：**
 ```typescript
 {
   pageId: string;
@@ -943,7 +943,7 @@ Updates a static page.
 }
 ```
 
-**Response:**
+**回應：**
 ```typescript
 {
   success: boolean;
@@ -953,11 +953,11 @@ Updates a static page.
 
 ### POST `/api/upload-image`
 
-Uploads an image file.
+上傳圖片檔案。
 
-**Request Body:** FormData with image file
+**請求主體：** 包含圖片檔案的 FormData
 
-**Response:**
+**回應：**
 ```typescript
 {
   success: boolean;
@@ -968,9 +968,9 @@ Uploads an image file.
 
 ### POST `/api/sync-blogs`
 
-Synchronizes blog data between backend and local files.
+同步後端和本地檔案之間的部落格資料。
 
-**Response:**
+**回應：**
 ```typescript
 {
   success: boolean;
@@ -981,80 +981,80 @@ Synchronizes blog data between backend and local files.
 
 ---
 
-## Environment Variables
+## 環境變數
 
-The application uses the following environment variables:
+應用程式使用以下環境變數：
 
 ```bash
-# Backend Configuration
+# 後端配置
 PUBLIC_BACKEND_URL=http://localhost:8080
 PUBLIC_BACKEND_WS_URL=ws://localhost:8080
 
-# Environment
+# 環境
 PUBLIC_APP_ENV=development
 ```
 
 ---
 
-## Error Handling
+## 錯誤處理
 
-The application implements comprehensive error handling:
+應用程式實作全面的錯誤處理：
 
-1. **Network Errors**: Automatic fallback to local data when backend is unavailable
-2. **Authentication Errors**: Graceful handling of expired tokens
-3. **Validation Errors**: User-friendly error messages for form validation
-4. **WebSocket Errors**: Automatic reconnection with exponential backoff
-
----
-
-## Performance Optimizations
-
-1. **Smart Loading**: Health checks before API calls with local fallback
-2. **Caching**: Backend health status caching (30 seconds)
-3. **Lazy Loading**: Images and components loaded on demand
-4. **Connection Pooling**: WebSocket connection reuse
-5. **Debouncing**: Input events debounced for better performance
+1. **網路錯誤**: 後端不可用時自動回退到本地資料
+2. **認證錯誤**: 優雅處理過期令牌
+3. **驗證錯誤**: 表單驗證的使用者友善錯誤訊息
+4. **WebSocket 錯誤**: 具有指數退避的自動重連
 
 ---
 
-## Security Considerations
+## 效能最佳化
 
-1. **Authentication**: JWT token-based authentication with Google OAuth
-2. **Authorization**: Role-based access control for admin features
-3. **Input Validation**: Server-side validation for all user inputs
-4. **CSRF Protection**: Built-in SvelteKit CSRF protection
-5. **Content Security Policy**: CSP headers for XSS prevention
-
----
-
-## Browser Support
-
-- **Modern Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Features Used**: WebSocket, Web Audio API, Fetch API, ES2020+
-- **Fallbacks**: Graceful degradation for older browsers
+1. **智慧載入**: API 呼叫前進行健康檢查，並使用本地備用方案
+2. **快取**: 後端健康狀態快取（30 秒）
+3. **延遲載入**: 按需載入圖片和元件
+4. **連線池**: WebSocket 連線重複使用
+5. **防抖**: 輸入事件防抖以提升效能
 
 ---
 
-## Contributing
+## 安全性考量
 
-When contributing to this codebase:
-
-1. Follow the existing TypeScript patterns
-2. Use Svelte 5 runes for state management
-3. Implement proper error handling
-4. Add comprehensive JSDoc comments
-5. Write unit tests for new functionality
-6. Follow the established naming conventions
+1. **認證**: 基於 JWT 令牌的認證，整合 Google OAuth
+2. **授權**: 管理功能的角色型存取控制
+3. **輸入驗證**: 所有使用者輸入的伺服器端驗證
+4. **CSRF 保護**: 內建 SvelteKit CSRF 保護
+5. **內容安全政策**: CSP 標頭防止 XSS 攻擊
 
 ---
 
-## License
+## 瀏覽器支援
 
-This documentation is part of the Tomlord.io project. Please refer to the project's license file for usage terms.
+- **現代瀏覽器**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **使用功能**: WebSocket, Web Audio API, Fetch API, ES2020+
+- **備用方案**: 舊版瀏覽器的優雅降級
 
 ---
 
-## Language Versions
+## 貢獻指南
+
+為此程式碼庫貢獻時：
+
+1. 遵循現有的 TypeScript 模式
+2. 使用 Svelte 5 runes 進行狀態管理
+3. 實作適當的錯誤處理
+4. 新增完整的 JSDoc 註解
+5. 為新功能編寫單元測試
+6. 遵循既定的命名慣例
+
+---
+
+## 授權
+
+本文件是 Tomlord.io 專案的一部分。請參閱專案的授權檔案以了解使用條款。
+
+---
+
+## 語言版本
 
 - [English Version](./API_DOCUMENTATION.md)
 - [繁體中文版本](./API_DOCUMENTATION_zh-tw.md)
