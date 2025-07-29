@@ -10,7 +10,9 @@ const __dirname = path.dirname(__filename);
 config();
 
 // Backend API base URL - use environment variable or fallback to localhost
+// const API_BASE = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
 const API_BASE = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080';
+console.log(`🔑 Using API base URL: ${API_BASE}`);
 
 // Helper function to parse frontmatter
 function parseFrontmatter(content) {
@@ -98,7 +100,6 @@ async function syncBlogs() {
 	}
 
 	try {
-		console.log(`🔑 Using token: ${token}`);
 		const postsDir = path.join(__dirname, '..', 'src', 'markdown', 'posts');
 
 		if (!fs.existsSync(postsDir)) {
