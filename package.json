@@ -4,7 +4,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:minikube": "vite dev --host 0.0.0.0",
-		"build": "node scripts/sync-blogs.js && vite build && npm run prepack",
+		"build": "vite build && npm run prepack",
 		"build:prod": "node scripts/sync-blogs.js && vite build && npm run prepack",
 		"sync-blogs": "node scripts/sync-blogs.js",
 		"preview": "vite preview",
