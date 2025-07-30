@@ -99,13 +99,16 @@
 					<div class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
 						<div class="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-lg">
 							<h3 class="mb-2 text-lg font-medium text-gray-900">
-								{(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'Admin Delete Comment' : 'Delete Comment'}
+								{currentUser?.email === 'r12944044@csie.ntu.edu.tw' &&
+								comment.user_id !== currentUser?.id
+									? 'Admin Delete Comment'
+									: 'Delete Comment'}
 							</h3>
 							<p class="mb-4 text-sm text-gray-600">
-								{(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id)
+								{currentUser?.email === 'r12944044@csie.ntu.edu.tw' &&
+								comment.user_id !== currentUser?.id
 									? `Are you sure you want to delete this comment by ${comment.user_name}? This action cannot be undone.`
-									: 'Are you sure you want to delete this comment? This action cannot be undone.'
-								}
+									: 'Are you sure you want to delete this comment? This action cannot be undone.'}
 							</p>
 							<div class="flex justify-end gap-3">
 								<button
@@ -116,9 +119,15 @@
 								</button>
 								<button
 									onclick={onDeleteMessage}
-									class="rounded-md px-4 py-2 text-sm text-white hover:bg-red-700 {(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'bg-red-700 hover:bg-red-800' : 'bg-red-600'}"
+									class="rounded-md px-4 py-2 text-sm text-white hover:bg-red-700 {currentUser?.email ===
+										'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id
+										? 'bg-red-700 hover:bg-red-800'
+										: 'bg-red-600'}"
 								>
-									{(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'Admin Delete' : 'Delete'}
+									{currentUser?.email === 'r12944044@csie.ntu.edu.tw' &&
+									comment.user_id !== currentUser?.id
+										? 'Admin Delete'
+										: 'Delete'}
 								</button>
 							</div>
 						</div>
@@ -127,10 +136,18 @@
 
 				<button
 					onclick={() => (showDeleteConfirm = true)}
-					class="cursor-pointer rounded-md border border-gray-300 p-1 text-sm text-gray-500 hover:text-gray-700 {(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' : ''}"
-					title={(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'Super user: Can delete any comment' : 'Delete comment'}
+					class="cursor-pointer rounded-md border border-gray-300 p-1 text-sm text-gray-500 hover:text-gray-700 {currentUser?.email ===
+						'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id
+						? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
+						: ''}"
+					title={currentUser?.email === 'r12944044@csie.ntu.edu.tw' &&
+					comment.user_id !== currentUser?.id
+						? 'Super user: Can delete any comment'
+						: 'Delete comment'}
 				>
-					{(currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id) ? 'Admin Delete' : 'Delete'}
+					{currentUser?.email === 'r12944044@csie.ntu.edu.tw' && comment.user_id !== currentUser?.id
+						? 'Admin Delete'
+						: 'Delete'}
 				</button>
 			{/if}
 		</nav>

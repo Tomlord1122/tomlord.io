@@ -45,13 +45,13 @@ import { config } from '$lib/config.js';
 
 ```typescript
 config.API = {
-  AUTH_ME: `${BACKEND_URL}/auth/me`,
-  AUTH_GOOGLE: `${BACKEND_URL}/auth/google`,
-  AUTH_LOGOUT: `${BACKEND_URL}/auth/logout`,
-  BLOGS: `${BACKEND_URL}/api/blogs`,
-  MESSAGES: `${BACKEND_URL}/api/messages`,
-  WEBSOCKET: `${BACKEND_WS_URL}/ws`,
-  HEALTH: `${BACKEND_URL}/health`
+	AUTH_ME: `${BACKEND_URL}/auth/me`,
+	AUTH_GOOGLE: `${BACKEND_URL}/auth/google`,
+	AUTH_LOGOUT: `${BACKEND_URL}/auth/logout`,
+	BLOGS: `${BACKEND_URL}/api/blogs`,
+	MESSAGES: `${BACKEND_URL}/api/messages`,
+	WEBSOCKET: `${BACKEND_WS_URL}/ws`,
+	HEALTH: `${BACKEND_URL}/health`
 };
 ```
 
@@ -70,6 +70,7 @@ const isHealthy = await checkBackendHealth(false);
 ```
 
 **Parameters:**
+
 - `useCache` (boolean, optional): Whether to use cached health check result (default: true)
 
 **Returns:** Promise<boolean> - True if backend is healthy
@@ -82,9 +83,9 @@ Smart loading strategy that checks backend health first, then decides whether to
 import { smartLoadWithFallback } from '$lib/config.js';
 
 const result = await smartLoadWithFallback(
-  () => fetch('/api/data'),
-  () => loadLocalData(),
-  false
+	() => fetch('/api/data'),
+	() => loadLocalData(),
+	false
 );
 
 console.log(result.data); // The loaded data
@@ -92,6 +93,7 @@ console.log(result.source); // 'api' or 'local'
 ```
 
 **Parameters:**
+
 - `apiCall` (() => Promise<T>): Function that calls the API
 - `fallbackCall` (() => Promise<T>): Function that loads local data
 - `forceHealthCheck` (boolean, optional): Force fresh health check (default: false)
@@ -106,13 +108,14 @@ Utility function for fetch with timeout and retry capabilities.
 import { fetchWithTimeout } from '$lib/config.js';
 
 const response = await fetchWithTimeout(
-  'https://api.example.com/data',
-  { method: 'GET' },
-  5000 // 5 second timeout
+	'https://api.example.com/data',
+	{ method: 'GET' },
+	5000 // 5 second timeout
 );
 ```
 
 **Parameters:**
+
 - `url` (string): The URL to fetch
 - `options` (RequestInit, optional): Fetch options
 - `timeout` (number, optional): Timeout in milliseconds (default: config.FETCH_TIMEOUT)
@@ -127,13 +130,14 @@ Attempts API call with immediate fallback if it fails or times out.
 import { fetchWithFallback } from '$lib/config.js';
 
 const data = await fetchWithFallback(
-  () => fetch('/api/data').then(r => r.json()),
-  () => loadLocalData(),
-  3000 // 3 second timeout
+	() => fetch('/api/data').then((r) => r.json()),
+	() => loadLocalData(),
+	3000 // 3 second timeout
 );
 ```
 
 **Parameters:**
+
 - `apiCall` (() => Promise<T>): Function that calls the API
 - `fallbackCall` (() => Promise<T>): Function that provides fallback data
 - `timeout` (number, optional): Timeout in milliseconds (default: config.FETCH_TIMEOUT)
@@ -150,13 +154,13 @@ const data = await fetchWithFallback(
 
 ```typescript
 interface PostMetadata {
-  title: string;
-  date: string;
-  slug: string;
-  description: string;
-  tags: string[];
-  lang: string;
-  duration: string;
+	title: string;
+	date: string;
+	slug: string;
+	description: string;
+	tags: string[];
+	lang: string;
+	duration: string;
 }
 ```
 
@@ -164,9 +168,9 @@ interface PostMetadata {
 
 ```typescript
 interface Post extends Omit<PostMetadata, 'description'> {
-  content: string; // Markdown/HTML content as string
-  duration: string;
-  description: string;
+	content: string; // Markdown/HTML content as string
+	duration: string;
+	description: string;
 }
 ```
 
@@ -174,15 +178,15 @@ interface Post extends Omit<PostMetadata, 'description'> {
 
 ```typescript
 interface PostData {
-  title: string;
-  slug: string;
-  content: string;
-  date: string;
-  lang: string;
-  duration: string;
-  tags: string[];
-  description: string;
-  is_published: boolean;
+	title: string;
+	slug: string;
+	content: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description: string;
+	is_published: boolean;
 }
 ```
 
@@ -190,14 +194,14 @@ interface PostData {
 
 ```typescript
 interface Frontmatter {
-  title?: string;
-  date?: string;
-  slug?: string;
-  description?: string;
-  tags?: string[];
-  lang?: string;
-  duration?: string;
-  [key: string]: string | string[] | undefined;
+	title?: string;
+	date?: string;
+	slug?: string;
+	description?: string;
+	tags?: string[];
+	lang?: string;
+	duration?: string;
+	[key: string]: string | string[] | undefined;
 }
 ```
 
@@ -207,17 +211,17 @@ interface Frontmatter {
 
 ```typescript
 interface Comment {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_picture: string;
-  post_slug: string;
-  blog_id?: string;
-  message: string;
-  thumb_count: number;
-  created_at: string;
-  updated_at: string;
-  user_thumbed?: boolean;
+	id: string;
+	user_id: string;
+	user_name: string;
+	user_picture: string;
+	post_slug: string;
+	blog_id?: string;
+	message: string;
+	thumb_count: number;
+	created_at: string;
+	updated_at: string;
+	user_thumbed?: boolean;
 }
 ```
 
@@ -225,10 +229,10 @@ interface Comment {
 
 ```typescript
 interface CreateCommentRequest {
-  user_id: string;
-  post_slug: string;
-  blog_id?: string;
-  message: string;
+	user_id: string;
+	post_slug: string;
+	blog_id?: string;
+	message: string;
 }
 ```
 
@@ -236,12 +240,12 @@ interface CreateCommentRequest {
 
 ```typescript
 interface CommentListRequest {
-  post_slug?: string;
-  blog_id?: string;
-  blog_slug?: string;
-  limit?: number;
-  offset?: number;
-  user_id?: string;
+	post_slug?: string;
+	blog_id?: string;
+	blog_slug?: string;
+	limit?: number;
+	offset?: number;
+	user_id?: string;
 }
 ```
 
@@ -249,18 +253,18 @@ interface CommentListRequest {
 
 ```typescript
 interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  lang: string;
-  duration: string;
-  tags: string[];
-  description?: string;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-  message_count?: number;
+	id: string;
+	title: string;
+	slug: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description?: string;
+	is_published: boolean;
+	created_at: string;
+	updated_at: string;
+	message_count?: number;
 }
 ```
 
@@ -270,11 +274,11 @@ interface BlogPost {
 
 ```typescript
 interface User {
-  id: string;
-  google_id: string;
-  email: string;
-  name: string;
-  picture_url?: string;
+	id: string;
+	google_id: string;
+	email: string;
+	name: string;
+	picture_url?: string;
 }
 ```
 
@@ -282,10 +286,10 @@ interface User {
 
 ```typescript
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+	user: User | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	error: string | null;
 }
 ```
 
@@ -305,27 +309,27 @@ import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
 
 ```typescript
 interface Props {
-  value?: string;                    // Two-way binding for textarea value
-  placeholder?: string;              // Placeholder text
-  class?: string;                    // Additional CSS classes
-  id?: string;                       // HTML id attribute
-  required?: boolean;                // Required field
-  disabled?: boolean;                // Disabled state
-  readonly?: boolean;                // Read-only state
-  rows?: number;                     // Number of rows (default: 4)
-  cols?: number;                     // Number of columns
-  maxlength?: number;                // Maximum character length
-  minlength?: number;                // Minimum character length
-  wrap?: 'soft' | 'hard' | null;     // Text wrapping (default: 'soft')
-  resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // Resize behavior (default: 'vertical')
-  onKeydown?: (e: KeyboardEvent) => void;     // Keydown event handler
-  onInput?: (e: Event) => void;      // Input event handler
-  onFocus?: (e: FocusEvent) => void; // Focus event handler
-  onBlur?: (e: FocusEvent) => void;  // Blur event handler
-  onCompositionstart?: (e: CompositionEvent) => void; // Composition start handler
-  onCompositionend?: (e: CompositionEvent) => void;   // Composition end handler
-  enableSound?: boolean;             // Enable typewriter sounds (default: true)
-  soundVolume?: number;              // Sound volume 0-1 (default: 0.1)
+	value?: string; // Two-way binding for textarea value
+	placeholder?: string; // Placeholder text
+	class?: string; // Additional CSS classes
+	id?: string; // HTML id attribute
+	required?: boolean; // Required field
+	disabled?: boolean; // Disabled state
+	readonly?: boolean; // Read-only state
+	rows?: number; // Number of rows (default: 4)
+	cols?: number; // Number of columns
+	maxlength?: number; // Maximum character length
+	minlength?: number; // Minimum character length
+	wrap?: 'soft' | 'hard' | null; // Text wrapping (default: 'soft')
+	resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // Resize behavior (default: 'vertical')
+	onKeydown?: (e: KeyboardEvent) => void; // Keydown event handler
+	onInput?: (e: Event) => void; // Input event handler
+	onFocus?: (e: FocusEvent) => void; // Focus event handler
+	onBlur?: (e: FocusEvent) => void; // Blur event handler
+	onCompositionstart?: (e: CompositionEvent) => void; // Composition start handler
+	onCompositionend?: (e: CompositionEvent) => void; // Composition end handler
+	enableSound?: boolean; // Enable typewriter sounds (default: true)
+	soundVolume?: number; // Sound volume 0-1 (default: 0.1)
 }
 ```
 
@@ -333,23 +337,23 @@ interface Props {
 
 ```svelte
 <script>
-  import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
-  
-  let content = '';
-  
-  function handleKeydown(e) {
-    console.log('Key pressed:', e.key);
-  }
+	import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
+
+	let content = '';
+
+	function handleKeydown(e) {
+		console.log('Key pressed:', e.key);
+	}
 </script>
 
 <TypewriterTextarea
-  bind:value={content}
-  placeholder="Start typing..."
-  rows={6}
-  enableSound={true}
-  soundVolume={0.2}
-  onKeydown={handleKeydown}
-  class="w-full p-4 border rounded-lg"
+	bind:value={content}
+	placeholder="Start typing..."
+	rows={6}
+	enableSound={true}
+	soundVolume={0.2}
+	onKeydown={handleKeydown}
+	class="w-full rounded-lg border p-4"
 />
 ```
 
@@ -374,7 +378,7 @@ import Navigation from '$lib/components/Navigation.svelte';
 
 ```svelte
 <script>
-  import Navigation from '$lib/components/Navigation.svelte';
+	import Navigation from '$lib/components/Navigation.svelte';
 </script>
 
 <Navigation />
@@ -392,10 +396,10 @@ import CommentForm from '$lib/components/CommentForm.svelte';
 
 ```typescript
 interface CommentFormProps {
-  postSlug: string;
-  blogId?: string;
-  onSubmit?: (comment: CreateCommentRequest) => void;
-  onCancel?: () => void;
+	postSlug: string;
+	blogId?: string;
+	onSubmit?: (comment: CreateCommentRequest) => void;
+	onCancel?: () => void;
 }
 ```
 
@@ -403,18 +407,14 @@ interface CommentFormProps {
 
 ```svelte
 <script>
-  import CommentForm from '$lib/components/CommentForm.svelte';
-  
-  function handleSubmit(comment) {
-    console.log('New comment:', comment);
-  }
+	import CommentForm from '$lib/components/CommentForm.svelte';
+
+	function handleSubmit(comment) {
+		console.log('New comment:', comment);
+	}
 </script>
 
-<CommentForm
-  postSlug="my-blog-post"
-  blogId="blog-123"
-  onSubmit={handleSubmit}
-/>
+<CommentForm postSlug="my-blog-post" blogId="blog-123" onSubmit={handleSubmit} />
 ```
 
 ### CommentList
@@ -429,13 +429,13 @@ import CommentList from '$lib/components/CommentList.svelte';
 
 ```typescript
 interface CommentListProps {
-  postSlug?: string;
-  blogId?: string;
-  blogSlug?: string;
-  limit?: number;
-  offset?: number;
-  userId?: string;
-  sortBy?: 'time' | 'likes';
+	postSlug?: string;
+	blogId?: string;
+	blogSlug?: string;
+	limit?: number;
+	offset?: number;
+	userId?: string;
+	sortBy?: 'time' | 'likes';
 }
 ```
 
@@ -443,14 +443,10 @@ interface CommentListProps {
 
 ```svelte
 <script>
-  import CommentList from '$lib/components/CommentList.svelte';
+	import CommentList from '$lib/components/CommentList.svelte';
 </script>
 
-<CommentList
-  postSlug="my-blog-post"
-  limit={10}
-  sortBy="time"
-/>
+<CommentList postSlug="my-blog-post" limit={10} sortBy="time" />
 ```
 
 ### PhotoCarousel
@@ -465,12 +461,12 @@ import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
 
 ```typescript
 interface PhotoCarouselProps {
-  images: string[];
-  startIndex?: number;
-  autoPlay?: boolean;
-  interval?: number;
-  showThumbnails?: boolean;
-  showControls?: boolean;
+	images: string[];
+	startIndex?: number;
+	autoPlay?: boolean;
+	interval?: number;
+	showThumbnails?: boolean;
+	showControls?: boolean;
 }
 ```
 
@@ -478,22 +474,12 @@ interface PhotoCarouselProps {
 
 ```svelte
 <script>
-  import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
-  
-  const images = [
-    '/photos/image1.jpg',
-    '/photos/image2.jpg',
-    '/photos/image3.jpg'
-  ];
+	import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
+
+	const images = ['/photos/image1.jpg', '/photos/image2.jpg', '/photos/image3.jpg'];
 </script>
 
-<PhotoCarousel
-  {images}
-  startIndex={0}
-  autoPlay={true}
-  interval={3000}
-  showThumbnails={true}
-/>
+<PhotoCarousel {images} startIndex={0} autoPlay={true} interval={3000} showThumbnails={true} />
 ```
 
 ### ResponsiveImage
@@ -508,13 +494,13 @@ import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 
 ```typescript
 interface ResponsiveImageProps {
-  src: string;
-  alt: string;
-  sizes?: string;
-  loading?: 'lazy' | 'eager';
-  class?: string;
-  width?: number;
-  height?: number;
+	src: string;
+	alt: string;
+	sizes?: string;
+	loading?: 'lazy' | 'eager';
+	class?: string;
+	width?: number;
+	height?: number;
 }
 ```
 
@@ -522,15 +508,15 @@ interface ResponsiveImageProps {
 
 ```svelte
 <script>
-  import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
+	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 </script>
 
 <ResponsiveImage
-  src="/images/hero.jpg"
-  alt="Hero image"
-  sizes="(max-width: 768px) 100vw, 50vw"
-  loading="lazy"
-  class="rounded-lg shadow-lg"
+	src="/images/hero.jpg"
+	alt="Hero image"
+	sizes="(max-width: 768px) 100vw, 50vw"
+	loading="lazy"
+	class="rounded-lg shadow-lg"
 />
 ```
 
@@ -546,7 +532,7 @@ import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 
 ```svelte
 <script>
-  import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
+	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 </script>
 
 <ReadingProgressBar />
@@ -564,9 +550,9 @@ import InteractiveBackground from '$lib/components/InteractiveBackground.svelte'
 
 ```typescript
 interface InteractiveBackgroundProps {
-  intensity?: number;
-  color?: string;
-  speed?: number;
+	intensity?: number;
+	color?: string;
+	speed?: number;
 }
 ```
 
@@ -574,14 +560,10 @@ interface InteractiveBackgroundProps {
 
 ```svelte
 <script>
-  import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
+	import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
 </script>
 
-<InteractiveBackground
-  intensity={0.5}
-  color="#4f46e5"
-  speed={2}
-/>
+<InteractiveBackground intensity={0.5} color="#4f46e5" speed={2} />
 ```
 
 ---
@@ -600,10 +582,10 @@ import { authStore } from '$lib/stores/auth.svelte';
 
 ```typescript
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+	user: User | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	error: string | null;
 }
 ```
 
@@ -619,27 +601,27 @@ interface AuthState {
 
 ```svelte
 <script>
-  import { authStore } from '$lib/stores/auth.svelte';
-  
-  // Access state
-  $: user = authStore.state.user;
-  $: isAuthenticated = authStore.state.isAuthenticated;
-  
-  // Use methods
-  function handleLogin() {
-    authStore.login();
-  }
-  
-  function handleLogout() {
-    authStore.logout();
-  }
+	import { authStore } from '$lib/stores/auth.svelte';
+
+	// Access state
+	$: user = authStore.state.user;
+	$: isAuthenticated = authStore.state.isAuthenticated;
+
+	// Use methods
+	function handleLogin() {
+		authStore.login();
+	}
+
+	function handleLogout() {
+		authStore.logout();
+	}
 </script>
 
 {#if isAuthenticated}
-  <p>Welcome, {user.name}!</p>
-  <button on:click={handleLogout}>Logout</button>
+	<p>Welcome, {user.name}!</p>
+	<button on:click={handleLogout}>Logout</button>
 {:else}
-  <button on:click={handleLogin}>Login with Google</button>
+	<button on:click={handleLogin}>Login with Google</button>
 {/if}
 ```
 
@@ -655,24 +637,24 @@ import { websocketStore } from '$lib/stores/websocket.svelte';
 
 ```typescript
 enum ConnectionState {
-  DISCONNECTED = 'disconnected',
-  CONNECTING = 'connecting',
-  CONNECTED = 'connected',
-  RECONNECTING = 'reconnecting',
-  FAILED = 'failed'
+	DISCONNECTED = 'disconnected',
+	CONNECTING = 'connecting',
+	CONNECTED = 'connected',
+	RECONNECTING = 'reconnecting',
+	FAILED = 'failed'
 }
 ```
 
 #### Message Types
 
 ```typescript
-type MessageType = 
-  | 'new_comment'
-  | 'thumb_update'
-  | 'comment_update'
-  | 'comment_delete'
-  | 'ping'
-  | 'pong';
+type MessageType =
+	| 'new_comment'
+	| 'thumb_update'
+	| 'comment_update'
+	| 'comment_delete'
+	| 'ping'
+	| 'pong';
 ```
 
 #### Methods
@@ -689,31 +671,31 @@ type MessageType =
 
 ```svelte
 <script>
-  import { websocketStore } from '$lib/stores/websocket.svelte';
-  import { onMount } from 'svelte';
-  
-  onMount(() => {
-    // Initialize WebSocket
-    websocketStore.init();
-    
-    // Connect to specific rooms
-    websocketStore.connect(['blog-comments', 'general']);
-    
-    // Listen for new comments
-    websocketStore.addEventListener('new_comment', (payload) => {
-      console.log('New comment received:', payload);
-    });
-    
-    // Listen for thumb updates
-    websocketStore.addEventListener('thumb_update', (payload) => {
-      console.log('Thumb update:', payload);
-    });
-  });
+	import { websocketStore } from '$lib/stores/websocket.svelte';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		// Initialize WebSocket
+		websocketStore.init();
+
+		// Connect to specific rooms
+		websocketStore.connect(['blog-comments', 'general']);
+
+		// Listen for new comments
+		websocketStore.addEventListener('new_comment', (payload) => {
+			console.log('New comment received:', payload);
+		});
+
+		// Listen for thumb updates
+		websocketStore.addEventListener('thumb_update', (payload) => {
+			console.log('Thumb update:', payload);
+		});
+	});
 </script>
 
 <div>
-  Connection status: {websocketStore.state}
-  Connected rooms: {websocketStore.rooms.join(', ')}
+	Connection status: {websocketStore.state}
+	Connected rooms: {websocketStore.rooms.join(', ')}
 </div>
 ```
 
@@ -733,12 +715,14 @@ console.log(duration); // Output: 1 (in minutes)
 ```
 
 **Parameters:**
+
 - `text` (string): The text content to analyze
 - `language` (string): Language code ('en', 'zh-tw', etc.)
 
 **Returns:** number - Reading duration in minutes
 
 **Language-specific behavior:**
+
 - English: 180 words per minute
 - Chinese: 300 characters per minute
 
@@ -756,6 +740,7 @@ await copyImageMarkdown('/images/photo.jpg');
 ```
 
 **Parameters:**
+
 - `imagePath` (string): Path to the image file
 
 **Returns:** Promise<void>
@@ -773,8 +758,8 @@ import { getCurrentRouteMetadata } from '$lib/navigation.js';
 
 const metadata = getCurrentRouteMetadata();
 if (metadata) {
-  console.log(metadata.title); // "Home - Tomlord"
-  console.log(metadata.icon);  // "🏠"
+	console.log(metadata.title); // "Home - Tomlord"
+	console.log(metadata.icon); // "🏠"
 }
 ```
 
@@ -804,14 +789,15 @@ Enhanced navigation function with additional options.
 import { navigateTo } from '$lib/navigation.js';
 
 await navigateTo('/blog', {
-  replaceState: false,
-  noScroll: false,
-  keepFocus: true,
-  trackHistory: true
+	replaceState: false,
+	noScroll: false,
+	keepFocus: true,
+	trackHistory: true
 });
 ```
 
 **Parameters:**
+
 - `href` (string): Target URL
 - `options` (object, optional):
   - `replaceState` (boolean): Replace current history entry
@@ -837,7 +823,7 @@ Check if navigation back is possible.
 import { canGoBack } from '$lib/navigation.js';
 
 if (canGoBack()) {
-  // Show back button
+	// Show back button
 }
 ```
 
@@ -865,14 +851,16 @@ const suggestions = getNavigationSuggestions();
 Creates a new blog post with both backend database and local file storage.
 
 **Request Body:**
+
 ```typescript
 {
-  filename: string;
-  content: string; // Markdown content with frontmatter
+	filename: string;
+	content: string; // Markdown content with frontmatter
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean;
@@ -883,16 +871,17 @@ Creates a new blog post with both backend database and local file storage.
 ```
 
 **Example:**
+
 ```typescript
 const response = await fetch('/api/add-post', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    filename: 'my-new-post.svx',
-    content: `---
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	},
+	body: JSON.stringify({
+		filename: 'my-new-post.svx',
+		content: `---
 title: My New Post
 date: 2024-01-15
 slug: my-new-post
@@ -906,7 +895,7 @@ duration: 5min
 
 This is the content of my new post...
 `
-  })
+	})
 });
 ```
 
@@ -915,15 +904,17 @@ This is the content of my new post...
 Updates an existing blog post.
 
 **Request Body:**
+
 ```typescript
 {
-  postId: string;
-  filename: string;
-  content: string;
+	postId: string;
+	filename: string;
+	content: string;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean;
@@ -936,14 +927,16 @@ Updates an existing blog post.
 Updates a static page.
 
 **Request Body:**
+
 ```typescript
 {
-  pageId: string;
-  content: string;
+	pageId: string;
+	content: string;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean;
@@ -958,6 +951,7 @@ Uploads an image file.
 **Request Body:** FormData with image file
 
 **Response:**
+
 ```typescript
 {
   success: boolean;
@@ -971,6 +965,7 @@ Uploads an image file.
 Synchronizes blog data between backend and local files.
 
 **Response:**
+
 ```typescript
 {
   success: boolean;

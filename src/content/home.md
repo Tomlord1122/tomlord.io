@@ -35,14 +35,12 @@ I am a software engineer passionate about systems—and a Golang lover. In my fr
 
 This website contains some of my blog posts about my learning journey and topics of interest. Here, I share my projects and reflections. Feel free to contact me via email.
 
-
-
->### Experience
+> ### Experience
 
 - HP Software Engineering Intern _(Jul 2024 - Jul 2025)_
 - MediaTek System Research Assistant _(Jan 2024 - Jul 2025)_
 
->### Education
+> ### Education
 
 - National Taiwan University, M.S. in Computer Science _(Sep. 2023 – Jul. 2025)_
 - National Central University, B.S. in Civil Engineering _(Sep. 2018 – Jul. 2022)_

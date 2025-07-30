@@ -45,13 +45,13 @@ import { config } from '$lib/config.js';
 
 ```typescript
 config.API = {
-  AUTH_ME: `${BACKEND_URL}/auth/me`,
-  AUTH_GOOGLE: `${BACKEND_URL}/auth/google`,
-  AUTH_LOGOUT: `${BACKEND_URL}/auth/logout`,
-  BLOGS: `${BACKEND_URL}/api/blogs`,
-  MESSAGES: `${BACKEND_URL}/api/messages`,
-  WEBSOCKET: `${BACKEND_WS_URL}/ws`,
-  HEALTH: `${BACKEND_URL}/health`
+	AUTH_ME: `${BACKEND_URL}/auth/me`,
+	AUTH_GOOGLE: `${BACKEND_URL}/auth/google`,
+	AUTH_LOGOUT: `${BACKEND_URL}/auth/logout`,
+	BLOGS: `${BACKEND_URL}/api/blogs`,
+	MESSAGES: `${BACKEND_URL}/api/messages`,
+	WEBSOCKET: `${BACKEND_WS_URL}/ws`,
+	HEALTH: `${BACKEND_URL}/health`
 };
 ```
 
@@ -70,6 +70,7 @@ const isHealthy = await checkBackendHealth(false);
 ```
 
 **參數：**
+
 - `useCache` (boolean, 可選): 是否使用快取的健康檢查結果（預設：true）
 
 **返回：** Promise<boolean> - 後端健康時返回 true
@@ -82,9 +83,9 @@ const isHealthy = await checkBackendHealth(false);
 import { smartLoadWithFallback } from '$lib/config.js';
 
 const result = await smartLoadWithFallback(
-  () => fetch('/api/data'),
-  () => loadLocalData(),
-  false
+	() => fetch('/api/data'),
+	() => loadLocalData(),
+	false
 );
 
 console.log(result.data); // 載入的資料
@@ -92,6 +93,7 @@ console.log(result.source); // 'api' 或 'local'
 ```
 
 **參數：**
+
 - `apiCall` (() => Promise<T>): 呼叫 API 的函數
 - `fallbackCall` (() => Promise<T>): 載入本地資料的函數
 - `forceHealthCheck` (boolean, 可選): 強制重新健康檢查（預設：false）
@@ -106,13 +108,14 @@ console.log(result.source); // 'api' 或 'local'
 import { fetchWithTimeout } from '$lib/config.js';
 
 const response = await fetchWithTimeout(
-  'https://api.example.com/data',
-  { method: 'GET' },
-  5000 // 5 秒超時
+	'https://api.example.com/data',
+	{ method: 'GET' },
+	5000 // 5 秒超時
 );
 ```
 
 **參數：**
+
 - `url` (string): 要獲取的 URL
 - `options` (RequestInit, 可選): Fetch 選項
 - `timeout` (number, 可選): 超時時間（毫秒，預設：config.FETCH_TIMEOUT）
@@ -127,13 +130,14 @@ const response = await fetchWithTimeout(
 import { fetchWithFallback } from '$lib/config.js';
 
 const data = await fetchWithFallback(
-  () => fetch('/api/data').then(r => r.json()),
-  () => loadLocalData(),
-  3000 // 3 秒超時
+	() => fetch('/api/data').then((r) => r.json()),
+	() => loadLocalData(),
+	3000 // 3 秒超時
 );
 ```
 
 **參數：**
+
 - `apiCall` (() => Promise<T>): 呼叫 API 的函數
 - `fallbackCall` (() => Promise<T>): 提供備用資料的函數
 - `timeout` (number, 可選): 超時時間（毫秒，預設：config.FETCH_TIMEOUT）
@@ -150,13 +154,13 @@ const data = await fetchWithFallback(
 
 ```typescript
 interface PostMetadata {
-  title: string;
-  date: string;
-  slug: string;
-  description: string;
-  tags: string[];
-  lang: string;
-  duration: string;
+	title: string;
+	date: string;
+	slug: string;
+	description: string;
+	tags: string[];
+	lang: string;
+	duration: string;
 }
 ```
 
@@ -164,9 +168,9 @@ interface PostMetadata {
 
 ```typescript
 interface Post extends Omit<PostMetadata, 'description'> {
-  content: string; // Markdown/HTML 內容字串
-  duration: string;
-  description: string;
+	content: string; // Markdown/HTML 內容字串
+	duration: string;
+	description: string;
 }
 ```
 
@@ -174,15 +178,15 @@ interface Post extends Omit<PostMetadata, 'description'> {
 
 ```typescript
 interface PostData {
-  title: string;
-  slug: string;
-  content: string;
-  date: string;
-  lang: string;
-  duration: string;
-  tags: string[];
-  description: string;
-  is_published: boolean;
+	title: string;
+	slug: string;
+	content: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description: string;
+	is_published: boolean;
 }
 ```
 
@@ -190,14 +194,14 @@ interface PostData {
 
 ```typescript
 interface Frontmatter {
-  title?: string;
-  date?: string;
-  slug?: string;
-  description?: string;
-  tags?: string[];
-  lang?: string;
-  duration?: string;
-  [key: string]: string | string[] | undefined;
+	title?: string;
+	date?: string;
+	slug?: string;
+	description?: string;
+	tags?: string[];
+	lang?: string;
+	duration?: string;
+	[key: string]: string | string[] | undefined;
 }
 ```
 
@@ -207,17 +211,17 @@ interface Frontmatter {
 
 ```typescript
 interface Comment {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_picture: string;
-  post_slug: string;
-  blog_id?: string;
-  message: string;
-  thumb_count: number;
-  created_at: string;
-  updated_at: string;
-  user_thumbed?: boolean;
+	id: string;
+	user_id: string;
+	user_name: string;
+	user_picture: string;
+	post_slug: string;
+	blog_id?: string;
+	message: string;
+	thumb_count: number;
+	created_at: string;
+	updated_at: string;
+	user_thumbed?: boolean;
 }
 ```
 
@@ -225,10 +229,10 @@ interface Comment {
 
 ```typescript
 interface CreateCommentRequest {
-  user_id: string;
-  post_slug: string;
-  blog_id?: string;
-  message: string;
+	user_id: string;
+	post_slug: string;
+	blog_id?: string;
+	message: string;
 }
 ```
 
@@ -236,12 +240,12 @@ interface CreateCommentRequest {
 
 ```typescript
 interface CommentListRequest {
-  post_slug?: string;
-  blog_id?: string;
-  blog_slug?: string;
-  limit?: number;
-  offset?: number;
-  user_id?: string;
+	post_slug?: string;
+	blog_id?: string;
+	blog_slug?: string;
+	limit?: number;
+	offset?: number;
+	user_id?: string;
 }
 ```
 
@@ -249,18 +253,18 @@ interface CommentListRequest {
 
 ```typescript
 interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  lang: string;
-  duration: string;
-  tags: string[];
-  description?: string;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-  message_count?: number;
+	id: string;
+	title: string;
+	slug: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description?: string;
+	is_published: boolean;
+	created_at: string;
+	updated_at: string;
+	message_count?: number;
 }
 ```
 
@@ -270,11 +274,11 @@ interface BlogPost {
 
 ```typescript
 interface User {
-  id: string;
-  google_id: string;
-  email: string;
-  name: string;
-  picture_url?: string;
+	id: string;
+	google_id: string;
+	email: string;
+	name: string;
+	picture_url?: string;
 }
 ```
 
@@ -282,10 +286,10 @@ interface User {
 
 ```typescript
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+	user: User | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	error: string | null;
 }
 ```
 
@@ -305,27 +309,27 @@ import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
 
 ```typescript
 interface Props {
-  value?: string;                    // 文字區域值的雙向綁定
-  placeholder?: string;              // 佔位符文字
-  class?: string;                    // 額外 CSS 類別
-  id?: string;                       // HTML id 屬性
-  required?: boolean;                // 必填欄位
-  disabled?: boolean;                // 禁用狀態
-  readonly?: boolean;                // 唯讀狀態
-  rows?: number;                     // 行數（預設：4）
-  cols?: number;                     // 列數
-  maxlength?: number;                // 最大字元長度
-  minlength?: number;                // 最小字元長度
-  wrap?: 'soft' | 'hard' | null;     // 文字換行（預設：'soft'）
-  resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // 調整大小行為（預設：'vertical'）
-  onKeydown?: (e: KeyboardEvent) => void;     // 按鍵按下事件處理器
-  onInput?: (e: Event) => void;      // 輸入事件處理器
-  onFocus?: (e: FocusEvent) => void; // 焦點事件處理器
-  onBlur?: (e: FocusEvent) => void;  // 失焦事件處理器
-  onCompositionstart?: (e: CompositionEvent) => void; // 組合開始處理器
-  onCompositionend?: (e: CompositionEvent) => void;   // 組合結束處理器
-  enableSound?: boolean;             // 啟用打字機音效（預設：true）
-  soundVolume?: number;              // 音效音量 0-1（預設：0.1）
+	value?: string; // 文字區域值的雙向綁定
+	placeholder?: string; // 佔位符文字
+	class?: string; // 額外 CSS 類別
+	id?: string; // HTML id 屬性
+	required?: boolean; // 必填欄位
+	disabled?: boolean; // 禁用狀態
+	readonly?: boolean; // 唯讀狀態
+	rows?: number; // 行數（預設：4）
+	cols?: number; // 列數
+	maxlength?: number; // 最大字元長度
+	minlength?: number; // 最小字元長度
+	wrap?: 'soft' | 'hard' | null; // 文字換行（預設：'soft'）
+	resize?: 'none' | 'both' | 'horizontal' | 'vertical'; // 調整大小行為（預設：'vertical'）
+	onKeydown?: (e: KeyboardEvent) => void; // 按鍵按下事件處理器
+	onInput?: (e: Event) => void; // 輸入事件處理器
+	onFocus?: (e: FocusEvent) => void; // 焦點事件處理器
+	onBlur?: (e: FocusEvent) => void; // 失焦事件處理器
+	onCompositionstart?: (e: CompositionEvent) => void; // 組合開始處理器
+	onCompositionend?: (e: CompositionEvent) => void; // 組合結束處理器
+	enableSound?: boolean; // 啟用打字機音效（預設：true）
+	soundVolume?: number; // 音效音量 0-1（預設：0.1）
 }
 ```
 
@@ -333,23 +337,23 @@ interface Props {
 
 ```svelte
 <script>
-  import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
-  
-  let content = '';
-  
-  function handleKeydown(e) {
-    console.log('按下的按鍵:', e.key);
-  }
+	import TypewriterTextarea from '$lib/components/TypewriterTextarea.svelte';
+
+	let content = '';
+
+	function handleKeydown(e) {
+		console.log('按下的按鍵:', e.key);
+	}
 </script>
 
 <TypewriterTextarea
-  bind:value={content}
-  placeholder="開始輸入..."
-  rows={6}
-  enableSound={true}
-  soundVolume={0.2}
-  onKeydown={handleKeydown}
-  class="w-full p-4 border rounded-lg"
+	bind:value={content}
+	placeholder="開始輸入..."
+	rows={6}
+	enableSound={true}
+	soundVolume={0.2}
+	onKeydown={handleKeydown}
+	class="w-full rounded-lg border p-4"
 />
 ```
 
@@ -374,7 +378,7 @@ import Navigation from '$lib/components/Navigation.svelte';
 
 ```svelte
 <script>
-  import Navigation from '$lib/components/Navigation.svelte';
+	import Navigation from '$lib/components/Navigation.svelte';
 </script>
 
 <Navigation />
@@ -392,10 +396,10 @@ import CommentForm from '$lib/components/CommentForm.svelte';
 
 ```typescript
 interface CommentFormProps {
-  postSlug: string;
-  blogId?: string;
-  onSubmit?: (comment: CreateCommentRequest) => void;
-  onCancel?: () => void;
+	postSlug: string;
+	blogId?: string;
+	onSubmit?: (comment: CreateCommentRequest) => void;
+	onCancel?: () => void;
 }
 ```
 
@@ -403,18 +407,14 @@ interface CommentFormProps {
 
 ```svelte
 <script>
-  import CommentForm from '$lib/components/CommentForm.svelte';
-  
-  function handleSubmit(comment) {
-    console.log('新評論:', comment);
-  }
+	import CommentForm from '$lib/components/CommentForm.svelte';
+
+	function handleSubmit(comment) {
+		console.log('新評論:', comment);
+	}
 </script>
 
-<CommentForm
-  postSlug="my-blog-post"
-  blogId="blog-123"
-  onSubmit={handleSubmit}
-/>
+<CommentForm postSlug="my-blog-post" blogId="blog-123" onSubmit={handleSubmit} />
 ```
 
 ### CommentList
@@ -429,13 +429,13 @@ import CommentList from '$lib/components/CommentList.svelte';
 
 ```typescript
 interface CommentListProps {
-  postSlug?: string;
-  blogId?: string;
-  blogSlug?: string;
-  limit?: number;
-  offset?: number;
-  userId?: string;
-  sortBy?: 'time' | 'likes';
+	postSlug?: string;
+	blogId?: string;
+	blogSlug?: string;
+	limit?: number;
+	offset?: number;
+	userId?: string;
+	sortBy?: 'time' | 'likes';
 }
 ```
 
@@ -443,14 +443,10 @@ interface CommentListProps {
 
 ```svelte
 <script>
-  import CommentList from '$lib/components/CommentList.svelte';
+	import CommentList from '$lib/components/CommentList.svelte';
 </script>
 
-<CommentList
-  postSlug="my-blog-post"
-  limit={10}
-  sortBy="time"
-/>
+<CommentList postSlug="my-blog-post" limit={10} sortBy="time" />
 ```
 
 ### PhotoCarousel
@@ -465,12 +461,12 @@ import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
 
 ```typescript
 interface PhotoCarouselProps {
-  images: string[];
-  startIndex?: number;
-  autoPlay?: boolean;
-  interval?: number;
-  showThumbnails?: boolean;
-  showControls?: boolean;
+	images: string[];
+	startIndex?: number;
+	autoPlay?: boolean;
+	interval?: number;
+	showThumbnails?: boolean;
+	showControls?: boolean;
 }
 ```
 
@@ -478,22 +474,12 @@ interface PhotoCarouselProps {
 
 ```svelte
 <script>
-  import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
-  
-  const images = [
-    '/photos/image1.jpg',
-    '/photos/image2.jpg',
-    '/photos/image3.jpg'
-  ];
+	import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
+
+	const images = ['/photos/image1.jpg', '/photos/image2.jpg', '/photos/image3.jpg'];
 </script>
 
-<PhotoCarousel
-  {images}
-  startIndex={0}
-  autoPlay={true}
-  interval={3000}
-  showThumbnails={true}
-/>
+<PhotoCarousel {images} startIndex={0} autoPlay={true} interval={3000} showThumbnails={true} />
 ```
 
 ### ResponsiveImage
@@ -508,13 +494,13 @@ import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 
 ```typescript
 interface ResponsiveImageProps {
-  src: string;
-  alt: string;
-  sizes?: string;
-  loading?: 'lazy' | 'eager';
-  class?: string;
-  width?: number;
-  height?: number;
+	src: string;
+	alt: string;
+	sizes?: string;
+	loading?: 'lazy' | 'eager';
+	class?: string;
+	width?: number;
+	height?: number;
 }
 ```
 
@@ -522,15 +508,15 @@ interface ResponsiveImageProps {
 
 ```svelte
 <script>
-  import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
+	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 </script>
 
 <ResponsiveImage
-  src="/images/hero.jpg"
-  alt="主要圖片"
-  sizes="(max-width: 768px) 100vw, 50vw"
-  loading="lazy"
-  class="rounded-lg shadow-lg"
+	src="/images/hero.jpg"
+	alt="主要圖片"
+	sizes="(max-width: 768px) 100vw, 50vw"
+	loading="lazy"
+	class="rounded-lg shadow-lg"
 />
 ```
 
@@ -546,7 +532,7 @@ import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 
 ```svelte
 <script>
-  import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
+	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 </script>
 
 <ReadingProgressBar />
@@ -564,9 +550,9 @@ import InteractiveBackground from '$lib/components/InteractiveBackground.svelte'
 
 ```typescript
 interface InteractiveBackgroundProps {
-  intensity?: number;
-  color?: string;
-  speed?: number;
+	intensity?: number;
+	color?: string;
+	speed?: number;
 }
 ```
 
@@ -574,14 +560,10 @@ interface InteractiveBackgroundProps {
 
 ```svelte
 <script>
-  import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
+	import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
 </script>
 
-<InteractiveBackground
-  intensity={0.5}
-  color="#4f46e5"
-  speed={2}
-/>
+<InteractiveBackground intensity={0.5} color="#4f46e5" speed={2} />
 ```
 
 ---
@@ -600,10 +582,10 @@ import { authStore } from '$lib/stores/auth.svelte';
 
 ```typescript
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+	user: User | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	error: string | null;
 }
 ```
 
@@ -619,27 +601,27 @@ interface AuthState {
 
 ```svelte
 <script>
-  import { authStore } from '$lib/stores/auth.svelte';
-  
-  // 存取狀態
-  $: user = authStore.state.user;
-  $: isAuthenticated = authStore.state.isAuthenticated;
-  
-  // 使用方法
-  function handleLogin() {
-    authStore.login();
-  }
-  
-  function handleLogout() {
-    authStore.logout();
-  }
+	import { authStore } from '$lib/stores/auth.svelte';
+
+	// 存取狀態
+	$: user = authStore.state.user;
+	$: isAuthenticated = authStore.state.isAuthenticated;
+
+	// 使用方法
+	function handleLogin() {
+		authStore.login();
+	}
+
+	function handleLogout() {
+		authStore.logout();
+	}
 </script>
 
 {#if isAuthenticated}
-  <p>歡迎，{user.name}！</p>
-  <button on:click={handleLogout}>登出</button>
+	<p>歡迎，{user.name}！</p>
+	<button on:click={handleLogout}>登出</button>
 {:else}
-  <button on:click={handleLogin}>使用 Google 登入</button>
+	<button on:click={handleLogin}>使用 Google 登入</button>
 {/if}
 ```
 
@@ -655,24 +637,24 @@ import { websocketStore } from '$lib/stores/websocket.svelte';
 
 ```typescript
 enum ConnectionState {
-  DISCONNECTED = 'disconnected',
-  CONNECTING = 'connecting',
-  CONNECTED = 'connected',
-  RECONNECTING = 'reconnecting',
-  FAILED = 'failed'
+	DISCONNECTED = 'disconnected',
+	CONNECTING = 'connecting',
+	CONNECTED = 'connected',
+	RECONNECTING = 'reconnecting',
+	FAILED = 'failed'
 }
 ```
 
 #### 訊息型別
 
 ```typescript
-type MessageType = 
-  | 'new_comment'
-  | 'thumb_update'
-  | 'comment_update'
-  | 'comment_delete'
-  | 'ping'
-  | 'pong';
+type MessageType =
+	| 'new_comment'
+	| 'thumb_update'
+	| 'comment_update'
+	| 'comment_delete'
+	| 'ping'
+	| 'pong';
 ```
 
 #### 方法
@@ -689,31 +671,31 @@ type MessageType =
 
 ```svelte
 <script>
-  import { websocketStore } from '$lib/stores/websocket.svelte';
-  import { onMount } from 'svelte';
-  
-  onMount(() => {
-    // 初始化 WebSocket
-    websocketStore.init();
-    
-    // 連線到特定房間
-    websocketStore.connect(['blog-comments', 'general']);
-    
-    // 監聽新評論
-    websocketStore.addEventListener('new_comment', (payload) => {
-      console.log('收到新評論:', payload);
-    });
-    
-    // 監聽按讚更新
-    websocketStore.addEventListener('thumb_update', (payload) => {
-      console.log('按讚更新:', payload);
-    });
-  });
+	import { websocketStore } from '$lib/stores/websocket.svelte';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		// 初始化 WebSocket
+		websocketStore.init();
+
+		// 連線到特定房間
+		websocketStore.connect(['blog-comments', 'general']);
+
+		// 監聽新評論
+		websocketStore.addEventListener('new_comment', (payload) => {
+			console.log('收到新評論:', payload);
+		});
+
+		// 監聽按讚更新
+		websocketStore.addEventListener('thumb_update', (payload) => {
+			console.log('按讚更新:', payload);
+		});
+	});
 </script>
 
 <div>
-  連線狀態: {websocketStore.state}
-  已連線房間: {websocketStore.rooms.join(', ')}
+	連線狀態: {websocketStore.state}
+	已連線房間: {websocketStore.rooms.join(', ')}
 </div>
 ```
 
@@ -733,12 +715,14 @@ console.log(duration); // 輸出: 1 (分鐘)
 ```
 
 **參數：**
+
 - `text` (string): 要分析的文字內容
 - `language` (string): 語言代碼 ('en', 'zh-tw', 等)
 
 **返回：** number - 閱讀時間（分鐘）
 
 **語言特定行為：**
+
 - 英文: 每分鐘 180 個單字
 - 中文: 每分鐘 300 個字元
 
@@ -756,6 +740,7 @@ await copyImageMarkdown('/images/photo.jpg');
 ```
 
 **參數：**
+
 - `imagePath` (string): 圖片檔案路徑
 
 **返回：** Promise<void>
@@ -773,8 +758,8 @@ import { getCurrentRouteMetadata } from '$lib/navigation.js';
 
 const metadata = getCurrentRouteMetadata();
 if (metadata) {
-  console.log(metadata.title); // "首頁 - Tomlord"
-  console.log(metadata.icon);  // "🏠"
+	console.log(metadata.title); // "首頁 - Tomlord"
+	console.log(metadata.icon); // "🏠"
 }
 ```
 
@@ -804,14 +789,15 @@ const breadcrumbs = getBreadcrumbs();
 import { navigateTo } from '$lib/navigation.js';
 
 await navigateTo('/blog', {
-  replaceState: false,
-  noScroll: false,
-  keepFocus: true,
-  trackHistory: true
+	replaceState: false,
+	noScroll: false,
+	keepFocus: true,
+	trackHistory: true
 });
 ```
 
 **參數：**
+
 - `href` (string): 目標 URL
 - `options` (object, 可選):
   - `replaceState` (boolean): 替換當前歷史記錄項目
@@ -837,7 +823,7 @@ await goBack();
 import { canGoBack } from '$lib/navigation.js';
 
 if (canGoBack()) {
-  // 顯示返回按鈕
+	// 顯示返回按鈕
 }
 ```
 
@@ -865,14 +851,16 @@ const suggestions = getNavigationSuggestions();
 建立新的部落格文章，同時儲存到後端資料庫和本地檔案。
 
 **請求主體：**
+
 ```typescript
 {
-  filename: string;
-  content: string; // 包含前置資料的 Markdown 內容
+	filename: string;
+	content: string; // 包含前置資料的 Markdown 內容
 }
 ```
 
 **回應：**
+
 ```typescript
 {
   success: boolean;
@@ -883,16 +871,17 @@ const suggestions = getNavigationSuggestions();
 ```
 
 **範例：**
+
 ```typescript
 const response = await fetch('/api/add-post', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    filename: 'my-new-post.svx',
-    content: `---
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`
+	},
+	body: JSON.stringify({
+		filename: 'my-new-post.svx',
+		content: `---
 title: 我的新文章
 date: 2024-01-15
 slug: my-new-post
@@ -906,7 +895,7 @@ duration: 5min
 
 這是我的新文章內容...
 `
-  })
+	})
 });
 ```
 
@@ -915,15 +904,17 @@ duration: 5min
 更新現有的部落格文章。
 
 **請求主體：**
+
 ```typescript
 {
-  postId: string;
-  filename: string;
-  content: string;
+	postId: string;
+	filename: string;
+	content: string;
 }
 ```
 
 **回應：**
+
 ```typescript
 {
   success: boolean;
@@ -936,14 +927,16 @@ duration: 5min
 更新靜態頁面。
 
 **請求主體：**
+
 ```typescript
 {
-  pageId: string;
-  content: string;
+	pageId: string;
+	content: string;
 }
 ```
 
 **回應：**
+
 ```typescript
 {
   success: boolean;
@@ -958,6 +951,7 @@ duration: 5min
 **請求主體：** 包含圖片檔案的 FormData
 
 **回應：**
+
 ```typescript
 {
   success: boolean;
@@ -971,6 +965,7 @@ duration: 5min
 同步後端和本地檔案之間的部落格資料。
 
 **回應：**
+
 ```typescript
 {
   success: boolean;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	
+
 	interface Props {
 		value?: string;
 		placeholder?: string;
@@ -24,7 +24,7 @@
 		enableSound?: boolean;
 		soundVolume?: number;
 	}
-	
+
 	let {
 		value = $bindable(''),
 		placeholder = '',
@@ -57,15 +57,17 @@
 	let typingTimeout: ReturnType<typeof setTimeout>;
 
 	// Different typewriter sounds for variety
-	const createTypewriterSound = (keyType: 'normal' | 'space' | 'enter' | 'backspace' = 'normal') => {
+	const createTypewriterSound = (
+		keyType: 'normal' | 'space' | 'enter' | 'backspace' = 'normal'
+	) => {
 		if (!audioContext || !enableSound) return;
-		
+
 		const oscillator = audioContext.createOscillator();
 		const gainNode = audioContext.createGain();
-		
+
 		oscillator.connect(gainNode);
 		gainNode.connect(audioContext.destination);
-		
+
 		// Different sounds for different key types
 		switch (keyType) {
 			case 'space':
@@ -96,7 +98,10 @@
 				// Random variation for normal keys - crisp mechanical keyboard sound
 				const baseFreq = 1000 + Math.random() * 200;
 				oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
-				oscillator.frequency.exponentialRampToValueAtTime(baseFreq * 0.6, audioContext.currentTime + 0.008);
+				oscillator.frequency.exponentialRampToValueAtTime(
+					baseFreq * 0.6,
+					audioContext.currentTime + 0.008
+				);
 				gainNode.gain.setValueAtTime(soundVolume * 1.1, audioContext.currentTime);
 				gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.04);
 				oscillator.start(audioContext.currentTime);
@@ -110,7 +115,7 @@
 			onKeydown?.(e);
 			return;
 		}
-		
+
 		// Create appropriate typewriter sound
 		if (e.key === ' ') {
 			createTypewriterSound('space');
@@ -118,10 +123,24 @@
 			createTypewriterSound('enter');
 		} else if (e.key === 'Backspace' || e.key === 'Delete') {
 			createTypewriterSound('backspace');
-		} else if (!['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+		} else if (
+			![
+				'Shift',
+				'Control',
+				'Alt',
+				'Meta',
+				'CapsLock',
+				'Tab',
+				'Escape',
+				'ArrowUp',
+				'ArrowDown',
+				'ArrowLeft',
+				'ArrowRight'
+			].includes(e.key)
+		) {
 			createTypewriterSound('normal');
 		}
-		
+
 		// Visual feedback for typing
 		if (!['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape'].includes(e.key)) {
 			isTyping = true;
@@ -130,7 +149,7 @@
 				isTyping = false;
 			}, 200);
 		}
-		
+
 		onKeydown?.(e);
 	};
 
@@ -170,7 +189,7 @@
 				console.warn('Web Audio API not supported:', error);
 			}
 		}
-		
+
 		return () => {
 			if (audioContext) {
 				audioContext.close();
@@ -201,7 +220,7 @@
 			${isTyping ? 'typewriter-typing' : ''}
 			${disabled ? 'typewriter-disabled' : ''}
 		`}
-		style:resize={resize}
+		style:resize
 		onkeydown={handleKeydown}
 		oninput={handleInput}
 		onfocus={handleFocus}
@@ -226,7 +245,7 @@
 	}
 
 	.typewriter-focused {
-		box-shadow: 
+		box-shadow:
 			0 0 0 2px rgba(59, 130, 246, 0.3),
 			0 4px 12px rgba(0, 0, 0, 0.1);
 		transform: translateY(-1px);
@@ -249,9 +268,16 @@
 	}
 
 	@keyframes subtle-shake {
-		0%, 100% { transform: translateX(0); }
-		25% { transform: translateX(-0.3px); }
-		75% { transform: translateX(0.3px); }
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		25% {
+			transform: translateX(-0.3px);
+		}
+		75% {
+			transform: translateX(0.3px);
+		}
 	}
 
 	/* Cursor animation for more typewriter feel */
@@ -261,7 +287,13 @@
 	}
 
 	@keyframes cursor-blink {
-		0%, 50% { caret-color: #4f46e5; }
-		51%, 100% { caret-color: transparent; }
+		0%,
+		50% {
+			caret-color: #4f46e5;
+		}
+		51%,
+		100% {
+			caret-color: transparent;
+		}
 	}
-</style> 
+</style>

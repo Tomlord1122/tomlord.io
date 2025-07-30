@@ -1,4 +1,9 @@
-import { PUBLIC_BACKEND_URL, PUBLIC_BACKEND_WS_URL, PUBLIC_APP_ENV, PUBLIC_AUTH_SUPER_USER_EMAIL } from '$env/static/public';
+import {
+	PUBLIC_BACKEND_URL,
+	PUBLIC_BACKEND_WS_URL,
+	PUBLIC_APP_ENV,
+	PUBLIC_AUTH_SUPER_USER_EMAIL
+} from '$env/static/public';
 import { browser } from '$app/environment';
 
 // Backend health status cache

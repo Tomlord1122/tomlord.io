@@ -9,7 +9,7 @@ export function isSuperUser(user: User | null): boolean {
 	if (!user || !user.email) {
 		return false;
 	}
-	
+
 	const superUserEmail = config.AUTH_SUPER_USER_EMAIL;
 	return user.email === superUserEmail;
 }
@@ -24,12 +24,12 @@ export function canDeleteComment(user: User | null, commentUserId: string): bool
 	if (!user) {
 		return false;
 	}
-	
+
 	// Super users can delete any comment
 	if (isSuperUser(user)) {
 		return true;
 	}
-	
+
 	// Regular users can only delete their own comments
 	return user.id === commentUserId;
-} 
+}
