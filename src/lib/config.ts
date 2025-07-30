@@ -1,4 +1,4 @@
-import { PUBLIC_BACKEND_URL, PUBLIC_BACKEND_WS_URL, PUBLIC_APP_ENV } from '$env/static/public';
+import { PUBLIC_BACKEND_URL, PUBLIC_BACKEND_WS_URL, PUBLIC_APP_ENV, PUBLIC_AUTH_SUPER_USER_EMAIL } from '$env/static/public';
 import { browser } from '$app/environment';
 
 // Backend health status cache
@@ -20,7 +20,7 @@ export const config = {
 
 	// Environment detection
 	APP_ENV: PUBLIC_APP_ENV || 'development',
-
+	AUTH_SUPER_USER_EMAIL: PUBLIC_AUTH_SUPER_USER_EMAIL || 'r12944044@csie.ntu.edu.tw',
 	// Performance and reliability settings
 	FETCH_TIMEOUT: 1000, // 1 seconds timeout for API calls
 	WEBSOCKET_TIMEOUT: 1000, // 1 seconds timeout for WebSocket connection

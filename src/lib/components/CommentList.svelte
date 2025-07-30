@@ -424,7 +424,7 @@
 						{comment}
 						onLikeToggle={() => handleLikeToggle(comment.id)}
 						onDeleteMessage={() => handleDeleteMessage(comment.id)}
-						currentUserId={authState.user?.id}
+						currentUser={authState.user}
 					/>
 				{/each}
 			</div>
