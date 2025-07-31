@@ -1,5 +1,5 @@
 import type { PageServerLoad } from '../$types.js';
-import homeContent from '../content/home.md?raw';
+import homeContent from '../../content/home.md?raw';
 
 function getDefaultHomeContent() {
 	return `<div class="flex gap-2 flex-wrap">
