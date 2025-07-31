@@ -130,12 +130,6 @@
 </script>
 
 <svelte:head>
-	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
-	<meta name="twitter:description" content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development" />
-	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
-	<meta name="twitter:image:alt" content="Tomlord's Blog" />
-	
-	<!-- Open Graph tags for better social sharing -->
 	<meta property="og:title" content="Blog | Tomlord's Blog" />
 	<meta property="og:description" content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development" />
 	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
