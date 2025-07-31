@@ -35,6 +35,7 @@
 
 <svelte:head>
 	<meta property="og:title" content="Projects | Tomlord's Blog" />
+	
 	<meta property="og:description" content="My learning journey" />
 	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
 	<meta property="og:type" content="website" />

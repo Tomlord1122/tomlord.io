@@ -31,11 +31,8 @@
 </script>
 
 <svelte:head>
-	<meta property="og:title" content="Home | Tomlord's Blog" />
-	<meta property="og:description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
-	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://tomlord.fyi" />
+	<meta name="title" content="Home | Tomlord's Blog" />
+	<meta name="description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
 </svelte:head>
 
 <!-- This is the main container for your page content -->
