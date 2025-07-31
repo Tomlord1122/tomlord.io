@@ -34,10 +34,7 @@
 </script>
 
 <svelte:head>
-	<meta name="twitter:title" content="Projects | Tomlord's Blog" />
-	<meta name="twitter:description" content="My learning journey" />
-	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
-	<meta name="twitter:image:alt" content="Tomlord's Projects" />
+	<meta name="description" content="My learning journey" />
 	
 	<!-- Open Graph tags for better social sharing -->
 	<meta property="og:title" content="Projects | Tomlord's Blog" />
