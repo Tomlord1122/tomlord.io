@@ -2,13 +2,34 @@
 <html lang="en" class="dark">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/app_icon.png" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/app_icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Tomlord's Blog</title>
 
-		<!-- Twitter Card Meta Tags -->
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:title" content="Tomlord's Blog" />
+		<!-- Primary Meta Tags -->
+		<meta name="title" content="%sveltekit.title%" />
+		<meta name="description" content="%sveltekit.description%" />
+		<meta name="keywords" content="blog, technology, programming, personal website" />
+		<meta name="author" content="Tomlord" />
+		<meta name="robots" content="index, follow" />
+
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="%sveltekit.type%" />
+		<meta property="og:url" content="%sveltekit.url%" />
+		<meta property="og:title" content="%sveltekit.title%" />
+		<meta property="og:description" content="%sveltekit.description%" />
+		<meta property="og:image" content="%sveltekit.assets%/app_icon.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:site_name" content="Tomlord's Blog" />
+		<meta property="og:locale" content="en_US" />
+
+		<!-- Additional Meta Tags -->
+		<meta name="theme-color" content="#EDEDED" />
+		<meta name="msapplication-TileColor" content="#EDEDED" />
+		<meta name="msapplication-TileImage" content="%sveltekit.assets%/app_icon.png" />
 
 		<!-- Google Fonts -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
