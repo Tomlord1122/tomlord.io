@@ -31,11 +31,6 @@
 </script>
 
 <svelte:head>
-	<meta name="twitter:title" content="Home | Tomlord's Blog" />
-	<meta name="twitter:description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
-	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
-	<meta name="twitter:image:alt" content="Tomlord's Blog" />
-
 	<meta property="og:title" content="Home | Tomlord's Blog" />
 	<meta property="og:description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
 	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
