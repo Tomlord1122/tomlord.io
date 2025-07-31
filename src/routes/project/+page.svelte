@@ -35,6 +35,16 @@
 
 <svelte:head>
 	<meta name="twitter:title" content="Projects | Tomlord's Blog" />
+	<meta name="twitter:description" content="My learning journey" />
+	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
+	<meta name="twitter:image:alt" content="Tomlord's Projects" />
+	
+	<!-- Open Graph tags for better social sharing -->
+	<meta property="og:title" content="Projects | Tomlord's Blog" />
+	<meta property="og:description" content="My learning journey" />
+	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://tomlord.fyi/project" />
 </svelte:head>
 
 <!-- This is the main container for your page content -->
