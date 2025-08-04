@@ -156,40 +156,57 @@
 		isLoading = true;
 		error = '';
 
-		try {
-			const token = localStorage.getItem('auth_token');
-			const url = blogId
-				? `${config.API.BLOGS}/${postSlug}/messages`
-				: `${config.API.MESSAGES}/post/${postSlug}`;
+		const maxRetries = 3;
+		const retryDelay = 1000; // 1 秒
 
-			const headers: HeadersInit = {};
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				const token = localStorage.getItem('auth_token');
+				const url = blogId
+					? `${config.API.BLOGS}/${postSlug}/messages`
+					: `${config.API.MESSAGES}/post/${postSlug}`;
+
+				const headers: HeadersInit = {};
+				if (token) {
+					headers['Authorization'] = `Bearer ${token}`;
+				}
+
+				// 增加超時時間到 8 秒，給冷啟動足夠時間
+				const response = await fetchWithTimeout(
+					url,
+					{ headers },
+					5000 // 5 秒超時
+				);
+
+				if (response.ok) {
+					const data = await response.json();
+					comments = data.messages || [];
+					break; // 成功就跳出重試循環
+				} else {
+					console.warn(`Attempt ${attempt}/${maxRetries} failed:`, response.status);
+					
+					// 如果不是最後一次嘗試，等待後重試
+					if (attempt < maxRetries) {
+						await new Promise(resolve => setTimeout(resolve, retryDelay));
+					} else {
+						// 最後一次嘗試失敗，設為空陣列
+						comments = [];
+					}
+				}
+			} catch (err) {
+				console.warn(`Attempt ${attempt}/${maxRetries} error:`, err);
+				
+				// 如果不是最後一次嘗試，等待後重試
+				if (attempt < maxRetries) {
+					await new Promise(resolve => setTimeout(resolve, retryDelay));
+				} else {
+					// 最後一次嘗試失敗，設為空陣列
+					comments = [];
+				}
 			}
-
-			// Use fetchWithTimeout to prevent hanging
-			const response = await fetchWithTimeout(
-				url,
-				{ headers },
-				2000 // 2 second timeout for comments
-			);
-
-			if (response.ok) {
-				const data = await response.json();
-				comments = data.messages || [];
-			} else {
-				// Don't show error for non-critical comment loading
-				console.warn('Failed to load comments:', response.status);
-				comments = []; // Empty comments array, don't block the page
-			}
-		} catch (err) {
-			console.warn("Error loading comments (this won't affect page functionality):", err);
-			// Set empty comments instead of error to not block the page
-			comments = [];
-			// Only show error in console, not to user
-		} finally {
-			isLoading = false;
 		}
+
+		isLoading = false;
 	}
 
 	async function handleLikeToggle(commentId: string) {
