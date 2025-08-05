@@ -8,7 +8,7 @@ export const load: LayoutServerLoad = async (): Promise<{
 }> => {
 	// API 載入函數
 	const loadFromAPI = async (): Promise<PostMetadata[]> => {
-		const response = await fetchWithTimeout(`${config.API.BLOGS}/?limit=100&published=true`);
+		const response = await fetchWithTimeout(`${config.API.BLOGS}/?limit=200&published=true`);
 
 		if (!response.ok) {
 			throw new Error(`Backend API error: ${response.status}`);
