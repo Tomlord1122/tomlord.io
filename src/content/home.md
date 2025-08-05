@@ -33,7 +33,7 @@ Hi, it's Tomlord here!
 
 I am a software engineer passionate about systems—and a Golang lover. In my free time, I also enjoy building frontend applications with Svelte.
 
-This website contains some of my blog posts about my learning journey and topics of interest. Here, I share my projects and reflections. Feel free to contact me via email.
+This website contains some of my blog posts about my learning journey and topics of interest. Here, I share my projects and reflections. Feel free to contact me via email!
 
 > ### Experience
 

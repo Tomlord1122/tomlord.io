@@ -25,6 +25,7 @@ export interface Post extends Omit<PostMetadata, 'description'> {
 	content: string; // Markdown/HTML content as string
 	duration: string;
 	description: string;
+	
 }
 
 export interface PostData {
