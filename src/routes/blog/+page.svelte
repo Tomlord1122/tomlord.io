@@ -157,7 +157,7 @@
 		{/if}
 	</h1>
 
-	<animate in:fade={{ duration: 800, delay: 200 }}>
+	<animate in:fade={{ duration: 800, delay: 100 }}>
 		<div class="not-prose font-serif">
 			<div class="flex w-full flex-col justify-between sm:flex-row">
 				<div class="flex items-center">
@@ -265,7 +265,7 @@
 		{/if}
 	</animate>
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area not-prose">
+	<main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area not-prose">
 		{#if filteredPosts && filteredPosts.length > 0}
 			<ul class="list-none">
 				{#each filteredPosts as post, index (post.slug)}
