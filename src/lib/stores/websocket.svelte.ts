@@ -1,5 +1,4 @@
 import { authStore } from './auth.svelte';
-import { PUBLIC_BACKEND_WS_URL } from '$env/static/public';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 import { config, checkBackendHealth } from '$lib/config.js';
 
@@ -151,8 +150,7 @@ class WebSocketManager {
 
 			// Include auth token if available
 			const token = localStorage.getItem('auth_token');
-			// Use environment variable for WebSocket URL (supports Minikube/production)
-			let wsUrl = PUBLIC_BACKEND_WS_URL + '/ws';
+            let wsUrl = config.API.WEBSOCKET;
 
 			// Add query parameters
 			const params = new SvelteURLSearchParams();
