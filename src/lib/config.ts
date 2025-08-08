@@ -192,18 +192,18 @@ export async function clientFirstLoadWithBackgroundSync<T>(
 	try {
 		const localData = await localCall();
 		console.log('⚡ Local data loaded immediately');
-		
+
 		// 背景中同步 API 資料（不阻塞主要載入）
 		Promise.resolve().then(async () => {
 			try {
 				// 延長 timeout 以應對 cold start（但不阻塞主流程）
 				const apiData = await Promise.race([
 					apiCall ? apiCall() : Promise.resolve(null),
-					new Promise<never>((_, reject) =>
-						setTimeout(() => reject(new Error('Background API timeout')), 3000) // 3秒 timeout
+					new Promise<never>(
+						(_, reject) => setTimeout(() => reject(new Error('Background API timeout')), 3000) // 3秒 timeout
 					)
 				]);
-				
+
 				// 如果有新資料且有回調函數，則更新
 				if (onBackgroundSync && JSON.stringify(apiData) !== JSON.stringify(localData)) {
 					console.log('🔄 Background sync completed with new data');
@@ -215,12 +215,12 @@ export async function clientFirstLoadWithBackgroundSync<T>(
 				console.log('🔇 Background sync failed (silent, cold start expected):', error);
 			}
 		});
-		
+
 		return { data: localData, source: 'local' };
 	} catch (localError) {
 		console.warn('❌ Local loading failed, falling back to API:', localError);
 		// 如果本地載入失敗，還是要等 API
-		const apiData = await (apiCall ? apiCall() : Promise.resolve(null)) as T;
+		const apiData = (await (apiCall ? apiCall() : Promise.resolve(null))) as T;
 		return { data: apiData, source: 'api' };
 	}
 }
@@ -228,14 +228,14 @@ export async function clientFirstLoadWithBackgroundSync<T>(
 // 智能預熱策略 - 在背景預熱後端
 export async function preWarmBackend(): Promise<void> {
 	if (!browser) return; // 只在客戶端執行
-	
+
 	// 延遲預熱，不影響初始載入
 	setTimeout(async () => {
 		try {
 			console.log('🔥 Pre-warming backend...');
 			await fetchWithTimeout(config.API.HEALTH, { method: 'GET' }, 5000);
 			console.log('✅ Backend pre-warmed successfully');
-		} catch (error) {
+		} catch {
 			console.log('🔇 Backend pre-warm failed (expected for cold start)');
 		}
 	}, 2000); // 2秒後開始預熱

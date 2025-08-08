@@ -11,7 +11,10 @@
 
 <svelte:head>
 	<meta name="title" content="Tomlord's Blog" />
-	<meta name="description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
+	<meta
+		name="description"
+		content="Personal blog by Tomlord, sharing tech, projects, and photography"
+	/>
 </svelte:head>
 
 <InteractiveBackground />

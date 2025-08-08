@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	interface WindowWithWebkitAudio extends Window {
+		webkitAudioContext?: typeof AudioContext;
+		AudioContext?: typeof AudioContext;
+	}
+
 	interface Props {
 		value?: string;
 		placeholder?: string;
@@ -68,6 +73,8 @@
 		oscillator.connect(gainNode);
 		gainNode.connect(audioContext.destination);
 
+		const baseFreq = 1000 + Math.random() * 200;
+
 		// Different sounds for different key types
 		switch (keyType) {
 			case 'space':
@@ -96,7 +103,6 @@
 				break;
 			default:
 				// Random variation for normal keys - crisp mechanical keyboard sound
-				const baseFreq = 1000 + Math.random() * 200;
 				oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
 				oscillator.frequency.exponentialRampToValueAtTime(
 					baseFreq * 0.6,
@@ -184,7 +190,11 @@
 		// Initialize Web Audio API
 		if (enableSound && typeof window !== 'undefined') {
 			try {
-				audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+				const win = window as unknown as WindowWithWebkitAudio;
+				const AudioContextCtor = win.AudioContext ?? win.webkitAudioContext;
+				if (AudioContextCtor) {
+					audioContext = new AudioContextCtor();
+				}
 			} catch (error) {
 				console.warn('Web Audio API not supported:', error);
 			}

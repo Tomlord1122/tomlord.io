@@ -184,10 +184,10 @@
 					break; // 成功就跳出重試循環
 				} else {
 					console.warn(`Attempt ${attempt}/${maxRetries} failed:`, response.status);
-					
+
 					// 如果不是最後一次嘗試，等待後重試
 					if (attempt < maxRetries) {
-						await new Promise(resolve => setTimeout(resolve, retryDelay));
+						await new Promise((resolve) => setTimeout(resolve, retryDelay));
 					} else {
 						// 最後一次嘗試失敗，設為空陣列
 						comments = [];
@@ -195,10 +195,10 @@
 				}
 			} catch (err) {
 				console.warn(`Attempt ${attempt}/${maxRetries} error:`, err);
-				
+
 				// 如果不是最後一次嘗試，等待後重試
 				if (attempt < maxRetries) {
-					await new Promise(resolve => setTimeout(resolve, retryDelay));
+					await new Promise((resolve) => setTimeout(resolve, retryDelay));
 				} else {
 					// 最後一次嘗試失敗，設為空陣列
 					comments = [];

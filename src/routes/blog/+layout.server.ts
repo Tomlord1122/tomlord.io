@@ -2,7 +2,6 @@ import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata, PostData } from '$lib/types/post.js';
 import { config, fetchWithTimeout, clientFirstLoadWithBackgroundSync } from '$lib/config.js';
 
-
 export const load: LayoutServerLoad = async (): Promise<{
 	posts: PostMetadata[];
 }> => {
@@ -33,10 +32,9 @@ export const load: LayoutServerLoad = async (): Promise<{
 		const posts: PostMetadata[] = [];
 		for (const postPath in postModules) {
 			try {
-				const module = await postModules[postPath]();
-				const file = module as any;
-				if (file && typeof file === 'object' && 'metadata' in file) {
-					const metadata = file.metadata as PostMetadata;
+				const module = (await postModules[postPath]()) as { metadata?: unknown };
+				if (module && typeof module === 'object' && 'metadata' in module) {
+					const metadata = module.metadata as PostMetadata;
 					if (metadata.slug && metadata.title && metadata.date) {
 						posts.push({
 							title: metadata.title,
@@ -60,12 +58,8 @@ export const load: LayoutServerLoad = async (): Promise<{
 	let posts: PostMetadata[] = [];
 
 	try {
-		const result = await clientFirstLoadWithBackgroundSync(
-			loadFromLocal,
-			loadFromAPI
-		);
+		const result = await clientFirstLoadWithBackgroundSync(loadFromLocal, loadFromAPI);
 		posts = result.data;
-
 	} catch (error) {
 		console.error('All loading strategies failed:', error);
 		posts = [];
@@ -73,9 +67,7 @@ export const load: LayoutServerLoad = async (): Promise<{
 
 	posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-
 	return {
-		posts,
+		posts
 	};
 };
-

@@ -82,13 +82,19 @@
 
 <svelte:head>
 	<meta name="twitter:title" content={title} />
-	<meta name="twitter:description" content={data.post.description || `Read ${title} on Tomlord's Blog`} />
+	<meta
+		name="twitter:description"
+		content={data.post.description || `Read ${title} on Tomlord's Blog`}
+	/>
 	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
 	<meta name="twitter:image:alt" content="Blog post: {title}" />
-	
+
 	<!-- Open Graph tags for better social sharing -->
 	<meta property="og:title" content={title} />
-	<meta property="og:description" content={data.post.description || `Read ${title} on Tomlord's Blog`} />
+	<meta
+		property="og:description"
+		content={data.post.description || `Read ${title} on Tomlord's Blog`}
+	/>
 	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content="https://tomlord.fyi/blog/{slug}" />

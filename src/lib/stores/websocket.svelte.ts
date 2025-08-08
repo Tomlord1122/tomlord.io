@@ -150,7 +150,7 @@ class WebSocketManager {
 
 			// Include auth token if available
 			const token = localStorage.getItem('auth_token');
-            let wsUrl = config.API.WEBSOCKET;
+			let wsUrl = config.API.WEBSOCKET;
 
 			// Add query parameters
 			const params = new SvelteURLSearchParams();

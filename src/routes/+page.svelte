@@ -32,7 +32,10 @@
 
 <svelte:head>
 	<meta property="og:title" content="Home | Tomlord's Blog" />
-	<meta property="og:description" content="Personal blog by Tomlord, sharing tech, projects, and photography" />
+	<meta
+		property="og:description"
+		content="Personal blog by Tomlord, sharing tech, projects, and photography"
+	/>
 	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://tomlord.fyi" />
