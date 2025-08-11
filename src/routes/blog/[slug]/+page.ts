@@ -30,10 +30,9 @@ export const load: PageLoad = async ({ params }) => {
 	let post: Post;
 
 	try {
-		const result = await clientFirstLoadWithBackgroundSync(loadFromLocal);
-		post = result.data;
+		post = await loadFromLocal();
 	} catch (apiAndLocalError) {
-		console.error('Failed to load blog post from both API and local files:', apiAndLocalError);
+		console.error('Failed to load blog post from local files:', apiAndLocalError);
 		error(404, 'Post does not exist or cannot be loaded');
 	}
 
