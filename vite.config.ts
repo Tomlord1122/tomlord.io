@@ -14,6 +14,12 @@ export default defineConfig({
 			})
 		})
 	],
+	optimizeDeps: {
+		exclude: ['sharp']
+	},
+	ssr: {
+		external: ['sharp']
+	},
 	test: {
 		workspace: [
 			{

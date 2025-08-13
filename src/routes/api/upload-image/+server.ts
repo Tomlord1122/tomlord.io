@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types.ts';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { dev } from '$app/environment';
-import sharp from 'sharp'; // Import sharp
 
 const uploadDir = path.join(process.cwd(), 'static', 'photography_assets');
 
@@ -47,26 +46,22 @@ export const POST: RequestHandler = async ({ request }) => {
 		});
 
 		const newNumber = maxNumber + 1;
-		// We will save as WebP, so the extension will be .webp
 		const newFileName = `${newNumber}.webp`;
 		const filePath = path.join(uploadDir, newFileName);
 
 		const arrayBuffer = await imageFile.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
-		// Convert to WebP using sharp and then save
-		const webpBuffer = await sharp(buffer)
-			.rotate()
-			.webp({ quality: 80 }) // Adjust quality as needed (0-100)
-			.toBuffer();
+		const { default: sharp } = await import('sharp');
 
-		await fs.writeFile(filePath, webpBuffer); // Save the WebP buffer
+		const webpBuffer = await sharp(buffer).rotate().webp({ quality: 80 }).toBuffer();
 
-		console.log(`File uploaded, auto-rotated, and converted to WebP successfully: ${filePath}`);
+		await fs.writeFile(filePath, webpBuffer);
+
 		return json(
 			{
 				message: 'File uploaded and converted to WebP successfully!',
-				fileName: newFileName // Send back the new .webp filename
+				fileName: newFileName
 			},
 			{ status: 201 }
 		);
