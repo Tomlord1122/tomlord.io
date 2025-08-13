@@ -69,7 +69,7 @@
 	);
 
 	// Progressive rendering of filtered posts (client-side pagination)
-	const PAGE_SIZE = 20;
+	const PAGE_SIZE = 10;
 	let visibleCount = $state(PAGE_SIZE);
 	let isLoadingMore = $state(false);
 	let sentinelEl: HTMLDivElement | null = $state(null);
