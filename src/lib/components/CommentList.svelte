@@ -182,7 +182,7 @@
 			for (let attempt = 1; attempt <= maxRetries; attempt++) {
 				try {
 					const token = localStorage.getItem('auth_token');
-					const base = `${config.API.MESSAGES}/post/${postSlug}`;
+					const base = `${config.API.MESSAGES}/blog/${postSlug}`;
 					const qs = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
 
 					const headers: HeadersInit = {};
