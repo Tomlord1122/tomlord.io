@@ -1,0 +1,216 @@
+<script lang="ts">
+	import { fly } from 'svelte/transition';
+	import { browser } from '$app/environment';
+	import { extractTableOfContents, renderMarkdown } from '$lib/util/markdown.js';
+	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
+	import CommentForm from '$lib/components/CommentForm.svelte';
+	import CommentList from '$lib/components/CommentList.svelte';
+	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
+	import TableOfContents from '$lib/components/TableOfContents.svelte';
+	import type { PostData } from '$lib/types/post.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
+	import type { LinkPreview } from '$lib/types/preview.js';
+
+	let { data } = $props();
+
+	// Use $derived to reactively get post data
+	let post = $derived(data.post);
+	let title = $derived(post.title);
+	let date = $derived(post.date);
+	let tags = $derived(post.tags);
+	let content = $derived(post.content);
+	let duration = $derived(post.duration);
+	let slug = $derived(post.slug);
+	let tocItems = $derived(extractTableOfContents(content));
+	let resolvedPreviews = $state<Record<string, LinkPreview>>({});
+
+	$effect(() => {
+		let cancelled = false;
+
+		Promise.resolve(data.previews).then((previews) => {
+			if (!cancelled) {
+				resolvedPreviews = previews ?? {};
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	// Convert markdown content to HTML (with pre-fetched embed previews)
+	let contentHtml = $derived(content ? renderMarkdown(content, resolvedPreviews) : '');
+
+	// Check if user can edit (super user only)
+	let canEdit = $derived(isSuperUser(auth.user));
+	let showEditModal = $state(false);
+	let postData = $state<PostData>({} as PostData);
+	let allTags = $state<string[]>([]);
+
+	// Initialize tags from the current post
+	$effect(() => {
+		if (browser) {
+			allTags = [...(tags || [])];
+		}
+	});
+
+	// Helper function to extract content without frontmatter
+	function extractContentWithoutFrontmatter(fullContent: string): string {
+		const frontmatterMatch = fullContent.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+		if (frontmatterMatch) {
+			return frontmatterMatch[1].trim();
+		}
+		return fullContent;
+	}
+
+	// Load post data for editing
+	async function loadPostForEditing() {
+		try {
+			const { fetchBlogBySlug } = await import('$lib/api/blogs.js');
+			const blog = await fetchBlogBySlug(slug);
+
+			// Extract only the markdown content without frontmatter
+			const contentWithoutFrontmatter = extractContentWithoutFrontmatter(blog.content || '');
+
+			postData = {
+				id: blog.id,
+				title: blog.title,
+				slug: blog.slug,
+				content: contentWithoutFrontmatter,
+				tags: blog.tags || [],
+				date: blog.date,
+				lang: blog.lang || 'en',
+				duration: blog.duration || '5min',
+				description: blog.description || ''
+			};
+			showEditModal = true;
+		} catch (error) {
+			console.error('Error loading post for editing:', error);
+			alert('An error occurred while loading the post for editing.');
+		}
+	}
+
+	// Callback for successful save
+	async function handlePostSaved() {
+		console.log('Post saved successfully.');
+		await revalidateISR(`/blog/${slug}`);
+		window.location.reload();
+	}
+
+	// Callback for modal cancellation
+	function handleEditCancel() {
+		console.log('Edit cancelled.');
+	}
+
+	// Callback for successful delete
+	async function handlePostDeleted() {
+		await revalidateISR('/blog');
+		window.location.href = '/blog';
+	}
+
+	// Function to open the edit modal
+	function openEditModal() {
+		loadPostForEditing();
+	}
+</script>
+
+<svelte:head>
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={title} />
+	<meta
+		name="twitter:description"
+		content={data.post.description || `Read ${title} on Tomlord's Blog`}
+	/>
+	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
+	<meta name="twitter:image:alt" content="Blog post: {title}" />
+
+	<!-- Open Graph tags for better social sharing -->
+	<meta property="og:title" content={title} />
+	<meta
+		property="og:description"
+		content={data.post.description || `Read ${title} on Tomlord's Blog`}
+	/>
+	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="https://tomlord.fyi/blog/{slug}" />
+	<meta property="article:published_time" content={date} />
+	<meta property="article:author" content="Tomlord" />
+</svelte:head>
+
+<!-- Reading Progress Bar -->
+<ReadingProgressBar />
+
+<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-3xl">
+	<header class="page-title mb-8">
+		<div class="prose prose-sm sm:prose-base">
+			<h1 style:view-transition-name={`blog-title-${slug}`}>
+				{#if canEdit}
+					<button
+						onclick={openEditModal}
+						aria-label="Edit Post"
+						class="text-left transition-colors hover:text-gray-600"
+					>
+						{title}
+					</button>
+				{:else}
+					{title}
+				{/if}
+			</h1>
+		</div>
+
+		<p class="text-sm text-gray-500">
+			Posted on {new Date(date).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			})}
+		</p>
+		<p class="text-sm text-gray-500">
+			Reading time: {duration}
+		</p>
+		{#if tags && tags.length > 0}
+			<div class="mt-4 flex flex-wrap gap-2">
+				{#each tags as tag (tag)}
+					<span class="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700"
+						>{tag}</span
+					>
+				{/each}
+			</div>
+		{/if}
+	</header>
+	<div
+		in:fly={{ y: 50, duration: 600, delay: 200 }}
+		class="prose prose-base sm:prose-base blog-content img-center max-w-none font-serif"
+	>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html contentHtml}
+	</div>
+
+	<!-- Comments Section -->
+	<div in:fly={{ y: 50, duration: 600, delay: 400 }} class="mt-12">
+		<CommentList postSlug={slug} />
+		<CommentForm postSlug={slug} />
+	</div>
+
+	<div in:fly={{ y: 50, duration: 600, delay: 500 }} class="mt-12 border-t border-gray-200 pt-8">
+		<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
+	</div>
+</article>
+
+<TableOfContents items={tocItems} />
+
+{#if canEdit}
+	<PostEditorModal
+		bind:show={showEditModal}
+		mode="edit"
+		bind:postData
+		bind:allCurrentTags={allTags}
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
+		onSaved={handlePostSaved}
+		onCancel={handleEditCancel}
+		onDeleted={handlePostDeleted}
+	/>
+{/if}

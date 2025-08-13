@@ -1,0 +1,410 @@
+<script lang="ts">
+	import { fade, fly, slide } from 'svelte/transition';
+	import { browser } from '$app/environment';
+	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
+	import type { PostEditorSavedPost, PostMetadata } from '$lib/types/post.js';
+
+	const suppressIntroTransitions =
+		browser && document.documentElement.dataset.suppressBlogListTransitions === 'true';
+	const filterTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 800, delay: 100 };
+	const listTransition = suppressIntroTransitions
+		? { y: 0, duration: 0 }
+		: { y: 100, duration: 800, delay: 100 };
+	const tagTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 300 };
+	const emptyTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 300, delay: 300 };
+
+	function postTransition(index: number) {
+		return suppressIntroTransitions ? { duration: 0 } : { duration: 400, delay: (index * 20) % 100 };
+	}
+
+	// Props are now received using $props() in Svelte 5
+	let { data } = $props();
+
+	let optimisticPosts = $state<PostMetadata[] | null>(null);
+	let posts = $derived(optimisticPosts ?? data.posts);
+
+	$effect(() => {
+		data.posts;
+		optimisticPosts = null;
+	});
+
+	let selectedTags = $state<string[]>([]);
+	let showCreatePostModal = $state(false);
+	let canEdit = $derived(isSuperUser(auth.user));
+	let language = $state<string>('');
+	let searchKeyword = $state<string>('');
+
+	// Derive base tags from posts
+	let baseTags = $derived([...new Set(posts.flatMap((post) => post.tags || []))].sort());
+
+	// Mutable state for all tags (used by modal to add new tags)
+	let allTags = $state<string[]>([]);
+
+	// Sync allTags with baseTags when posts change
+	$effect(() => {
+		// Merge baseTags into allTags, keeping any additional tags added by modal
+		const merged = [...new Set([...baseTags, ...allTags])].sort();
+		if (JSON.stringify(merged) !== JSON.stringify(allTags)) {
+			allTags = merged;
+		}
+	});
+
+	// Initialize allTags on first render
+	$effect(() => {
+		if (allTags.length === 0 && baseTags.length > 0) {
+			allTags = [...baseTags];
+		}
+	});
+
+	// Function to toggle a tag's selection status
+	function toggleTag(tag: string) {
+		const index = selectedTags.indexOf(tag);
+		if (index > -1) {
+			// If tag is already selected, remove it
+			selectedTags = selectedTags.filter((t) => t !== tag);
+		} else {
+			// If tag is not selected, add it
+			selectedTags = [...selectedTags, tag];
+		}
+	}
+
+	let filteredPosts = $derived(
+		posts.filter((post) => {
+			const languageMatch = language === 'en' ? post.lang === 'en' : true;
+			const tagMatch =
+				selectedTags.length === 0 || selectedTags.every((tag) => post.tags?.includes(tag));
+			const titleMatch =
+				searchKeyword.trim() === '' ||
+				post.title.toLowerCase().includes(searchKeyword.toLowerCase());
+
+			return languageMatch && tagMatch && titleMatch;
+		})
+	);
+
+	// Progressive rendering of filtered posts (client-side pagination)
+	const PAGE_SIZE = 10;
+	let visibleCount = $state(PAGE_SIZE);
+	let isLoadingMore = $state(false);
+	let sentinelEl: HTMLDivElement | null = $state(null);
+
+	let visiblePosts = $derived(filteredPosts.slice(0, visibleCount));
+	let hasMorePosts = $derived(visibleCount < filteredPosts.length);
+
+	// Reset pagination whenever filters change
+	$effect(() => {
+		visibleCount = Math.min(PAGE_SIZE, filteredPosts.length);
+		isLoadingMore = false;
+	});
+
+	async function loadMorePosts() {
+		if (!hasMorePosts || isLoadingMore) return;
+		isLoadingMore = true;
+		// Allow next frame to keep UI smooth
+		// Add a 300ms delay for smoother UX
+		// await new Promise(resolve => setTimeout(resolve, 300));
+		await Promise.resolve();
+		visibleCount = Math.min(visibleCount + PAGE_SIZE, filteredPosts.length);
+		isLoadingMore = false;
+	}
+
+	// IntersectionObserver to auto-load when sentinel is fully visible
+	$effect(() => {
+		if (!hasMorePosts || !sentinelEl) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((e) => e.isIntersecting)) {
+					void loadMorePosts();
+				}
+			},
+			{ root: null, rootMargin: '0px', threshold: 1 }
+		);
+
+		observer.observe(sentinelEl);
+		return () => observer.disconnect();
+	});
+
+	function toPostMetadata(post: PostEditorSavedPost): PostMetadata {
+		return {
+			title: post.title,
+			date: post.date,
+			slug: post.slug,
+			description: post.description || '',
+			tags: post.tags || [],
+			lang: post.lang || 'en',
+			duration: post.duration || '5min'
+		};
+	}
+
+	// Called when a post is successfully created in the modal
+	function handlePostCreationSuccess(post?: PostEditorSavedPost) {
+		console.log('Post created successfully.');
+		showCreatePostModal = false;
+		if (post) {
+			const createdPost = toPostMetadata(post);
+			optimisticPosts = [createdPost, ...posts.filter((item) => item.slug !== post.slug)].sort(
+				(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+			);
+		}
+		void revalidateISR('/blog');
+	}
+
+	// Called when the modal is closed without creating a post
+	function handlePostCreationCancel() {
+		console.log('Modal cancelled. Resetting tags to base tags.');
+		// Reset allTags to only base tags (remove any temporarily added tags)
+		allTags = [...baseTags];
+		showCreatePostModal = false;
+	}
+
+	function openCreatePostModal() {
+		showCreatePostModal = true;
+	}
+
+	let tagContainer: HTMLElement | null = $state(null);
+	let canScrollLeft = $state(false);
+	let canScrollRight = $state(true);
+
+	function updateScrollButtons() {
+		if (tagContainer) {
+			const { scrollLeft, scrollWidth, clientWidth } = tagContainer;
+			canScrollLeft = scrollLeft > 0;
+			canScrollRight = scrollLeft < scrollWidth - clientWidth - 1;
+		}
+	}
+
+	function scrollTags(direction: 'left' | 'right') {
+		if (tagContainer) {
+			const scrollAmount = 200;
+			tagContainer.scrollBy({
+				left: direction === 'left' ? -scrollAmount : scrollAmount,
+				behavior: 'smooth'
+			});
+		}
+	}
+
+	$effect(() => {
+		if (tagContainer) {
+			updateScrollButtons();
+		}
+	});
+</script>
+
+<svelte:head>
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Blog | Tomlord's Blog" />
+	<meta
+		name="twitter:description"
+		content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development"
+	/>
+	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
+	<meta name="twitter:image:alt" content="Tomlord's Blog" />
+
+	<meta property="og:title" content="Blog | Tomlord's Blog" />
+	<meta
+		property="og:description"
+		content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development"
+	/>
+	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://tomlord.fyi/blog" />
+</svelte:head>
+
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
+	<h1 class="page-title">
+		{#if canEdit}
+			<button
+				onclick={openCreatePostModal}
+				aria-label="Create New Post"
+				class="transition-colors hover:text-gray-600"
+			>
+				tom.changelog
+			</button>
+		{:else}
+			tom.changelog
+		{/if}
+	</h1>
+
+	<animate in:fade={filterTransition}>
+		<div class="not-prose font-serif">
+			<div class="flex w-full flex-col justify-between sm:flex-row">
+				<div class="flex items-center">
+					<label class="flex cursor-pointer items-center gap-1 text-sm text-gray-500">
+						<input
+							type="checkbox"
+							checked={language === 'en'}
+							onclick={() => {
+								language = language === 'en' ? '' : 'en';
+							}}
+							class="form-checkbox h-4 w-4 rounded border-gray-300 text-gray-400 focus:ring-gray-500"
+						/>
+						English Only
+					</label>
+				</div>
+				<div class="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row">
+					<input
+						type="text"
+						bind:value={searchKeyword}
+						placeholder="Search by title"
+						class="rounded-lg border border-gray-300 px-4 py-2 text-sm transition-all duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-gray-400"
+					/>
+				</div>
+			</div>
+		</div>
+
+		{#if allTags.length > 0}
+			<div class="not-prose font-serif">
+				<div class="flex w-full justify-between">
+					<h3 class="text-md text-gray-700">Filter by Tags</h3>
+					{#if selectedTags.length > 0}
+						<button
+							type="button"
+							onclick={() => (selectedTags = [])}
+							class="text-sm text-gray-600 hover:text-gray-800 hover:underline"
+						>
+							clear all tags ({selectedTags.length})
+						</button>
+					{/if}
+				</div>
+
+				<div class="group relative">
+					<!-- 左箭頭按鈕 -->
+					{#each [{ direction: 'left' as const, canScroll: canScrollLeft, path: 'M15 19l-7-7 7-7' }, { direction: 'right' as const, canScroll: canScrollRight, path: 'M9 5l7 7-7 7' }] as { direction, canScroll, path } (direction)}
+						{#if canScroll}
+							<button
+								type="button"
+								onclick={() => scrollTags(direction)}
+								class="absolute top-1/2 {direction}-0 z-10 -translate-y-1/2 rounded-full bg-white/90 p-1 opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-white"
+								aria-label="Scroll tags {direction}"
+							>
+								<svg
+									class="h-4 w-4 text-gray-600"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={path} />
+								</svg>
+							</button>
+						{/if}
+					{/each}
+
+					<div
+						bind:this={tagContainer}
+						onscroll={updateScrollButtons}
+						id="tag-container"
+						class="scrollbar-hide flex min-h-[40px] items-center gap-2 overflow-x-auto scroll-smooth px-4 py-2"
+						style="scrollbar-width: none; -ms-overflow-style: none;"
+					>
+						{#each allTags as tag (tag)}
+							{@const isSelected = selectedTags.includes(tag)}
+							<button
+								transition:fade={tagTransition}
+								type="button"
+								onclick={() => toggleTag(tag)}
+								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
+										${
+											isSelected
+												? 'border-gray-400 bg-gray-300 '
+												: 'border-gray-300 bg-gray-100 hover:bg-gray-200'
+										} transition-colors duration-150`}
+							>
+								{tag}
+							</button>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{/if}
+	</animate>
+
+	<main in:fly={listTransition} class="main-content-area not-prose">
+		{#if filteredPosts && filteredPosts.length > 0}
+			<ul class="list-none">
+				{#each visiblePosts as post, index (post.slug)}
+					<li
+						class="mb-1 border-b border-l border-gray-300 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
+						transition:slide={postTransition(index)}
+					>
+						<a
+							href="/blog/{post.slug}"
+							class="block pt-2 pb-2 pl-2"
+							data-sveltekit-preload-data="hover"
+						>
+							<h2
+								class="prose prose-sm sm:prose-lg text-gray-700 underline underline-offset-4 group-hover:text-gray-900"
+								style:view-transition-name={`blog-title-${post.slug}`}
+							>
+								{post.title}
+							</h2>
+							<div class="text-sm text-gray-500">
+								<p>
+									{new Date(post.date).toLocaleDateString('en-US', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})}
+								</p>
+								{#if post.tags && post.tags.length > 0}
+									<div class="relative">
+										<div
+											id="post-tags-{index}"
+											class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth"
+											style="scrollbar-width: none; -ms-overflow-style: none;"
+										>
+											{#each post.tags as tag (tag)}
+												<span
+													class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
+												>
+													{tag}
+												</span>
+											{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</a>
+					</li>
+				{/each}
+			</ul>
+			<!-- Infinite scroll sentinel and manual control -->
+			{#if hasMorePosts}
+				<div bind:this={sentinelEl} class="h-6"></div>
+			{/if}
+			<div class="mt-2 flex items-center justify-center">
+				{#if hasMorePosts}
+					<button
+						onclick={() => void loadMorePosts()}
+						class="text-sm text-gray-600 underline hover:text-gray-800"
+					>
+						Load more posts
+					</button>
+				{:else}
+					<p class="text-xs text-gray-400">No more posts</p>
+				{/if}
+			</div>
+		{:else}
+			<p class="text-gray-600" in:fade={emptyTransition}>
+				{#if selectedTags.length > 0 || searchKeyword.trim() !== ''}
+					No posts match the filter.
+				{:else}
+					No posts yet.
+				{/if}
+			</p>
+		{/if}
+	</main>
+</div>
+
+{#if showCreatePostModal && canEdit}
+	<PostEditorModal
+		bind:show={showCreatePostModal}
+		mode="create"
+		bind:allCurrentTags={allTags}
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
+		onSaved={handlePostCreationSuccess}
+		onCancel={handlePostCreationCancel}
+	/>
+{/if}

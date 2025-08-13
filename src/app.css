@@ -1,0 +1,352 @@
+@import 'tailwindcss';
+/*
+ * CMS/markdown emits `.photo-post w-[…px]` HTML that Tailwind’s file scanner never sees.
+ * Brace expansion yields w-[100px] … w-[900px] in steps of 100 (see detecting-classes docs).
+ */
+@source inline('w-[{100..900..100}px]');
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* This is a base style import for Tailwind,
+   ensure this or similar setup is at the top of your global CSS file
+   if you are setting up Tailwind from scratch.
+   If you already have Tailwind configured, you might already have these. */
+
+@layer base {
+	html {
+		scrollbar-gutter: stable;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		::view-transition-group(*),
+		::view-transition-old(*),
+		::view-transition-new(*) {
+			animation: none !important;
+		}
+	}
+
+	/* body {
+      @apply overflow-y-scroll;
+    } */
+}
+/* Custom component classes */
+@layer components {
+	.page-title {
+		/* These are the common classes for your h1 tags */
+		@apply border-b border-gray-400 pb-2 font-serif shadow-gray-500;
+	}
+
+	.main-content-area {
+		/* These are the common classes for your main tags */
+		/* We noticed 'gap-3' is used in project and photography,
+       and 'gap-4' in blog. We'll use 'gap-3' here as a common base.
+       We can discuss how to handle variations later if needed! */
+		@apply flex flex-col gap-3 font-serif;
+	}
+	.photo-grid {
+		@apply h-full w-full object-cover;
+	}
+	.photo-post {
+		@apply z-20 h-auto max-w-full rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105;
+	}
+
+	.markdown-content img.photo-post {
+		cursor: pointer;
+	}
+
+	.markdown-content img.photo-post.is-selected {
+		outline: 2px solid #1f2937;
+		outline-offset: 3px;
+		transform: none;
+	}
+
+	/* Skeleton shimmer while .photo-post is loading.
+	   Uses background on the img itself; cleared once `data-loaded` is set by JS.
+
+	   Sizing strategy (priority order):
+	   1. If <img> has width/height attrs, browser auto-computes aspect-ratio (no shift)
+	   2. If inline `aspect-ratio` style, browser respects it
+	   3. Otherwise, falls back to aspect-ratio 3/2 (typical photo) — gives a sane skeleton
+	      size; once loaded, the real image dimensions take over. */
+	.photo-post:not([data-loaded]) {
+		aspect-ratio: 3 / 2;
+		background: linear-gradient(135deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+		background-size: 200% 200%;
+		animation: photo-post-shimmer 1.5s ease-in-out infinite;
+		color: transparent;
+	}
+
+	@keyframes photo-post-shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	.nav-link {
+		@apply text-gray-700 transition-all duration-300 hover:scale-105 hover:text-gray-900;
+	}
+
+	/* NotionLikeEditor utility classes */
+	.scrollbar-stable {
+		scrollbar-gutter: stable;
+	}
+
+	.markdown-content {
+		@apply prose prose-sm sm:prose-base max-w-none;
+	}
+
+	.markdown-content.compact {
+		@apply prose-sm;
+	}
+
+	.markdown-content.compact h1 {
+		@apply text-xl font-bold;
+	}
+
+	.markdown-content.compact h2 {
+		@apply text-lg font-semibold;
+	}
+
+	.markdown-content.compact h3 {
+		@apply text-base font-medium;
+	}
+
+	.blog-content :is(h1, h2, h3, h4) {
+		scroll-margin-top: 3rem;
+	}
+
+	.mermaid-diagram {
+		@apply my-6 flex justify-center overflow-x-auto;
+	}
+
+	.mermaid-diagram svg {
+		@apply max-w-full;
+	}
+
+	.mermaid-error {
+		@apply my-4 rounded bg-red-50 p-4 text-red-700;
+	}
+
+	/* Inline link embed — favicon + title, same line-height as body text. */
+	.inline-embed {
+		@apply inline-flex items-center text-inherit;
+		text-decoration: none !important;
+		max-width: 12rem;
+		overflow: hidden;
+		border: 1px solid #c2c2c2;
+		border-radius: 4px;
+		padding: 0 0.35em;
+		line-height: 1.3;
+		vertical-align: middle;
+	}
+
+	.inline-embed:hover {
+		border-color: #b3b3b3;
+	}
+
+	.inline-embed-label {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.inline-embed-icon {
+		@apply inline-block object-contain align-middle;
+		width: 1em;
+		height: 1em;
+		vertical-align: -0.1em;
+		/* Override prose img margins so inline favicons don't blow up the line-height */
+		margin-top: 0em !important;
+		margin-bottom: 0 !important;
+		margin-right: 0.2em;
+	}
+}
+
+/* Prism One Light Theme */
+code[class*='language-'],
+pre[class*='language-'] {
+	background: #fafafa;
+	color: #383a42;
+	font-family: 'Fira Code', 'Fira Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	line-height: 1.5;
+	tab-size: 2;
+	hyphens: none;
+}
+
+pre[class*='language-'] {
+	padding: 1em;
+	margin: 0.5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*='language-'] {
+	padding: 0.2em 0.3em;
+	border-radius: 0.3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.cdata {
+	color: #a0a1a7;
+}
+
+.token.doctype,
+.token.punctuation,
+.token.entity {
+	color: #383a42;
+}
+
+.token.attr-name,
+.token.class-name,
+.token.boolean,
+.token.constant,
+.token.number,
+.token.atrule {
+	color: #b76b01;
+}
+
+.token.keyword {
+	color: #a626a4;
+}
+
+.token.property,
+.token.tag,
+.token.symbol,
+.token.deleted,
+.token.important {
+	color: #e45649;
+}
+
+.token.selector,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted,
+.token.regex,
+.token.attr-value,
+.token.attr-value > .token.punctuation {
+	color: #50a14f;
+}
+
+.token.variable,
+.token.operator,
+.token.function {
+	color: #4078f2;
+}
+
+.token.url {
+	color: #0184bc;
+}
+
+.token.attr-value > .token.punctuation.attr-equals,
+.token.special-attr > .token.attr-value > .token.value.css {
+	color: #383a42;
+}
+
+.language-css .token.selector {
+	color: #e45649;
+}
+
+.language-css .token.property {
+	color: #383a42;
+}
+
+.language-css .token.function,
+.language-css .token.url > .token.function {
+	color: #0184bc;
+}
+
+.language-css .token.url > .token.string.url {
+	color: #50a14f;
+}
+
+.language-css .token.important,
+.language-css .token.atrule .token.rule {
+	color: #a626a4;
+}
+
+.language-javascript .token.operator {
+	color: #a626a4;
+}
+
+.language-javascript
+	.token.template-string
+	> .token.interpolation
+	> .token.interpolation-punctuation.punctuation {
+	color: #ca1243;
+}
+
+.language-json .token.operator {
+	color: #383a42;
+}
+
+.language-json .token.null.keyword {
+	color: #b76b01;
+}
+
+.language-markdown .token.url,
+.language-markdown .token.url > .token.operator,
+.language-markdown .token.url-reference.url > .token.string {
+	color: #383a42;
+}
+
+.language-markdown .token.url > .token.content {
+	color: #4078f2;
+}
+
+.language-markdown .token.url > .token.url,
+.language-markdown .token.url-reference.url {
+	color: #0184bc;
+}
+
+.language-markdown .token.blockquote.punctuation,
+.language-markdown .token.hr.punctuation {
+	color: #a0a1a7;
+	font-style: italic;
+}
+
+.language-markdown .token.code-snippet {
+	color: #50a14f;
+}
+
+.language-markdown .token.bold .token.content {
+	color: #b76b01;
+}
+
+.language-markdown .token.italic .token.content {
+	color: #a626a4;
+}
+
+.language-markdown .token.strike .token.content,
+.language-markdown .token.strike .token.punctuation,
+.language-markdown .token.list.punctuation,
+.language-markdown .token.title.important > .token.punctuation {
+	color: #e45649;
+}
+
+.token.bold {
+	font-weight: bold;
+}
+
+.token.comment,
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+.token.namespace {
+	opacity: 0.8;
+}
