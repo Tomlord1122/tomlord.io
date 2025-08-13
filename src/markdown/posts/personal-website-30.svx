@@ -7,8 +7,6 @@ duration: '1min'
 tags: ['Career']
 ---
 
-## Personal Website 3.0
-
 <div class="flex justify-center">
 <img src="/photography_assets/2.webp" alt="2.webp" class="photo-post">
 </div>
