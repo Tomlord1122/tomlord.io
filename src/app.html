@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/app_icon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="Personal blog by Tomlord, sharing tech, projects, and photography"
+		/>
+
+		<title>Tomlord's Blog</title>
+
+		<!-- 只保留 twitter:card，其他由個別頁面設定 -->
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content="Tomlord's Blog" />
+		<meta
+			name="twitter:description"
+			content="Personal blog by Tomlord, sharing tech, projects, and photography"
+		/>
+		<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
+
+		<!-- Google Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+			rel="stylesheet"
+		/>
+
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div>%sveltekit.body%</div>
+	</body>
+</html>

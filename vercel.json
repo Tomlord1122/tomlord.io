@@ -1,0 +1,6 @@
+{
+	"buildCommand": "pnpm build:prod",
+	"outputDirectory": "build",
+	"installCommand": "pnpm install",
+	"framework": "sveltekit"
+}

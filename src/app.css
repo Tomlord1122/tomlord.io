@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* This is a base style import for Tailwind, 
+   ensure this or similar setup is at the top of your global CSS file
+   if you are setting up Tailwind from scratch.
+   If you already have Tailwind configured, you might already have these. */
+
+@layer base {
+	html {
+		/* 使用 TailwindCSS 的任意值語法 */
+		scrollbar-gutter: stable;
+	}
+	/* 或者回退方案 */
+	/* body {
+      @apply overflow-y-scroll;
+    } */
+}
+/* Custom component classes */
+@layer components {
+	.page-title {
+		/* These are the common classes for your h1 tags */
+		@apply border-b border-gray-400 pb-2 font-serif shadow-gray-500;
+	}
+
+	.main-content-area {
+		/* These are the common classes for your main tags */
+		/* We noticed 'gap-3' is used in project and photography, 
+       and 'gap-4' in blog. We'll use 'gap-3' here as a common base.
+       We can discuss how to handle variations later if needed! */
+		@apply flex flex-col gap-3 font-serif;
+	}
+	.photo-grid {
+		@apply h-full w-full object-cover;
+	}
+	.photo-post {
+		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105 lg:w-1/2;
+	}
+
+	.nav-link {
+		@apply text-gray-700 transition-all duration-300 hover:scale-105 hover:text-gray-900;
+	}
+}

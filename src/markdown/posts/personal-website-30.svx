@@ -1,0 +1,18 @@
+---
+title: 'Personal Website'
+date: '2025-07-29'
+slug: 'personal-website-30'
+lang: 'en'
+duration: '1min'
+tags: ['Career']
+---
+
+## Personal Website 3.0
+
+<div class="flex justify-center">
+<img src="/photography_assets/2.webp" alt="2.webp" class="photo-post">
+</div>
+
+Today I'm excited to share that I've successfully added a comment system to my blog! This marks a significant milestone as my website is no longer a static site - it now has a backend database powering it. While building this website, I also practiced backend project development and implemented features like WebSocket functionality. What seemed like simple features actually taught me a lot and gave me a deeper understanding of backend development.
+
+(Hint: WebSocket allows our comments to update in real-time without needing to refresh the page, just like Line's chat functionality)
