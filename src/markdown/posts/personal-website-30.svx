@@ -1,5 +1,5 @@
 ---
-title: 'Personal Website'
+title: 'Personal Website 3.0'
 date: '2025-07-29'
 slug: 'personal-website-30'
 lang: 'en'
