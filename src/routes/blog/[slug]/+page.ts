@@ -1,7 +1,6 @@
 import type { PageLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
-import { clientFirstLoadWithBackgroundSync } from '$lib/config.js';
 
 export const load: PageLoad = async ({ params }) => {
 	const { slug } = params;

@@ -4,6 +4,7 @@
 	import { config, fetchWithTimeout } from '$lib/config.js';
 	import CommentItem from './CommentItem.svelte';
 	import type { Comment } from '$lib/types/comment.js';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	interface Props {
 		postSlug: string;
@@ -194,7 +195,7 @@
 						const items: Comment[] = data.messages || [];
 
 						// Concatenate and de-duplicate by id
-						const merged = new Map<string, Comment>();
+						const merged = new SvelteMap<string, Comment>();
 						for (const c of comments) merged.set(c.id, c);
 						for (const c of items) merged.set(c.id, c);
 						comments = Array.from(merged.values());
@@ -433,7 +434,9 @@
 
 	{#if isLoading && comments.length === 0}
 		<div class="flex items-center justify-center py-8">
-			<div class="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+			<div
+				class="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"
+			></div>
 			<span class="ml-2 text-sm text-gray-600">Loading comments...</span>
 		</div>
 	{:else if error}
@@ -486,9 +489,7 @@
 					<div
 						class="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-blue-600"
 					></div>
-					<span class="ml-2 text-xs text-gray-600">
-						Loading comments...
-					</span>
+					<span class="ml-2 text-xs text-gray-600"> Loading comments... </span>
 				</div>
 			{:else if hasMore}
 				<button
