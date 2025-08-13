@@ -5,7 +5,7 @@ import { config, fetchWithTimeout, clientFirstLoadWithBackgroundSync } from '$li
 export const load: LayoutServerLoad = async (): Promise<{
 	posts: PostMetadata[];
 }> => {
-	// API 載入函數
+	// API Load Functions
 	const loadFromAPI = async (): Promise<PostMetadata[]> => {
 		const response = await fetchWithTimeout(`${config.API.BLOGS}/?limit=10000&published=true`);
 
