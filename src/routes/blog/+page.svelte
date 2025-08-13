@@ -87,23 +87,23 @@
 		if (!hasMorePosts || isLoadingMore) return;
 		isLoadingMore = true;
 		// Allow next frame to keep UI smooth
+		// Add a 300ms delay for smoother UX
+		// await new Promise(resolve => setTimeout(resolve, 300));
 		await Promise.resolve();
 		visibleCount = Math.min(visibleCount + PAGE_SIZE, filteredPosts.length);
 		isLoadingMore = false;
 	}
 
-	// IntersectionObserver to auto-load on scroll near the bottom
+	// IntersectionObserver to auto-load when sentinel is fully visible
 	$effect(() => {
-		if (!sentinelEl) return;
+		if (!hasMorePosts || !sentinelEl) return;
 		const observer = new IntersectionObserver(
 			(entries) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						void loadMorePosts();
-					}
+				if (entries.some((e) => e.isIntersecting)) {
+					void loadMorePosts();
 				}
 			},
-			{ root: null, rootMargin: '0px', threshold: 0.1 }
+			{ root: null, rootMargin: '0px', threshold: 1 }
 		);
 
 		observer.observe(sentinelEl);
@@ -319,7 +319,7 @@
 				{#each visiblePosts as post, index (post.slug)}
 					<li
 						class="mb-1 border-b border-l border-gray-300 pt-2 pl-2"
-						transition:slide={{ duration: 400, delay: index * 50 }}
+						transition:slide={{ duration: 400, delay: (index * 20) % 100 }}
 					>
 						<a href="/blog/{post.slug}" class="inline-block underline underline-offset-4">
 							<h2 class="prose prose-sm sm:prose-lg text-gray-700 hover:text-gray-900">
@@ -356,7 +356,9 @@
 				{/each}
 			</ul>
 			<!-- Infinite scroll sentinel and manual control -->
-			<div bind:this={sentinelEl} class="h-6"></div>
+			{#if hasMorePosts}
+				<div bind:this={sentinelEl} class="h-6"></div>
+			{/if}
 			<div class="mt-2 flex items-center justify-center">
 				{#if hasMorePosts}
 					<button

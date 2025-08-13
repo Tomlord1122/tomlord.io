@@ -29,7 +29,9 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-	console.log('Usage: node scripts/generate-random-posts.js [--count N] [--lang en|zh-tw] [--prefix TEXT] [--dry-run]');
+	console.log(
+		'Usage: node scripts/generate-random-posts.js [--count N] [--lang en|zh-tw] [--prefix TEXT] [--dry-run]'
+	);
 	console.log('Examples:');
 	console.log('  pnpm generate:posts -- --count 3');
 	console.log('  pnpm generate:posts -- --count 2 --lang zh-tw');
@@ -86,10 +88,10 @@ const chineseSubjects = ['開發工作流', '學習計畫', '日常生活', '網
 
 const englishParagraphs = [
 	"Today I sketched a tiny idea and iterated on it. It's surprising how much clarity you get by just writing things down.",
-	"I tried a different approach to structuring content. Keeping the draft short helped me keep momentum without overthinking.",
-	"Small, consistent steps compound over time. The trick is to make starting easy and stopping hard.",
-	"Tools matter less than habits, yet the right defaults make good habits lighter to carry.",
-	"Shipping something imperfect taught me more than waiting for the perfect moment ever did."
+	'I tried a different approach to structuring content. Keeping the draft short helped me keep momentum without overthinking.',
+	'Small, consistent steps compound over time. The trick is to make starting easy and stopping hard.',
+	'Tools matter less than habits, yet the right defaults make good habits lighter to carry.',
+	'Shipping something imperfect taught me more than waiting for the perfect moment ever did.'
 ];
 
 const chineseParagraphs = [
@@ -171,7 +173,10 @@ async function main() {
 		const slug = ensureUniqueSlug(baseSlug || `post-${Date.now()}`, postsDir);
 		const date = formatDate(new Date(Date.now() - randomInt(0, 365) * 24 * 60 * 60 * 1000));
 		const duration = choice(durations);
-		const chosenTags = Array.from(new Set([choice(tagPool), choice(tagPool)])).slice(0, randomInt(1, 2));
+		const chosenTags = Array.from(new Set([choice(tagPool), choice(tagPool)])).slice(
+			0,
+			randomInt(1, 2)
+		);
 		const showImage = lang === 'en' && Math.random() < 0.4;
 		const body = generateContent(lang, title, showImage);
 
@@ -199,5 +204,3 @@ main().catch((err) => {
 	console.error('Failed to generate posts:', err);
 	process.exit(1);
 });
-
-
