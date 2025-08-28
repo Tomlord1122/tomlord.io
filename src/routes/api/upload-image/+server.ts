@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		const { default: sharp } = await import('sharp');
 
-		const webpBuffer = await sharp(buffer).rotate().webp({ quality: 80 }).toBuffer();
+		const webpBuffer = await sharp(buffer).rotate().webp({ quality: 50 }).toBuffer();
 
 		await fs.writeFile(filePath, webpBuffer);
 

@@ -44,7 +44,7 @@
 				data-sveltekit-preload-data="hover"
 			>
 				<img
-					src="/app_icon.png"
+					src="/app_icon.webp"
 					alt="Tomlord"
 					class="h-12 w-12 rounded-2xl border-2 border-gray-300 sm:h-15 sm:w-15"
 				/>
