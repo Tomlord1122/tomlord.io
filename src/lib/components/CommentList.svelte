@@ -16,7 +16,7 @@
 	let comments = $state<Comment[]>([]);
 	let isLoading = $state(false);
 	let error = $state('');
-	let sortBy = $state<'time' | 'likes'>('time');
+	let sortBy = $state<'oldest' | 'newest' | 'likes'>('oldest');
 
 	// Pagination state
 	const LIMIT = 20;
@@ -67,7 +67,11 @@
 	// Reactive sorted comments
 	let sortedComments = $derived(() => {
 		const sorted = [...comments];
-		if (sortBy === 'time') {
+		if (sortBy === 'oldest') {
+			return sorted.sort(
+				(a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+			);
+		} else if (sortBy === 'newest') {
 			return sorted.sort(
 				(a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
 			);
@@ -375,7 +379,7 @@
 
 	function handleSortChange(event: Event) {
 		const target = event.target as HTMLSelectElement;
-		sortBy = target.value as 'time' | 'likes';
+		sortBy = target.value as 'oldest' | 'newest' | 'likes';
 	}
 
 	// Helper function to get connection status display
@@ -425,7 +429,8 @@
 					onchange={handleSortChange}
 					class="rounded-md border border-gray-300 bg-white py-1 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 				>
-					<option value="time">Newest</option>
+					<option value="oldest">Oldest</option>	
+					<option value="newest">Newest</option>
 					<option value="likes">Likes</option>
 				</select>
 			</div>
