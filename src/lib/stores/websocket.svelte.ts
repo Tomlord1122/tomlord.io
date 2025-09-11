@@ -94,18 +94,18 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Check auth state and backend health before connecting
+		// Check auth state and backend health before connecting - optimized for initial load
 		const authState = authStore.state;
 		if (authState.isAuthenticated) {
-			// Check backend health first, then connect if healthy
+			// Delay WebSocket connection to not block initial page load
 			setTimeout(async () => {
-				const isBackendHealthy = await checkBackendHealth();
+				const isBackendHealthy = await checkBackendHealth(true, true); // Allow immediate return
 				if (isBackendHealthy) {
 					this.connect();
 				} else {
 					console.log('🔴 Backend unhealthy, skipping WebSocket connection');
 				}
-			}, 100);
+			}, 500); // Increased delay to prioritize page rendering
 		}
 	}
 

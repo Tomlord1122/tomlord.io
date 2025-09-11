@@ -25,12 +25,12 @@ function createAuthStore() {
 		error: null
 	});
 
-	// Initialize from localStorage if browser
+	// Initialize from localStorage if browser - non-blocking
 	if (browser) {
 		const savedToken = localStorage.getItem('auth_token');
 		if (savedToken) {
-			// Use setTimeout to defer the async operation to avoid blocking
-			setTimeout(() => checkAuthStatus(), 0);
+			// Defer auth check to not block initial render
+			setTimeout(() => checkAuthStatus(), 100); // Increased delay for better UX
 		}
 	}
 

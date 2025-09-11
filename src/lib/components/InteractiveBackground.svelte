@@ -18,8 +18,8 @@
 		color: string;
 	}[] = [];
 
-	// Constants
-	const NUM_DOTS = 150;
+	// Constants - Optimized for performance
+	const NUM_DOTS = 100; // Reduced from 150 for better performance
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.6;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
@@ -168,11 +168,18 @@
 		ctx = null;
 	}
 
-	// Initialize when canvas is available
+	// Initialize when canvas is available - with delay for better initial load
 	$effect(() => {
 		if (browser && canvas) {
-			initializeCanvas();
-			return cleanup;
+			// Delay initialization to not block initial render
+			const timeoutId = setTimeout(() => {
+				initializeCanvas();
+			}, 200); // 200ms delay for better perceived performance
+			
+			return () => {
+				clearTimeout(timeoutId);
+				cleanup();
+			};
 		}
 	});
 </script>

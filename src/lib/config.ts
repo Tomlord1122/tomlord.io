@@ -56,9 +56,16 @@ export const config = {
 	}
 };
 
-// Fast backend health check
-export async function checkBackendHealth(useCache: boolean = true): Promise<boolean> {
+// Fast backend health check with immediate return for first load
+export async function checkBackendHealth(useCache: boolean = true, allowImmediate: boolean = false): Promise<boolean> {
 	const now = Date.now();
+
+	// For initial page load, assume healthy and check in background
+	if (allowImmediate && backendHealthCache.lastCheck === 0) {
+		// Start background check but don't wait
+		setTimeout(() => checkBackendHealth(false, false), 0);
+		return true; // Optimistic assumption for faster initial load
+	}
 
 	// Use cached result if recent and cache is enabled
 	if (
