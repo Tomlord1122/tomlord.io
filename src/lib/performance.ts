@@ -15,26 +15,24 @@ export class PerformanceOptimizer {
 	// Initialize performance optimizations
 	init() {
 		if (!browser || this.initialized) return;
-		
+
 		this.initialized = true;
-		
+
 		// Preload critical resources
 		this.preloadCriticalResources();
-		
+
 		// Setup performance monitoring
 		this.setupPerformanceMonitoring();
-		
+
 		// Optimize images loading
 		this.optimizeImageLoading();
 	}
 
 	private preloadCriticalResources() {
 		// Preload critical CSS and fonts
-		const criticalResources = [
-			{ href: '/app_icon.webp', as: 'image' },
-		];
+		const criticalResources = [{ href: '/app_icon.webp', as: 'image' }];
 
-		criticalResources.forEach(resource => {
+		criticalResources.forEach((resource) => {
 			const link = document.createElement('link');
 			link.rel = 'preload';
 			link.href = resource.href;
@@ -55,7 +53,7 @@ export class PerformanceOptimizer {
 		// Implement lazy loading for images
 		if ('IntersectionObserver' in window) {
 			const imageObserver = new IntersectionObserver((entries) => {
-				entries.forEach(entry => {
+				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
 						const img = entry.target as HTMLImageElement;
 						if (img.dataset.src) {
@@ -68,7 +66,7 @@ export class PerformanceOptimizer {
 			});
 
 			// Observe all images with data-src
-			document.querySelectorAll('img[data-src]').forEach(img => {
+			document.querySelectorAll('img[data-src]').forEach((img) => {
 				imageObserver.observe(img);
 			});
 		}
@@ -96,7 +94,7 @@ export class PerformanceOptimizer {
 			if (!inThrottle) {
 				func.apply(this, args);
 				inThrottle = true;
-				setTimeout(() => inThrottle = false, limit);
+				setTimeout(() => (inThrottle = false), limit);
 			}
 		};
 	}

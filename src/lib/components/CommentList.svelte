@@ -429,7 +429,7 @@
 					onchange={handleSortChange}
 					class="rounded-md border border-gray-300 bg-white py-1 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
 				>
-					<option value="oldest">Oldest</option>	
+					<option value="oldest">Oldest</option>
 					<option value="newest">Newest</option>
 					<option value="likes">Likes</option>
 				</select>

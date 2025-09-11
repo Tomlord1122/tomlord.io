@@ -5,7 +5,7 @@
 	let mouse = { x: 0, y: 0 };
 
 	// Track if we're on mobile
-	let isMobile = false;
+	let isMobileOrSafari = false;
 
 	// Star data (non-reactive)
 	let dots: {
@@ -18,38 +18,39 @@
 		color: string;
 	}[] = [];
 
-	// Constants - Optimized for performance with Safari compatibility
-	const NUM_DOTS = 50; // Reduced from 150 for better performance
+	const NUM_DOTS = 100;
 	const GLOW_RADIUS = 100;
-	const MAX_GLOW = 0.4; // Reduced for Safari compatibility
-	// Updated colors with better cross-browser compatibility
-	const STAR_COLORS = ['rgba(215, 169, 215, 0.8)', 'rgba(80, 80, 80, 0.6)']; // Lighter gray for Safari
+	const MAX_GLOW = 0.4;
+	const STAR_COLORS = ['rgba(215, 169, 215, 0.8)', 'rgba(80, 80, 80, 0.6)'];
 	const MOUSE_PULL_FACTOR = 0.55;
 	const EASING_FACTOR = 0.2;
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D | null = null;
 	let animationFrameId: number | null = null;
-	
-	// Browser detection for Safari-specific optimizations
-	let isSafari = false;
 
-	// Check if device is mobile and detect Safari
 	function checkMobile() {
 		if (!browser) return false;
 
-		isMobile = window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-		
-		// Detect Safari for browser-specific optimizations
-		isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		const isSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
 
-		return isMobile;
+		if (isSafari) {
+			console.log('🦁 Safari detected - InteractiveBackground disabled');
+			isMobileOrSafari = true;
+		} else {
+			isMobileOrSafari =
+				window.innerWidth < 768 ||
+				'ontouchstart' in window ||
+				navigator.maxTouchPoints > 0;
+		}
+
+		return isMobileOrSafari;
 	}
 
 	// Initialize stars
 	function initializeDots() {
 		const newDots = [];
-		const dotCount = isMobile ? 0 : NUM_DOTS;
+		const dotCount = isMobileOrSafari ? 0 : NUM_DOTS;
 
 		for (let i = 0; i < dotCount; i++) {
 			const x = Math.random() * window.innerWidth;
@@ -69,7 +70,7 @@
 
 	// Handle pointer movement
 	function handlePointerMove(event: PointerEvent) {
-		if (isMobile) return;
+		if (isMobileOrSafari) return;
 
 		mouse.x = event.clientX;
 		mouse.y = event.clientY;
@@ -131,24 +132,14 @@
 			if (ctx) {
 				ctx.beginPath();
 				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
-				
-				// Safari-specific rendering adjustments
-				if (isSafari) {
-					// Use more conservative settings for Safari
-					ctx.fillStyle = newDot.color;
-					ctx.globalAlpha = 0.08 + glowIntensity * 0.25; // Much lighter for Safari
-					ctx.shadowBlur = 2 + glowIntensity * 8; // Reduced shadow for Safari
-					ctx.shadowColor = newDot.color;
-				} else {
-					// Chrome/Firefox optimized settings
-					ctx.fillStyle = newDot.color;
-					ctx.globalAlpha = 0.12 + glowIntensity * 0.35;
-					ctx.shadowBlur = 3 + glowIntensity * 12;
-					ctx.shadowColor = newDot.color;
-				}
-				
+
+				ctx.fillStyle = newDot.color;
+				ctx.globalAlpha = 0.12 + glowIntensity * 0.35;
+				ctx.shadowBlur = 3 + glowIntensity * 12;
+				ctx.shadowColor = newDot.color;
+
 				ctx.fill();
-				
+
 				// Reset context state
 				ctx.globalAlpha = 1;
 				ctx.shadowBlur = 0;
@@ -165,30 +156,22 @@
 		if (!canvas) return;
 
 		checkMobile();
-		
-		// Get 2D context with Safari-optimized settings
+
 		ctx = canvas.getContext('2d', {
 			alpha: true,
 			colorSpace: 'srgb', // Ensure consistent color space
-			desynchronized: false // Better for Safari
+			desynchronized: false
 		});
-		
+
 		if (!ctx) return;
-		
+
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
-		
-		// Safari-specific canvas optimizations
-		if (isSafari) {
-			// Force sRGB color space for Safari
-			ctx.imageSmoothingEnabled = true;
-			ctx.imageSmoothingQuality = 'medium';
-		}
 
 		initializeDots();
 
 		// Start animation loop only if not mobile
-		if (!isMobile) {
+		if (!isMobileOrSafari) {
 			if (animationFrameId) {
 				cancelAnimationFrame(animationFrameId);
 			}
@@ -212,7 +195,7 @@
 			const timeoutId = setTimeout(() => {
 				initializeCanvas();
 			}, 200); // 200ms delay for better perceived performance
-			
+
 			return () => {
 				clearTimeout(timeoutId);
 				cleanup();
