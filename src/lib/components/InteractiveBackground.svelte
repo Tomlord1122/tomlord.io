@@ -19,7 +19,7 @@
 	}[] = [];
 
 	// Constants - Optimized for performance
-	const NUM_DOTS = 100; // Reduced from 150 for better performance
+	const NUM_DOTS = 50; // Reduced from 150 for better performance
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.6;
 	const STAR_COLORS = ['#D7A9D7', '#323232'];
