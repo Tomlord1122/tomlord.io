@@ -18,23 +18,30 @@
 		color: string;
 	}[] = [];
 
-	// Constants - Optimized for performance
+	// Constants - Optimized for performance with Safari compatibility
 	const NUM_DOTS = 50; // Reduced from 150 for better performance
 	const GLOW_RADIUS = 100;
-	const MAX_GLOW = 0.6;
-	const STAR_COLORS = ['#D7A9D7', '#323232'];
+	const MAX_GLOW = 0.4; // Reduced for Safari compatibility
+	// Updated colors with better cross-browser compatibility
+	const STAR_COLORS = ['rgba(215, 169, 215, 0.8)', 'rgba(80, 80, 80, 0.6)']; // Lighter gray for Safari
 	const MOUSE_PULL_FACTOR = 0.55;
 	const EASING_FACTOR = 0.2;
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D | null = null;
 	let animationFrameId: number | null = null;
+	
+	// Browser detection for Safari-specific optimizations
+	let isSafari = false;
 
-	// Check if device is mobile
+	// Check if device is mobile and detect Safari
 	function checkMobile() {
 		if (!browser) return false;
 
 		isMobile = window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		
+		// Detect Safari for browser-specific optimizations
+		isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 		return isMobile;
 	}
@@ -119,16 +126,30 @@
 			newDot.x = lerp(newDot.x, targetX, EASING_FACTOR);
 			newDot.y = lerp(newDot.y, targetY, EASING_FACTOR);
 
-			// Draw star with glow effect
+			// Draw star with glow effect - Safari optimized
 			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
 			if (ctx) {
 				ctx.beginPath();
 				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
-				ctx.fillStyle = newDot.color;
-				ctx.globalAlpha = 0.15 + glowIntensity * 0.5;
-				ctx.shadowBlur = 3 + glowIntensity * 15;
-				ctx.shadowColor = newDot.color;
+				
+				// Safari-specific rendering adjustments
+				if (isSafari) {
+					// Use more conservative settings for Safari
+					ctx.fillStyle = newDot.color;
+					ctx.globalAlpha = 0.08 + glowIntensity * 0.25; // Much lighter for Safari
+					ctx.shadowBlur = 2 + glowIntensity * 8; // Reduced shadow for Safari
+					ctx.shadowColor = newDot.color;
+				} else {
+					// Chrome/Firefox optimized settings
+					ctx.fillStyle = newDot.color;
+					ctx.globalAlpha = 0.12 + glowIntensity * 0.35;
+					ctx.shadowBlur = 3 + glowIntensity * 12;
+					ctx.shadowColor = newDot.color;
+				}
+				
 				ctx.fill();
+				
+				// Reset context state
 				ctx.globalAlpha = 1;
 				ctx.shadowBlur = 0;
 			}
@@ -144,9 +165,25 @@
 		if (!canvas) return;
 
 		checkMobile();
-		ctx = canvas.getContext('2d');
+		
+		// Get 2D context with Safari-optimized settings
+		ctx = canvas.getContext('2d', {
+			alpha: true,
+			colorSpace: 'srgb', // Ensure consistent color space
+			desynchronized: false // Better for Safari
+		});
+		
+		if (!ctx) return;
+		
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
+		
+		// Safari-specific canvas optimizations
+		if (isSafari) {
+			// Force sRGB color space for Safari
+			ctx.imageSmoothingEnabled = true;
+			ctx.imageSmoothingQuality = 'medium';
+		}
 
 		initializeDots();
 
@@ -198,5 +235,8 @@
 		background-color: rgba(0, 0, 0, 0.01);
 		pointer-events: none;
 		z-index: 0;
+		/* Ensure consistent rendering across browsers */
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
 	}
 </style>
