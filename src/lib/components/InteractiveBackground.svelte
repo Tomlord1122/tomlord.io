@@ -18,10 +18,10 @@
 		color: string;
 	}[] = [];
 
-	const NUM_DOTS = 100;
+	const NUM_DOTS = 150;
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.4;
-	const STAR_COLORS = ['rgba(215, 169, 215, 0.8)', 'rgba(80, 80, 80, 0.6)'];
+	const STAR_COLORS = ['rgb(215, 169, 215)', 'rgb(80, 80, 80)'];
 	const MOUSE_PULL_FACTOR = 0.55;
 	const EASING_FACTOR = 0.2;
 
