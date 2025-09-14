@@ -2,17 +2,18 @@
 	import '../app.css';
 	import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
 	import Navigation from '$lib/components/Navigation.svelte';
-	import { injectAnalytics } from '@vercel/analytics/sveltekit';
-	import { dev, browser } from '$app/environment';
-	import { performanceOptimizer } from '$lib/performance.js';
+	import { browser } from '$app/environment';
+	import { config } from '$lib/config.js';
 
 	let { children } = $props();
-	injectAnalytics({ mode: dev ? 'development' : 'production' });
 
-	// Initialize performance optimizations
+	// Initialize performance optimizations only in development
 	$effect(() => {
-		if (browser) {
-			performanceOptimizer.init();
+		if (browser && config.isDevelopment) {
+			// Lazy load performance optimizer only in development
+			import('$lib/performance.js').then(({ performanceOptimizer }) => {
+				performanceOptimizer.init();
+			});
 		}
 	});
 </script>

@@ -15,12 +15,19 @@
 	let pageContent = $derived(data.pageContent);
 
 	function handlePageSaved() {
-		console.log('Home page content saved successfully.');
-		window.location.reload();
+		if (isDev) {
+			console.log('Home page content saved successfully.');
+		}
+		// Instead of full page reload, use SvelteKit's invalidateAll
+		import('$app/navigation').then(({ invalidateAll }) => {
+			invalidateAll();
+		});
 	}
 
 	function handleEditCancel() {
-		console.log('Edit cancelled.');
+		if (isDev) {
+			console.log('Edit cancelled.');
+		}
 	}
 
 	function openEditModal() {

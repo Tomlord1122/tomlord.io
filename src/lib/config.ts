@@ -96,15 +96,21 @@ export async function checkBackendHealth(
 		backendHealthCache.isHealthy = response.ok;
 		backendHealthCache.lastCheck = now;
 
-		if (backendHealthCache.isHealthy) {
-			console.log('🟢 Backend is healthy');
-		} else {
-			console.warn('🟡 Backend responded but not healthy');
+		// Only log in development
+		if (config.isDevelopment) {
+			if (backendHealthCache.isHealthy) {
+				console.log('🟢 Backend is healthy');
+			} else {
+				console.warn('🟡 Backend responded but not healthy');
+			}
 		}
 
 		return backendHealthCache.isHealthy;
 	} catch (error) {
-		console.warn('🔴 Backend health check failed, using local files:', error);
+		// Only log in development
+		if (config.isDevelopment) {
+			console.warn('🔴 Backend health check failed, using local files:', error);
+		}
 		backendHealthCache.isHealthy = false;
 		backendHealthCache.lastCheck = now;
 		return false;
@@ -123,7 +129,9 @@ export async function smartLoadWithFallback<T>(
 	const isBackendHealthy = await checkBackendHealth(!forceHealthCheck);
 
 	if (!isBackendHealthy) {
-		console.log('📁 Backend unhealthy, loading directly from local files');
+		if (config.isDevelopment) {
+			console.log('📁 Backend unhealthy, loading directly from local files');
+		}
 		const data = await fallbackCall();
 		return { data, source: 'local' };
 	}
@@ -136,10 +144,14 @@ export async function smartLoadWithFallback<T>(
 				setTimeout(() => reject(new Error('API call timeout')), config.FETCH_TIMEOUT)
 			)
 		]);
-		console.log('✅ Loaded from API');
+		if (config.isDevelopment) {
+			console.log('✅ Loaded from API');
+		}
 		return { data, source: 'api' };
 	} catch (error) {
-		console.warn('API call failed, falling back to local files:', error);
+		if (config.isDevelopment) {
+			console.warn('API call failed, falling back to local files:', error);
+		}
 		// Mark backend as unhealthy for future requests
 		backendHealthCache.isHealthy = false;
 		backendHealthCache.lastCheck = Date.now();
@@ -187,7 +199,9 @@ export async function fetchWithFallback<T>(
 		const result = await Promise.race([apiCall(), timeoutPromise]);
 		return result;
 	} catch (error) {
-		console.warn('API call failed or timed out, using fallback:', error);
+		if (config.isDevelopment) {
+			console.warn('API call failed or timed out, using fallback:', error);
+		}
 		return await fallbackCall();
 	}
 }
@@ -201,7 +215,9 @@ export async function clientFirstLoadWithBackgroundSync<T>(
 	// 立即載入本地資料
 	try {
 		const localData = await localCall();
-		console.log('⚡ Local data loaded immediately');
+		if (config.isDevelopment) {
+			console.log('⚡ Local data loaded immediately');
+		}
 
 		// 背景中同步 API 資料（不阻塞主要載入）
 		Promise.resolve().then(async () => {
@@ -216,19 +232,25 @@ export async function clientFirstLoadWithBackgroundSync<T>(
 
 				// 如果有新資料且有回調函數，則更新
 				if (onBackgroundSync && JSON.stringify(apiData) !== JSON.stringify(localData)) {
-					console.log('🔄 Background sync completed with new data');
+					if (config.isDevelopment) {
+						console.log('🔄 Background sync completed with new data');
+					}
 					onBackgroundSync(apiData as T);
-				} else {
+				} else if (config.isDevelopment) {
 					console.log('✅ Background sync completed - data is already up to date');
 				}
 			} catch (error) {
-				console.log('🔇 Background sync failed (silent, cold start expected):', error);
+				if (config.isDevelopment) {
+					console.log('🔇 Background sync failed (silent, cold start expected):', error);
+				}
 			}
 		});
 
 		return { data: localData, source: 'local' };
 	} catch (localError) {
-		console.warn('❌ Local loading failed, falling back to API:', localError);
+		if (config.isDevelopment) {
+			console.warn('❌ Local loading failed, falling back to API:', localError);
+		}
 		// 如果本地載入失敗，還是要等 API
 		const apiData = (await (apiCall ? apiCall() : Promise.resolve(null))) as T;
 		return { data: apiData, source: 'api' };
@@ -242,11 +264,17 @@ export async function preWarmBackend(): Promise<void> {
 	// 延遲預熱，不影響初始載入
 	setTimeout(async () => {
 		try {
-			console.log('🔥 Pre-warming backend...');
+			if (config.isDevelopment) {
+				console.log('🔥 Pre-warming backend...');
+			}
 			await fetchWithTimeout(config.API.HEALTH, { method: 'GET' }, 5000);
-			console.log('✅ Backend pre-warmed successfully');
+			if (config.isDevelopment) {
+				console.log('✅ Backend pre-warmed successfully');
+			}
 		} catch {
-			console.log('🔇 Backend pre-warm failed (expected for cold start)');
+			if (config.isDevelopment) {
+				console.log('🔇 Backend pre-warm failed (expected for cold start)');
+			}
 		}
 	}, 2000); // 2秒後開始預熱
 }

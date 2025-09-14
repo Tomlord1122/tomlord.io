@@ -45,7 +45,10 @@ export class PerformanceOptimizer {
 		// Monitor Core Web Vitals
 		if ('web-vital' in window) {
 			// This would integrate with web-vitals library if needed
-			console.log('Performance monitoring initialized');
+			// Only log in development
+			if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+				console.log('Performance monitoring initialized');
+			}
 		}
 	}
 

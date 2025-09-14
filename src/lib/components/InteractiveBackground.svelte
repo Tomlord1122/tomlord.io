@@ -18,7 +18,7 @@
 		color: string;
 	}[] = [];
 
-	const NUM_DOTS = 150;
+	const NUM_DOTS = 100;
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.4;
 	const STAR_COLORS = ['rgb(215, 169, 215)', 'rgb(80, 80, 80)'];
@@ -35,7 +35,10 @@
 		const isSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent);
 
 		if (isSafari) {
-			console.log('🦁 Safari detected - InteractiveBackground disabled');
+			// Only log in development
+			if (window.location.hostname === 'localhost') {
+				console.log('🦁 Safari detected - InteractiveBackground disabled');
+			}
 			isMobileOrSafari = true;
 		} else {
 			isMobileOrSafari =
@@ -188,13 +191,13 @@
 		ctx = null;
 	}
 
-	// Initialize when canvas is available - with delay for better initial load
+	// Initialize when canvas is available - with longer delay for better initial load
 	$effect(() => {
 		if (browser && canvas) {
-			// Delay initialization to not block initial render
+			// Longer delay to ensure page content loads first
 			const timeoutId = setTimeout(() => {
 				initializeCanvas();
-			}, 200); // 200ms delay for better perceived performance
+			}, 1000); // 1 second delay for better perceived performance
 
 			return () => {
 				clearTimeout(timeoutId);

@@ -20,6 +20,16 @@ export default defineConfig({
 	ssr: {
 		external: ['sharp']
 	},
+	build: {
+		minify: 'esbuild',
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					vendor: ['svelte'],
+				}
+			}
+		}
+	},
 	test: {
 		workspace: [
 			{
