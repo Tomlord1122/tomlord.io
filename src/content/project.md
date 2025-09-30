@@ -1,6 +1,6 @@
 - **[go-symphony](https://github.com/Tomlord1122/go-symphony)**: A modern CLI tool for generating Go projects that combines the **Gin** framework, PostgreSQL database, and **SQLC** for type-safe queries to build efficient API services. With built-in **Supabase integration** and support for **SvelteKit** or **Next.js** frontend scaffolding.
 
-- **[go-note](https://github.com/Tomlord1122/go-note)**: A note-taking app that integrated langchain-go with Retrieval-Augmented Generation (RAG) to build an AI-powered note review system. ([link](https://go-note-frontend.vercel.app/))
+- **[go-note](https://github.com/Tomlord1122/go-note)**: A note-taking app that integrated langchain-go with Retrieval-Augmented Generation (RAG) to build an AI-powered note review system.
 
 - **[tomlord.io](https://github.com/Tomlord1122/tomlord.io)**: My personal website frontend which is written in SvelteKit, featuring routing and SvelteKit data fetching mechanisms.([link](https://tomlord.fyi/))
 
