@@ -4,7 +4,9 @@
 	import Navigation from '$lib/components/Navigation.svelte';
 	import { browser } from '$app/environment';
 	import { config } from '$lib/config.js';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 
+	injectAnalytics();
 	let { children } = $props();
 
 	// Initialize performance optimizations only in development
