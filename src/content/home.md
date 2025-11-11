@@ -38,6 +38,7 @@ This website contains some of my blog posts about my learning journey and topics
 
 > ### Experience
 
+- Trend Micro Software Engineer _(Oct 2025 - Present)_
 - HP Software Engineering Intern _(Jul 2024 - Jul 2025)_
 - MediaTek System Research Assistant _(Jan 2024 - Jul 2025)_
 
