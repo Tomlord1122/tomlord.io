@@ -1,16 +1,16 @@
-import type { PageLoad } from './$types.js';
+import type { PageServerLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params }) => {
 	const { slug } = params;
 
 	try {
 		const response = await fetchWithTimeout(
 			`${config.API.BLOGS}/${slug}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
-			5000 // 5 second timeout
+			10000 // 10 second timeout for server-side
 		);
 
 		if (!response.ok) {

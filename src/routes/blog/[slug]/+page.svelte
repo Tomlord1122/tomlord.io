@@ -12,7 +12,14 @@
 
 	let { data } = $props();
 
-	const { title, date, tags, content, duration, slug } = data.post;
+	// Use $derived to reactively get post data
+	let post = $derived(data.post);
+	let title = $derived(post.title);
+	let date = $derived(post.date);
+	let tags = $derived(post.tags);
+	let content = $derived(post.content);
+	let duration = $derived(post.duration);
+	let slug = $derived(post.slug);
 
 	// Convert markdown content to HTML
 	let contentHtml = $state('');

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { fade, fly, slide } from 'svelte/transition';
-	import { SvelteSet } from 'svelte/reactivity';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
+
+	// Use $derived for reactive access to data.posts
+	let posts = $derived(data.posts);
 
 	let selectedTags = $state<string[]>([]);
 	let showCreatePostModal = $state(false);
@@ -15,17 +17,27 @@
 	let searchKeyword = $state<string>('');
 	let tagSearchKeyword = $state<string>('');
 
-	let initialTags = [...new Set(data.posts.flatMap((post) => post.tags || []))].sort();
-	let allTags = $state(initialTags);
+	// Derive base tags from posts
+	let baseTags = $derived(
+		[...new Set(posts.flatMap((post) => post.tags || []))].sort()
+	);
 
+	// Mutable state for all tags (used by modal to add new tags)
+	let allTags = $state<string[]>([]);
+
+	// Sync allTags with baseTags when posts change
 	$effect(() => {
-		const tagsFromCurrentPosts = [...new SvelteSet(data.posts.flatMap((post) => post.tags || []))];
-		const combinedTagsSet = new SvelteSet(tagsFromCurrentPosts);
-		allTags.forEach((tag) => combinedTagsSet.add(tag));
-		const mergedSortedTags = Array.from(combinedTagsSet).sort();
+		// Merge baseTags into allTags, keeping any additional tags added by modal
+		const merged = [...new Set([...baseTags, ...allTags])].sort();
+		if (JSON.stringify(merged) !== JSON.stringify(allTags)) {
+			allTags = merged;
+		}
+	});
 
-		if (JSON.stringify(allTags) !== JSON.stringify(mergedSortedTags)) {
-			allTags = mergedSortedTags;
+	// Initialize allTags on first render
+	$effect(() => {
+		if (allTags.length === 0 && baseTags.length > 0) {
+			allTags = [...baseTags];
 		}
 	});
 
@@ -49,7 +61,7 @@
 	);
 
 	let filteredPosts = $derived(
-		data.posts.filter((post) => {
+		posts.filter((post) => {
 			const languageMatch = language === 'en' ? post.lang === 'en' : true;
 			const tagMatch =
 				selectedTags.length === 0 || selectedTags.every((tag) => post.tags?.includes(tag));
@@ -105,33 +117,21 @@
 
 	// Called when a post is successfully created in the modal
 	function handlePostCreationSuccess() {
-		console.log('Post created successfully. New tags (if any) are already in allTags.');
-		// 'allTags' would have been updated by the modal via bind:allCurrentTags.
-		// The $effect above will ensure 'allTags' stays consistent when data.posts updates.
-		// We ensure the modal is closed (though bind:show should handle this too).
+		console.log('Post created successfully.');
 		showCreatePostModal = false;
+		// Reload to get updated data from server
+		window.location.reload();
 	}
 
 	// Called when the modal is closed without creating a post
 	function handlePostCreationCancel() {
-		console.log('Modal cancelled. Reverting any temporarily added tags from allTags.');
-		// Reset 'allTags' to only those tags that actually exist in 'data.posts'.
-		// This removes any tags that were added in the modal session but not saved with a post.
-		const tagsExclusivelyFromPosts = [
-			...new Set(data.posts.flatMap((post) => post.tags || []))
-		].sort();
-		allTags = tagsExclusivelyFromPosts;
-		// We ensure the modal is closed.
+		console.log('Modal cancelled. Resetting tags to base tags.');
+		// Reset allTags to only base tags (remove any temporarily added tags)
+		allTags = [...baseTags];
 		showCreatePostModal = false;
 	}
 
 	function openCreatePostModal() {
-		// When opening the modal, ensure allTags is up-to-date with the latest from posts,
-		// in case it was modified by a previous cancellation.
-		const currentTagsFromData = [...new Set(data.posts.flatMap((post) => post.tags || []))].sort();
-		if (JSON.stringify(allTags) !== JSON.stringify(currentTagsFromData)) {
-			allTags = currentTagsFromData;
-		}
 		showCreatePostModal = true;
 	}
 
