@@ -123,7 +123,6 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ${content}`;
 
 		try {
-			// Try backend API first
 			await updateBlog(
 				postData.slug,
 				{
@@ -140,40 +139,11 @@ ${content}`;
 			);
 
 			alert('Post updated successfully!');
-			onSaved(); // Call the onSaved callback
+			onSaved();
 			show = false;
-		} catch (apiError) {
-			console.warn('Backend API update failed, trying local endpoint:', apiError);
-
-			// Fallback to local file endpoint
-			try {
-				const response = await fetch('/api/edit-post', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						originalSlug: postData.slug,
-						newSlug: finalSlug,
-						content: fullContent
-					})
-				});
-
-				if (response.ok) {
-					alert('Post updated successfully (local file)!');
-					onSaved();
-					show = false;
-				} else {
-					const errorData = await response
-						.json()
-						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
-					console.error('Server error response:', response.status, errorData);
-					alert(`Failed to update post: ${errorData.message || response.statusText}`);
-				}
-			} catch (localError) {
-				console.error('Error updating post (network or client-side issue):', localError);
-				alert('An error occurred while updating the post.');
-			}
+		} catch (error) {
+			console.error('Error updating post:', error);
+			alert(`Failed to update post: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
 	}
 

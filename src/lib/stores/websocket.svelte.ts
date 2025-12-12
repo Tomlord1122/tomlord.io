@@ -1,6 +1,6 @@
 import { authStore } from './auth.svelte';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
-import { config, checkBackendHealth } from '$lib/config.js';
+import { config } from '$lib/config.js';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -94,31 +94,18 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Check auth state and backend health before connecting - optimized for initial load
+		// Check auth state before connecting - optimized for initial load
 		const authState = authStore.state;
 		if (authState.isAuthenticated) {
 			// Delay WebSocket connection to not block initial page load
-			setTimeout(async () => {
-				const isBackendHealthy = await checkBackendHealth(true, true); // Allow immediate return
-				if (isBackendHealthy) {
-					this.connect();
-				} else {
-					console.log('🔴 Backend unhealthy, skipping WebSocket connection');
-				}
+			setTimeout(() => {
+				this.connect();
 			}, 500); // Increased delay to prioritize page rendering
 		}
 	}
 
 	// Connect to WebSocket with improved error handling
-	async connect(rooms: string[] = []) {
-		// Check backend health before attempting connection
-		const isBackendHealthy = await checkBackendHealth();
-		if (!isBackendHealthy) {
-			console.log('🔴 Backend unhealthy, skipping WebSocket connection');
-			this.connectionState = ConnectionState.FAILED;
-			return;
-		}
-
+	connect(rooms: string[] = []) {
 		// Prevent multiple simultaneous connection attempts
 		if (
 			this.connectionState === ConnectionState.CONNECTING ||

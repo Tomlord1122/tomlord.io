@@ -98,7 +98,6 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ${content}`;
 
 		try {
-			// Try backend API first
 			await createBlog(
 				{
 					title,
@@ -123,43 +122,9 @@ ${content}`;
 			postTags = [];
 			newTagInput = '';
 			closeModal();
-		} catch (apiError) {
-			console.warn('Backend API create failed, trying local endpoint:', apiError);
-
-			// Fallback to local file endpoint
-			try {
-				const response = await fetch('/api/add-post', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						filename: `${finalSlug}.svx`,
-						content: fullContent
-					})
-				});
-
-				if (response.ok) {
-					alert('Post created successfully (local file)!');
-					onSaved();
-					// Reset form and close modal
-					title = '';
-					slug = '';
-					content = '';
-					postTags = [];
-					newTagInput = '';
-					closeModal();
-				} else {
-					const errorData = await response
-						.json()
-						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
-					console.error('Server error response:', response.status, errorData);
-					alert(`Failed to create post: ${errorData.message || response.statusText}`);
-				}
-			} catch (localError) {
-				console.error('Error creating post (network or client-side issue):', localError);
-				alert('An error occurred while creating the post.');
-			}
+		} catch (error) {
+			console.error('Error creating post:', error);
+			alert(`Failed to create post: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
 	}
 

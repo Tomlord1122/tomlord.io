@@ -1,41 +1,51 @@
 import type { PageLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
+import { config, fetchWithTimeout } from '$lib/config.js';
 
 export const load: PageLoad = async ({ params }) => {
 	const { slug } = params;
 
-	const loadFromLocal = async () => {
-		const postModule = await import(`../../../markdown/posts/${slug}.svx`);
+	try {
+		const response = await fetchWithTimeout(
+			`${config.API.BLOGS}/${slug}`,
+			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
+			5000 // 5 second timeout
+		);
 
-		if (!postModule || !postModule.metadata) {
-			throw new Error('Post metadata is missing');
+		if (!response.ok) {
+			if (response.status === 404) {
+				error(404, 'Post not found');
+			}
+			throw new Error(`API error: ${response.status}`);
 		}
 
-		const metadata = postModule.metadata as Omit<Post, 'content' | 'slug'>;
+		const data = await response.json();
+		const blog = data.blog;
+
+		// Extract content from the markdown (remove frontmatter if present)
+		let content = blog.content || '';
+		const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+		if (frontmatterMatch) {
+			content = frontmatterMatch[1].trim();
+		}
+
+		const post: Post = {
+			title: blog.title,
+			date: blog.date,
+			tags: blog.tags || [],
+			content: content,
+			slug: blog.slug,
+			duration: blog.duration || '5min',
+			lang: blog.lang || 'en',
+			description: blog.description || ''
+		};
 
 		return {
-			title: metadata.title,
-			date: metadata.date,
-			tags: metadata.tags || [],
-			content: postModule.default,
-			slug: slug,
-			duration: metadata.duration || '5min',
-			lang: metadata.lang || 'en',
-			description: metadata.description || ''
+			post
 		};
-	};
-
-	let post: Post;
-
-	try {
-		post = await loadFromLocal();
-	} catch (apiAndLocalError) {
-		console.error('Failed to load blog post from local files:', apiAndLocalError);
+	} catch (err) {
+		console.error('Failed to load blog post:', err);
 		error(404, 'Post does not exist or cannot be loaded');
 	}
-
-	return {
-		post
-	};
 };

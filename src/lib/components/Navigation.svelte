@@ -90,7 +90,7 @@
 				{#if auth.isAuthenticated}
 					<button
 						onclick={handleSignOut}
-						class="nav-link flex items-center gap-1.5 text-gray-600 hover:text-gray-900"
+						class="nav-link flex items-center gap-1.5 text-gray-600 hover:text-gray-900 cursor-pointer"
 						title="Sign out"
 					>
 						{#if auth.user?.picture_url}
@@ -105,7 +105,7 @@
 				{:else}
 					<button
 						onclick={handleSignIn}
-						class="nav-link text-gray-600 hover:text-gray-900"
+						class="nav-link text-gray-600 hover:text-gray-900 cursor-pointer"
 						title="Sign in with Google"
 					>
 						Sign in

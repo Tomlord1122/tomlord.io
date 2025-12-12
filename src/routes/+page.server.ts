@@ -1,5 +1,4 @@
 import type { PageServerLoad } from './$types.js';
-import homeContent from '../content/home.md?raw';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
 function getDefaultHomeContent() {
@@ -50,7 +49,7 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 		const response = await fetchWithTimeout(
 			`${config.API.PAGES}/${name}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
-			3000 // 3 second timeout for server-side
+			5000 // 5 second timeout
 		);
 		if (response.ok) {
 			const data = await response.json();
@@ -64,14 +63,13 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 
 export const load: PageServerLoad = async () => {
 	try {
-		// Try API first, fallback to local content
 		const apiContent = await fetchPageFromAPI('home');
 		if (apiContent) {
 			return { pageContent: apiContent };
 		}
-		// Fallback to local file
+		// Fallback to default content if API fails
 		return {
-			pageContent: homeContent || getDefaultHomeContent()
+			pageContent: getDefaultHomeContent()
 		};
 	} catch (error) {
 		console.error('Error loading home page content:', error);

@@ -1,5 +1,4 @@
 import type { PageServerLoad } from './$types.js';
-import projectContent from '../../content/project.md?raw';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
 function getDefaultProjectContent() {
@@ -11,7 +10,7 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 		const response = await fetchWithTimeout(
 			`${config.API.PAGES}/${name}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
-			3000 // 3 second timeout for server-side
+			5000 // 5 second timeout
 		);
 		if (response.ok) {
 			const data = await response.json();
@@ -25,14 +24,13 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 
 export const load: PageServerLoad = async () => {
 	try {
-		// Try API first, fallback to local content
 		const apiContent = await fetchPageFromAPI('project');
 		if (apiContent) {
 			return { pageContent: apiContent };
 		}
-		// Fallback to local file
+		// Fallback to default content if API fails
 		return {
-			pageContent: projectContent || getDefaultProjectContent()
+			pageContent: getDefaultProjectContent()
 		};
 	} catch (error) {
 		console.error('Error loading project page content:', error);

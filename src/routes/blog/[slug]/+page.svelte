@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
+	import { marked } from 'marked';
 	import EditPostModal from '$lib/components/EditPostModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
@@ -8,12 +9,22 @@
 	import type { PostData } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
-	// export let data; // 從 load 函數接收資料 (data.post)
-	let { data } = $props(); // Using $props() instead of export let data
+
+	let { data } = $props();
 
 	const { title, date, tags, content, duration, slug } = data.post;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const Component = $derived(content as any); // use any to avoid type error
+
+	// Convert markdown content to HTML
+	let contentHtml = $state('');
+
+	$effect(() => {
+		if (content) {
+			const result = marked(content);
+			Promise.resolve(result).then((html) => {
+				contentHtml = html;
+			});
+		}
+	});
 
 	// Check if user can edit (super user only)
 	let canEdit = $derived(isSuperUser(auth.user));
@@ -32,44 +43,21 @@
 	// Load post data for editing
 	async function loadPostForEditing() {
 		try {
-			// Try loading from API first, fallback to local endpoint
 			const { fetchBlogBySlug } = await import('$lib/api/blogs.js');
-			try {
-				const blog = await fetchBlogBySlug(slug);
-				postData = {
-					id: blog.id,
-					title: blog.title,
-					slug: blog.slug,
-					content: blog.content || '',
-					tags: blog.tags || [],
-					date: blog.date,
-					lang: blog.lang || 'en',
-					duration: blog.duration || '5min',
-					description: blog.description || '',
-					is_published: blog.is_published
-				};
-				showEditModal = true;
-			} catch {
-				// Fallback to local file endpoint if API fails
-				const response = await fetch(`/api/edit-post?slug=${slug}`);
-				if (response.ok) {
-					const data = await response.json();
-					postData = {
-						title: data.metadata.title,
-						slug: data.metadata.slug,
-						content: data.content,
-						tags: data.metadata.tags || [],
-						date: data.metadata.date,
-						lang: data.metadata.lang || 'en',
-						duration: data.metadata.duration || '5min',
-						description: data.metadata.description || '',
-						is_published: data.metadata.is_published || false
-					};
-					showEditModal = true;
-				} else {
-					alert('Failed to load post for editing.');
-				}
-			}
+			const blog = await fetchBlogBySlug(slug);
+			postData = {
+				id: blog.id,
+				title: blog.title,
+				slug: blog.slug,
+				content: blog.content || '',
+				tags: blog.tags || [],
+				date: blog.date,
+				lang: blog.lang || 'en',
+				duration: blog.duration || '5min',
+				description: blog.description || '',
+				is_published: blog.is_published
+			};
+			showEditModal = true;
 		} catch (error) {
 			console.error('Error loading post for editing:', error);
 			alert('An error occurred while loading the post for editing.');
@@ -79,8 +67,6 @@
 	// Callback for successful save
 	function handlePostSaved() {
 		console.log('Post saved successfully.');
-		// If the slug changed, we need to navigate to the new URL
-		// For now, we'll just reload the page
 		window.location.reload();
 	}
 
@@ -166,7 +152,8 @@
 		in:fly={{ y: 50, duration: 600, delay: 200 }}
 		class="prose prose-sm sm:prose-base img-center max-w-none font-serif"
 	>
-		<Component />
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html contentHtml}
 	</div>
 
 	<!-- Comments Section -->

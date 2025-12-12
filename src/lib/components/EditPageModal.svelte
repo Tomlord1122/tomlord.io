@@ -79,43 +79,14 @@
 		}
 
 		try {
-			// Try backend API first
 			await updatePage(pageName, content.trim(), auth.token);
 
 			alert('Page content saved successfully!');
 			onSaved();
 			closeModal();
-		} catch (apiError) {
-			console.warn('Backend API update failed, trying local endpoint:', apiError);
-
-			// Fallback to local file endpoint
-			try {
-				const response = await fetch(`/api/edit-page`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						pageName: pageName,
-						content: content.trim()
-					})
-				});
-
-				if (response.ok) {
-					alert('Page content saved successfully (local file)!');
-					onSaved();
-					closeModal();
-				} else {
-					const errorData = await response
-						.json()
-						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
-					console.error('Server error response:', response.status, errorData);
-					alert(`Failed to save page: ${errorData.message || response.statusText}`);
-				}
-			} catch (localError) {
-				console.error('Error saving page (network or client-side issue):', localError);
-				alert('An error occurred while saving the page.');
-			}
+		} catch (error) {
+			console.error('Error saving page:', error);
+			alert(`Failed to save page: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
 	}
 
