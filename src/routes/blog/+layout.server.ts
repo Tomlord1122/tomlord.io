@@ -1,10 +1,30 @@
+import { dev } from '$app/environment';
 import type { LayoutServerLoad } from '../$types.js';
 import type { PostMetadata, PostData } from '$lib/types/post.js';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
+function getDefaultPosts(): PostMetadata[] {
+	return [
+		{
+			title: 'Sample Post for Development',
+			date: '2024-01-01',
+			slug: 'sample-post',
+			description: 'This is a sample post for development mode.',
+			tags: ['sample', 'dev'],
+			lang: 'en',
+			duration: '5min'
+		}
+	];
+}
+
 export const load: LayoutServerLoad = async (): Promise<{
 	posts: PostMetadata[];
 }> => {
+	// In development mode, skip API call and use default posts for faster loading
+	if (dev) {
+		return { posts: getDefaultPosts() };
+	}
+
 	let posts: PostMetadata[] = [];
 
 	try {

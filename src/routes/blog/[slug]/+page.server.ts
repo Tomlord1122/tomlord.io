@@ -1,10 +1,29 @@
+import { dev } from '$app/environment';
 import type { PageServerLoad } from './$types.js';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
+function getDefaultPost(slug: string): Post {
+	return {
+		title: 'Sample Post for Development',
+		date: '2024-01-01',
+		tags: ['sample', 'dev'],
+		content: `# Sample Post\n\nThis is a sample post for development mode.\n\nSlug: ${slug}`,
+		slug: slug,
+		duration: '5min',
+		lang: 'en',
+		description: 'This is a sample post for development mode.'
+	};
+}
+
 export const load: PageServerLoad = async ({ params }) => {
 	const { slug } = params;
+
+	// In development mode, skip API call and use default post for faster loading
+	if (dev) {
+		return { post: getDefaultPost(slug) };
+	}
 
 	try {
 		const response = await fetchWithTimeout(

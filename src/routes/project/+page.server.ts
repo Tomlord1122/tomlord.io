@@ -1,3 +1,4 @@
+import { dev } from '$app/environment';
 import type { PageServerLoad } from './$types.js';
 import { config, fetchWithTimeout } from '$lib/config.js';
 
@@ -23,6 +24,11 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 }
 
 export const load: PageServerLoad = async () => {
+	// In development mode, skip API call and use default content for faster loading
+	if (dev) {
+		return { pageContent: getDefaultProjectContent() };
+	}
+
 	try {
 		const apiContent = await fetchPageFromAPI('project');
 		if (apiContent) {

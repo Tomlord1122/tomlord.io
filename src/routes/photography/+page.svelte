@@ -190,16 +190,6 @@
 		};
 	});
 
-	// Debug effect to track photos state changes
-	$effect(() => {
-		console.log('Photos state changed:', {
-			hasData: !!data?.availablePhotos,
-			photosLength: photos?.length || 0,
-			displayedLength: displayedPhotos?.length || 0,
-			visibleCount: visiblePhotosCount
-		});
-	});
-
 	// Performance optimization: Auto-preload when approaching end
 	$effect(() => {
 		if (photos && photos.length > 0 && displayedPhotos.length > 0) {
@@ -280,7 +270,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- Main container -->
-<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-3xl">
 	<h1 class="page-title flex items-center justify-between">
 		{#if isDev}
 			<!-- Button to open the image upload modal -->

@@ -4,7 +4,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
 	preprocess: [vitePreprocess(), mdsvex()],
-	kit: { 
+	kit: {
 		adapter: adapter(),
 		prerender: {
 			handleMissingId: 'warn'

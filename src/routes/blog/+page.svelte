@@ -18,9 +18,7 @@
 	let tagSearchKeyword = $state<string>('');
 
 	// Derive base tags from posts
-	let baseTags = $derived(
-		[...new Set(posts.flatMap((post) => post.tags || []))].sort()
-	);
+	let baseTags = $derived([...new Set(posts.flatMap((post) => post.tags || []))].sort());
 
 	// Mutable state for all tags (used by modal to add new tags)
 	let allTags = $state<string[]>([]);

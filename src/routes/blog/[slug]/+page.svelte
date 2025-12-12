@@ -130,7 +130,7 @@
 <!-- Reading Progress Bar -->
 <ReadingProgressBar />
 
-<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
+<article class="prose prose-sm sm:prose-base mx-auto lg:max-w-3xl">
 	<header class="page-title mb-8">
 		<div class="prose prose-sm sm:prose-base">
 			<h1>

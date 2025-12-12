@@ -5,6 +5,7 @@
 	import CommentItem from './CommentItem.svelte';
 	import type { Comment } from '$lib/types/comment.js';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { browser } from '$app/environment';
 
 	interface Props {
 		postSlug: string;
@@ -154,14 +155,16 @@
 	});
 
 	// Load comments when component mounts or refresh trigger changes
+	// Use browser check to avoid SSR fetch warnings
 	let didInit = $state(false);
 	$effect(() => {
-		if (didInit) return;
+		if (!browser || didInit) return;
 		didInit = true;
 		void loadComments(true);
 	});
 
 	$effect(() => {
+		if (!browser) return;
 		if (refreshTrigger > 0) {
 			void loadComments(false);
 		}

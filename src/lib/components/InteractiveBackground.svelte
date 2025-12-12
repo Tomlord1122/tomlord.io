@@ -42,9 +42,7 @@
 			isMobileOrSafari = true;
 		} else {
 			isMobileOrSafari =
-				window.innerWidth < 768 ||
-				'ontouchstart' in window ||
-				navigator.maxTouchPoints > 0;
+				window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 		}
 
 		return isMobileOrSafari;

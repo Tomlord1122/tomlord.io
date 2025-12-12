@@ -30,13 +30,6 @@ export const load: LayoutServerLoad = async () => {
 				};
 				return getNumber(b) - getNumber(a);
 			});
-		// Only log in development
-		if (process.env.NODE_ENV === 'development') {
-			console.log(
-				`Loaded ${availablePhotos.length} photography assets:`,
-				availablePhotos.slice(0, 5)
-			);
-		}
 	} catch (err) {
 		// Only log in development
 		if (process.env.NODE_ENV === 'development') {
