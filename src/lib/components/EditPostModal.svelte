@@ -3,7 +3,7 @@
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { PostData } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
-	import { updateBlog } from '$lib/api/blogs.js';
+	import { updateBlog, deleteBlog } from '$lib/api/blogs.js';
 	// Props for the modal
 	import type { EditPostModalType } from '../types/post.js';
 	let {
@@ -12,8 +12,9 @@
 		allCurrentTags = $bindable([]),
 		availableImages = [],
 		onSaved = () => {}, // Callback for successful save
-		onCancel = () => {} // Callback for cancellation
-	}: EditPostModalType = $props();
+		onCancel = () => {}, // Callback for cancellation
+		onDeleted = () => {} // Callback for successful deletion
+	}: EditPostModalType & { onDeleted?: () => void } = $props();
 
 	// State for the post data being edited
 	let title = $state('');
@@ -185,6 +186,37 @@ ${content}`;
 			newTagInput = '';
 		}
 	}
+
+	// Function to handle post deletion
+	async function handleDeletePost() {
+		if (!postData || !postData.slug) {
+			alert('Cannot delete: post data is missing.');
+			return;
+		}
+
+		if (!auth.token) {
+			alert('You must be logged in to delete posts.');
+			return;
+		}
+
+		const confirmDelete = confirm(
+			`Are you sure you want to delete "${postData.title}"?\n\nThis action cannot be undone.`
+		);
+
+		if (!confirmDelete) {
+			return;
+		}
+
+		try {
+			await deleteBlog(postData.slug, auth.token);
+			alert('Post deleted successfully!');
+			onDeleted();
+			show = false;
+		} catch (error) {
+			console.error('Error deleting post:', error);
+			alert(`Failed to delete post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		}
+	}
 </script>
 
 {#if show}
@@ -205,7 +237,7 @@ ${content}`;
 				</button>
 			</div>
 
-			<div class="flex-grow overflow-y-auto pr-2">
+			<div class="grow overflow-y-auto pr-2">
 				<form
 					onsubmit={() => {
 						/* handleUpdatePost is called by button */
@@ -241,7 +273,7 @@ ${content}`;
 									id="edit-post-slug-input"
 									bind:value={slug}
 									placeholder="your-post-url"
-									class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
+									class="grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 									required
 								/>
 							</div>
@@ -290,7 +322,7 @@ ${content}`;
 								type="text"
 								bind:value={newTagInput}
 								placeholder="Add new tag"
-								class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
+								class="grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								onkeypress={(e) => {
 									if (e.key === 'Enter') {
 										e.preventDefault();
@@ -399,25 +431,34 @@ ${content}`;
 					</div>
 
 					<div
-						class="sticky bottom-0 z-20 mt-6 flex justify-end space-x-3 border-t border-gray-200 bg-white pt-4 pb-2"
+						class="sticky bottom-0 z-20 mt-6 flex justify-between border-t border-gray-200 bg-white pt-4 pb-2"
 					>
 						<button
 							type="button"
-							onclick={() => {
-								onCancel();
-								show = false;
-							}}
-							class="rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+							onclick={handleDeletePost}
+							class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:ring-4 focus:ring-red-300"
 						>
-							Cancel
+							Delete Post
 						</button>
-						<button
-							type="button"
-							onclick={handleUpdatePost}
-							class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:ring-4 focus:ring-green-300"
-						>
-							Update Post
-						</button>
+						<div class="flex space-x-3">
+							<button
+								type="button"
+								onclick={() => {
+									onCancel();
+									show = false;
+								}}
+								class="rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								onclick={handleUpdatePost}
+								class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+							>
+								Update Post
+							</button>
+						</div>
 					</div>
 				</form>
 			</div>

@@ -149,6 +149,28 @@ export async function updateBlog(
 }
 
 /**
+ * Delete a blog post (requires super user auth)
+ */
+export async function deleteBlog(slug: string, token: string): Promise<void> {
+	const response = await fetchWithTimeout(
+		`${config.API.BLOGS}/${slug}`,
+		{
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			}
+		},
+		10000
+	);
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+		throw new Error(error.error || `Failed to delete blog: ${response.status}`);
+	}
+}
+
+/**
  * Convert BlogDetail to PostMetadata format used in frontend
  */
 export function blogToPostMetadata(blog: BlogDetail): PostMetadata {
