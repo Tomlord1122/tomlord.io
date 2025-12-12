@@ -53,7 +53,7 @@
 
 			// Use fetchWithTimeout for comment submission
 			const response = await fetchWithTimeout(
-				`${config.API.MESSAGES}/`,
+				`${config.API.MESSAGES}`,
 				{
 					method: 'POST',
 					headers: {

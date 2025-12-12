@@ -29,7 +29,7 @@ export const load: LayoutServerLoad = async (): Promise<{
 
 	try {
 		const response = await fetchWithTimeout(
-			`${config.API.BLOGS}/?limit=10000&published=true`,
+			`${config.API.BLOGS}?limit=10000&published=true`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
 			5000 // 5 second timeout
 		);

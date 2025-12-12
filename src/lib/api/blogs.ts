@@ -76,7 +76,7 @@ export async function fetchBlogs(options?: {
 	if (options?.lang) params.set('lang', options.lang);
 	if (options?.published !== undefined) params.set('published', options.published.toString());
 
-	const url = `${config.API.BLOGS}/?${params.toString()}`;
+	const url = `${config.API.BLOGS}?${params.toString()}`;
 	const response = await fetchWithTimeout(url, {
 		method: 'GET',
 		headers: {
