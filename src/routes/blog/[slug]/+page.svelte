@@ -47,16 +47,29 @@
 		}
 	});
 
+	// Helper function to extract content without frontmatter
+	function extractContentWithoutFrontmatter(fullContent: string): string {
+		const frontmatterMatch = fullContent.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+		if (frontmatterMatch) {
+			return frontmatterMatch[1].trim();
+		}
+		return fullContent;
+	}
+
 	// Load post data for editing
 	async function loadPostForEditing() {
 		try {
 			const { fetchBlogBySlug } = await import('$lib/api/blogs.js');
 			const blog = await fetchBlogBySlug(slug);
+
+			// Extract only the markdown content without frontmatter
+			const contentWithoutFrontmatter = extractContentWithoutFrontmatter(blog.content || '');
+
 			postData = {
 				id: blog.id,
 				title: blog.title,
 				slug: blog.slug,
-				content: blog.content || '',
+				content: contentWithoutFrontmatter,
 				tags: blog.tags || [],
 				date: blog.date,
 				lang: blog.lang || 'en',
