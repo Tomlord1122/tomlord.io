@@ -4,9 +4,6 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run prepack",
-		"build:prod": "node scripts/sync-blogs.js && vite build && npm run prepack",
-		"sync-blogs": "node scripts/sync-blogs.js",
-		"posts": "node scripts/generate-random-posts.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package && publint",
