@@ -6,6 +6,8 @@
 	import CommentList from '$lib/components/CommentList.svelte';
 	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 	import type { PostData } from '$lib/types/post.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
 	// export let data; // 從 load 函數接收資料 (data.post)
 	let { data } = $props(); // Using $props() instead of export let data
 
@@ -13,19 +15,16 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const Component = $derived(content as any); // use any to avoid type error
 
-	// Check if we're in development mode
-	let isDev = $state(false);
+	// Check if user can edit (super user only)
+	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
 	let postData = $state<PostData>({} as PostData);
 	let allTags = $state<string[]>([]);
 	let commentRefreshTrigger = $state(0);
 
-	// Check environment on client-side
+	// Initialize tags from the current post
 	$effect(() => {
 		if (browser) {
-			// Only localhost is considered development
-			isDev = window.location.hostname === 'localhost';
-			// Initialize tags from the current post
 			allTags = [...(tags || [])];
 		}
 	});
@@ -33,23 +32,43 @@
 	// Load post data for editing
 	async function loadPostForEditing() {
 		try {
-			const response = await fetch(`/api/edit-post?slug=${slug}`);
-			if (response.ok) {
-				const data = await response.json();
+			// Try loading from API first, fallback to local endpoint
+			const { fetchBlogBySlug } = await import('$lib/api/blogs.js');
+			try {
+				const blog = await fetchBlogBySlug(slug);
 				postData = {
-					title: data.metadata.title,
-					slug: data.metadata.slug,
-					content: data.content,
-					tags: data.metadata.tags || [],
-					date: data.metadata.date,
-					lang: data.metadata.lang || 'en',
-					duration: data.metadata.duration || '5min',
-					description: data.metadata.description || '',
-					is_published: data.metadata.is_published || false
+					id: blog.id,
+					title: blog.title,
+					slug: blog.slug,
+					content: blog.content || '',
+					tags: blog.tags || [],
+					date: blog.date,
+					lang: blog.lang || 'en',
+					duration: blog.duration || '5min',
+					description: blog.description || '',
+					is_published: blog.is_published
 				};
 				showEditModal = true;
-			} else {
-				alert('Failed to load post for editing.');
+			} catch {
+				// Fallback to local file endpoint if API fails
+				const response = await fetch(`/api/edit-post?slug=${slug}`);
+				if (response.ok) {
+					const data = await response.json();
+					postData = {
+						title: data.metadata.title,
+						slug: data.metadata.slug,
+						content: data.content,
+						tags: data.metadata.tags || [],
+						date: data.metadata.date,
+						lang: data.metadata.lang || 'en',
+						duration: data.metadata.duration || '5min',
+						description: data.metadata.description || '',
+						is_published: data.metadata.is_published || false
+					};
+					showEditModal = true;
+				} else {
+					alert('Failed to load post for editing.');
+				}
 			}
 		} catch (error) {
 			console.error('Error loading post for editing:', error);
@@ -109,7 +128,7 @@
 	<header class="page-title mb-8">
 		<div class="prose prose-sm sm:prose-base">
 			<h1>
-				{#if isDev}
+				{#if canEdit}
 					<button
 						onclick={openEditModal}
 						aria-label="Edit Post"
@@ -161,7 +180,7 @@
 	</div>
 </article>
 
-{#if isDev}
+{#if canEdit}
 	<EditPostModal
 		bind:show={showEditModal}
 		{postData}

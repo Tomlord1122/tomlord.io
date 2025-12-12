@@ -118,11 +118,11 @@ async function syncBlogs() {
 				console.log(`📝 Processing ${filename}...`);
 
 				const filePath = path.join(postsDir, filename);
-				const content = fs.readFileSync(filePath, 'utf-8');
+				const fullContent = fs.readFileSync(filePath, 'utf-8');
 
-				const { frontmatterData } = parseFrontmatter(content);
+				const { frontmatterData } = parseFrontmatter(fullContent);
 
-				// Prepare blog data for backend API
+				// Prepare blog data for backend API - now includes full content
 				const blogData = {
 					title: frontmatterData.title || filename.replace('.svx', ''),
 					slug: frontmatterData.slug || filename.replace('.svx', ''),
@@ -131,6 +131,7 @@ async function syncBlogs() {
 					duration: frontmatterData.duration || '5min',
 					tags: frontmatterData.tags || [],
 					description: frontmatterData.description || '',
+					content: fullContent, // Include full markdown content with frontmatter
 					is_published: true
 				};
 
@@ -138,6 +139,7 @@ async function syncBlogs() {
 				console.log(`   🔗 Slug: ${blogData.slug}`);
 				console.log(`   📅 Date: ${blogData.date}`);
 				console.log(`   🏷️  Tags: ${blogData.tags.join(', ') || 'none'}`);
+				console.log(`   📄 Content: ${fullContent.length} characters`);
 
 				blogDataArray.push(blogData);
 				fileMap[blogData.slug] = filename;

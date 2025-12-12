@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types.js';
 import homeContent from '../content/home.md?raw';
+import { config, fetchWithTimeout } from '$lib/config.js';
 
 function getDefaultHomeContent() {
 	return `<div class="flex gap-2 flex-wrap">
@@ -30,7 +31,7 @@ function getDefaultHomeContent() {
 		Twitter
 	</a>
  </div>
- 
+
 <!-- About me -->
 Hi, it's Tomlord here.
 
@@ -44,8 +45,31 @@ This website contains some of my blog posts about my learning journey and topics
 - **MediaTek System Research Assistant** *(Jan 2024 - Jul 2025)*`;
 }
 
+async function fetchPageFromAPI(name: string): Promise<string | null> {
+	try {
+		const response = await fetchWithTimeout(
+			`${config.API.PAGES}/${name}`,
+			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
+			3000 // 3 second timeout for server-side
+		);
+		if (response.ok) {
+			const data = await response.json();
+			return data.page?.content || null;
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
 export const load: PageServerLoad = async () => {
 	try {
+		// Try API first, fallback to local content
+		const apiContent = await fetchPageFromAPI('home');
+		if (apiContent) {
+			return { pageContent: apiContent };
+		}
+		// Fallback to local file
 		return {
 			pageContent: homeContent || getDefaultHomeContent()
 		};

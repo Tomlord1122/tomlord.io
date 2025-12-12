@@ -4,6 +4,7 @@
 	import { navigating } from '$app/state';
 	import { preloadData } from '$app/navigation';
 	import { fly } from 'svelte/transition';
+	import { auth } from '$lib/stores/auth.svelte.js';
 
 	// Navigation items configuration
 	const navItems = $state([
@@ -29,6 +30,16 @@
 			// Silently handle preload errors
 			console.debug('Preload failed for:', href);
 		}
+	}
+
+	// Handle sign in
+	function handleSignIn() {
+		auth.login();
+	}
+
+	// Handle sign out
+	function handleSignOut() {
+		auth.logout();
 	}
 </script>
 
@@ -73,6 +84,33 @@
 						{/if}
 					</a>
 				{/each}
+
+				<!-- Auth Button -->
+				<span class="mx-1 text-gray-300">|</span>
+				{#if auth.isAuthenticated}
+					<button
+						onclick={handleSignOut}
+						class="nav-link flex items-center gap-1.5 text-gray-600 hover:text-gray-900"
+						title="Sign out"
+					>
+						{#if auth.user?.picture_url}
+							<img
+								src={auth.user.picture_url}
+								alt={auth.user.name || 'User'}
+								class="h-6 w-6 rounded-full"
+							/>
+						{/if}
+						<span class="hidden sm:inline">Sign out</span>
+					</button>
+				{:else}
+					<button
+						onclick={handleSignIn}
+						class="nav-link text-gray-600 hover:text-gray-900"
+						title="Sign in with Google"
+					>
+						Sign in
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>

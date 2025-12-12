@@ -28,6 +28,7 @@ export interface Post extends Omit<PostMetadata, 'description'> {
 }
 
 export interface PostData {
+	id?: string;
 	title: string;
 	slug: string;
 	content: string;
@@ -37,6 +38,8 @@ export interface PostData {
 	tags: string[];
 	description: string;
 	is_published: boolean;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface NewPostModalType {

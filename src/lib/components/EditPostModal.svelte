@@ -2,6 +2,8 @@
 	import { marked } from 'marked';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { PostData } from '$lib/types/post.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { updateBlog } from '$lib/api/blogs.js';
 	// Props for the modal
 	import type { EditPostModalType } from '../types/post.js';
 	let {
@@ -92,6 +94,12 @@
 			return;
 		}
 
+		// Check authentication
+		if (!auth.token) {
+			alert('You must be logged in to update posts.');
+			return;
+		}
+
 		// Use the custom slug, but still sanitize it
 		const finalSlug = slug
 			.trim()
@@ -102,8 +110,8 @@
 		// Calculate duration on demand
 		const durationValue = calculateDuration(content, lang);
 
-		// Create the markdown content with frontmatter
-		const frontmatter = `---
+		// Create the markdown content with frontmatter for storage
+		const fullContent = `---
 title: '${title}'
 date: '${postData.date || new Date().toISOString().split('T')[0]}'
 slug: '${finalSlug}'
@@ -114,36 +122,58 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 
 ${content}`;
 
-		// Log the actual payload being sent
-		const payload = {
-			originalSlug: postData.slug, // This is the crucial one
-			newSlug: finalSlug,
-			content: frontmatter
-		};
-
 		try {
-			const response = await fetch('/api/edit-post', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
+			// Try backend API first
+			await updateBlog(
+				postData.slug,
+				{
+					title,
+					date: postData.date || new Date().toISOString().split('T')[0],
+					lang,
+					duration: `${durationValue}min`,
+					tags: postTags,
+					description: postData.description || '',
+					content: fullContent,
+					is_published: postData.is_published ?? true
 				},
-				body: JSON.stringify(payload) // Use the logged payload
-			});
+				auth.token
+			);
 
-			if (response.ok) {
-				alert('Post updated successfully!');
-				onSaved(); // Call the onSaved callback
-				show = false;
-			} else {
-				const errorData = await response
-					.json()
-					.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
-				console.error('Server error response:', response.status, errorData);
-				alert(`Failed to update post: ${errorData.message || response.statusText}`);
+			alert('Post updated successfully!');
+			onSaved(); // Call the onSaved callback
+			show = false;
+		} catch (apiError) {
+			console.warn('Backend API update failed, trying local endpoint:', apiError);
+
+			// Fallback to local file endpoint
+			try {
+				const response = await fetch('/api/edit-post', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						originalSlug: postData.slug,
+						newSlug: finalSlug,
+						content: fullContent
+					})
+				});
+
+				if (response.ok) {
+					alert('Post updated successfully (local file)!');
+					onSaved();
+					show = false;
+				} else {
+					const errorData = await response
+						.json()
+						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
+					console.error('Server error response:', response.status, errorData);
+					alert(`Failed to update post: ${errorData.message || response.statusText}`);
+				}
+			} catch (localError) {
+				console.error('Error updating post (network or client-side issue):', localError);
+				alert('An error occurred while updating the post.');
 			}
-		} catch (error) {
-			console.error('Error updating post (network or client-side issue):', error);
-			alert('An error occurred while updating the post.');
 		}
 	}
 

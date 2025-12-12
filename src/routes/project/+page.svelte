@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { browser } from '$app/environment';
 	import EditPageModal from '$lib/components/EditPageModal.svelte';
 	import { marked } from 'marked';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
 
 	// Get data from the server load function
 	let { data } = $props();
 
-	// Check if we're in development mode
-	let isDev = $derived(browser && window.location.hostname === 'localhost');
+	// Check if user can edit (super user only)
+	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
 	let pageContent = $derived(data.pageContent);
 
@@ -45,7 +46,7 @@
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	<!-- A large heading for the page title or your name -->
 	<h1 class="page-title">
-		{#if isDev}
+		{#if canEdit}
 			<button
 				onclick={openEditModal}
 				aria-label="Edit Project Page"
@@ -66,7 +67,7 @@
 	</main>
 </div>
 
-{#if isDev}
+{#if canEdit}
 	<EditPageModal
 		bind:show={showEditModal}
 		pageTitle="Project Page"

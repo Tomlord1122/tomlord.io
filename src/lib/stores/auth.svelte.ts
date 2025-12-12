@@ -121,3 +121,27 @@ function createAuthStore() {
 
 // Create and export the auth store instance
 export const authStore = createAuthStore();
+
+// Export a simplified auth object for direct access to common properties
+// This provides a cleaner API: auth.user, auth.token, auth.login(), auth.logout()
+export const auth = {
+	get user() {
+		return authStore.state.user;
+	},
+	get isAuthenticated() {
+		return authStore.state.isAuthenticated;
+	},
+	get isLoading() {
+		return authStore.state.isLoading;
+	},
+	get token() {
+		if (typeof window !== 'undefined') {
+			return localStorage.getItem('auth_token');
+		}
+		return null;
+	},
+	login: authStore.login,
+	logout: authStore.logout,
+	setToken: authStore.setToken,
+	checkAuthStatus: authStore.checkAuthStatus
+};

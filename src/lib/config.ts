@@ -49,6 +49,7 @@ export const config = {
 			AUTH_GOOGLE: `${this.BACKEND_URL}/auth/google`,
 			AUTH_LOGOUT: `${this.BACKEND_URL}/auth/logout`,
 			BLOGS: `${this.BACKEND_URL}/api/blogs`,
+			PAGES: `${this.BACKEND_URL}/api/pages`,
 			MESSAGES: `${this.BACKEND_URL}/api/messages`,
 			WEBSOCKET: `${this.BACKEND_WS_URL}/ws`,
 			HEALTH: `${this.BACKEND_URL}/health`

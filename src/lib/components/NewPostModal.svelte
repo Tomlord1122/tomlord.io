@@ -2,6 +2,8 @@
 	import { marked } from 'marked';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { NewPostModalType } from '../types/post.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { createBlog } from '$lib/api/blogs.js';
 	let {
 		show = $bindable(false),
 		allCurrentTags = $bindable([]),
@@ -53,7 +55,7 @@
 		});
 	}
 
-	// Function to handle post creation (currently logs to console)
+	// Function to handle post creation
 	async function handleCreatePost() {
 		if (!title.trim()) {
 			alert('Please enter a title for your post.');
@@ -68,6 +70,12 @@
 			return;
 		}
 
+		// Check authentication
+		if (!auth.token) {
+			alert('You must be logged in to create posts.');
+			return;
+		}
+
 		const finalSlug = slug
 			.trim()
 			.toLowerCase()
@@ -75,10 +83,12 @@
 			.replace(/[^\w-]+/g, '');
 
 		const duration = calculateDuration(content, lang);
+		const dateStr = new Date().toISOString().split('T')[0];
 
-		const frontmatter = `---
+		// Create the markdown content with frontmatter for storage
+		const fullContent = `---
 title: '${title}'
-date: '${new Date().toISOString().split('T')[0]}'
+date: '${dateStr}'
 slug: '${finalSlug}'
 lang: '${lang}'
 duration: '${duration}min'
@@ -88,49 +98,49 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ${content}`;
 
 		try {
-			// Get authentication token for backend API integration
-			const token = localStorage.getItem('auth_token');
-			const headers: Record<string, string> = {
-				'Content-Type': 'application/json'
-			};
+			// Try backend API first
+			await createBlog(
+				{
+					title,
+					slug: finalSlug,
+					date: dateStr,
+					lang,
+					duration: `${duration}min`,
+					tags: postTags,
+					description: '',
+					content: fullContent,
+					is_published: true
+				},
+				auth.token
+			);
 
-			// Add authorization header if token exists
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
-			}
+			alert('Post created successfully!');
+			onSaved();
+			// Reset form and close modal
+			title = '';
+			slug = '';
+			content = '';
+			postTags = [];
+			newTagInput = '';
+			closeModal();
+		} catch (apiError) {
+			console.warn('Backend API create failed, trying local endpoint:', apiError);
 
-			// Updated API endpoint path to match your server endpoint
-			const response = await fetch('/api/add-post', {
-				method: 'POST',
-				headers,
-				body: JSON.stringify({
-					filename: `${finalSlug}.svx`,
-					content: frontmatter
-				})
-			});
+			// Fallback to local file endpoint
+			try {
+				const response = await fetch('/api/add-post', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						filename: `${finalSlug}.svx`,
+						content: fullContent
+					})
+				});
 
-			if (response.ok) {
-				const result = await response.json();
-				if (result.warning) {
-					alert(`Post created with warning: ${result.warning}`);
-				} else {
-					alert('Post created successfully in database and saved locally!');
-				}
-				onSaved(); // Call the oncreated callback
-				// Reset form and close modal
-				title = '';
-				slug = '';
-				content = '';
-				postTags = [];
-				newTagInput = '';
-				closeModal();
-			} else {
-				const errorData = await response.json().catch(() => ({}));
-				console.error('Server error:', errorData);
-
-				if (errorData.requiresAuth) {
-					alert('Please sign in to save posts to the database. The post was saved locally.');
-					// Still call onSaved since the file was saved locally
+				if (response.ok) {
+					alert('Post created successfully (local file)!');
 					onSaved();
 					// Reset form and close modal
 					title = '';
@@ -140,12 +150,16 @@ ${content}`;
 					newTagInput = '';
 					closeModal();
 				} else {
-					alert(`Failed to create post: ${errorData.error || 'Unknown error'}`);
+					const errorData = await response
+						.json()
+						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
+					console.error('Server error response:', response.status, errorData);
+					alert(`Failed to create post: ${errorData.message || response.statusText}`);
 				}
+			} catch (localError) {
+				console.error('Error creating post (network or client-side issue):', localError);
+				alert('An error occurred while creating the post.');
 			}
-		} catch (error) {
-			console.error('Error creating post:', error);
-			alert('An error occurred while creating the post.');
 		}
 	}
 

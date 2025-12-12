@@ -1,23 +1,20 @@
 <script lang="ts">
-	// This script block is where you can add JavaScript logic for your page if needed later.
-	// For now, we'll leave it empty as we're just adding static content.
 	import { fly } from 'svelte/transition';
-	import { browser } from '$app/environment';
 	import EditPageModal from '$lib/components/EditPageModal.svelte';
 	import { marked } from 'marked';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
 
 	// Get data from the server load function
 	let { data } = $props();
 
-	// Check if we're in development mode
-	let isDev = $derived(browser && window.location.hostname === 'localhost');
+	// Check if user can edit (super user only)
+	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
 	let pageContent = $derived(data.pageContent);
 
 	function handlePageSaved() {
-		if (isDev) {
-			console.log('Home page content saved successfully.');
-		}
+		console.log('Home page content saved successfully.');
 		// Instead of full page reload, use SvelteKit's invalidateAll
 		import('$app/navigation').then(({ invalidateAll }) => {
 			invalidateAll();
@@ -25,9 +22,7 @@
 	}
 
 	function handleEditCancel() {
-		if (isDev) {
-			console.log('Edit cancelled.');
-		}
+		console.log('Edit cancelled.');
 	}
 
 	function openEditModal() {
@@ -51,7 +46,7 @@
 <!-- This is the main container for your page content -->
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	<h1 class="page-title">
-		{#if isDev}
+		{#if canEdit}
 			<button
 				onclick={openEditModal}
 				aria-label="Edit Home Page"
@@ -76,7 +71,7 @@
 	</main>
 </div>
 
-{#if isDev}
+{#if canEdit}
 	<EditPageModal
 		bind:show={showEditModal}
 		pageTitle="Home Page"

@@ -2,25 +2,18 @@
 	import { fade, fly, slide } from 'svelte/transition';
 	import { SvelteSet } from 'svelte/reactivity';
 	import NewPostModal from '$lib/components/NewPostModal.svelte';
-	import { browser } from '$app/environment';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { isSuperUser } from '$lib/util/auth.js';
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
 
 	let selectedTags = $state<string[]>([]);
 	let showCreatePostModal = $state(false);
-	let isDev = $state(false);
+	let canEdit = $derived(isSuperUser(auth.user));
 	let language = $state<string>('');
 	let searchKeyword = $state<string>('');
 	let tagSearchKeyword = $state<string>('');
-
-	// Check environment on client-side
-	$effect(() => {
-		if (browser) {
-			// Only localhost is considered development
-			isDev = window.location.hostname === 'localhost';
-		}
-	});
 
 	let initialTags = [...new Set(data.posts.flatMap((post) => post.tags || []))].sort();
 	let allTags = $state(initialTags);
@@ -192,7 +185,7 @@
 
 <div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
 	<h1 class="page-title">
-		{#if isDev}
+		{#if canEdit}
 			<button
 				onclick={openCreatePostModal}
 				aria-label="Create New Post"
@@ -383,7 +376,7 @@
 	</main>
 </div>
 
-{#if showCreatePostModal && isDev}
+{#if showCreatePostModal && canEdit}
 	<NewPostModal
 		bind:show={showCreatePostModal}
 		bind:allCurrentTags={allTags}

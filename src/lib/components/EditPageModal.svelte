@@ -3,6 +3,8 @@
 	import { tick } from 'svelte';
 	// Props for the modal
 	import type { EditPageModalType } from '../types/page.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
+	import { updatePage } from '$lib/api/pages.js';
 	let {
 		show = $bindable(false),
 		pageTitle = '',
@@ -70,30 +72,50 @@
 			return;
 		}
 
-		try {
-			const response = await fetch(`/api/edit-page`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					pageName: pageName,
-					content: content.trim()
-				})
-			});
+		// Check authentication
+		if (!auth.token) {
+			alert('You must be logged in to save page content.');
+			return;
+		}
 
-			if (response.ok) {
-				alert('Page content saved successfully!');
-				onSaved(); // Call the onSaved callback
-				closeModal();
-			} else {
-				const errorData = await response.json().catch(() => ({}));
-				console.error('Server error:', errorData);
-				alert(`Failed to save page: ${errorData.message || 'Unknown error'}`);
+		try {
+			// Try backend API first
+			await updatePage(pageName, content.trim(), auth.token);
+
+			alert('Page content saved successfully!');
+			onSaved();
+			closeModal();
+		} catch (apiError) {
+			console.warn('Backend API update failed, trying local endpoint:', apiError);
+
+			// Fallback to local file endpoint
+			try {
+				const response = await fetch(`/api/edit-page`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						pageName: pageName,
+						content: content.trim()
+					})
+				});
+
+				if (response.ok) {
+					alert('Page content saved successfully (local file)!');
+					onSaved();
+					closeModal();
+				} else {
+					const errorData = await response
+						.json()
+						.catch(() => ({ message: 'Unknown server error or non-JSON response' }));
+					console.error('Server error response:', response.status, errorData);
+					alert(`Failed to save page: ${errorData.message || response.statusText}`);
+				}
+			} catch (localError) {
+				console.error('Error saving page (network or client-side issue):', localError);
+				alert('An error occurred while saving the page.');
 			}
-		} catch (error) {
-			console.error('Error saving page:', error);
-			alert('An error occurred while saving the page.');
 		}
 	}
 
