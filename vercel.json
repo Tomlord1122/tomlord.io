@@ -1,6 +1,6 @@
 {
-	"buildCommand": "pnpm build:prod",
+	"buildCommand": "bun run build:prod",
 	"outputDirectory": "build",
-	"installCommand": "pnpm install",
+	"installCommand": "bun install",
 	"framework": "sveltekit"
 }
