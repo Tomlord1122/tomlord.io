@@ -17,7 +17,12 @@ function getDefaultPost(slug: string): Post {
 	};
 }
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, setHeaders }) => {
+	// Cache blog posts for 10 minutes, stale for 1 day
+	setHeaders({
+		'cache-control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=86400'
+	});
+
 	const { slug } = params;
 
 	// In development mode, skip API call and use default post for faster loading
