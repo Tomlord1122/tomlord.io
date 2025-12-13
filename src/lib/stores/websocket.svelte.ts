@@ -94,14 +94,11 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Check auth state before connecting - optimized for initial load
-		const authState = authStore.state;
-		if (authState.isAuthenticated) {
-			// Delay WebSocket connection to not block initial page load
-			setTimeout(() => {
-				this.connect();
-			}, 500); // Increased delay to prioritize page rendering
-		}
+		// Always connect to WebSocket for real-time updates (authenticated or not)
+		// Delay WebSocket connection to not block initial page load
+		setTimeout(() => {
+			this.connect();
+		}, 500); // Increased delay to prioritize page rendering
 	}
 
 	// Connect to WebSocket with improved error handling
@@ -470,13 +467,20 @@ class WebSocketManager {
 		console.log('Auth state changed:', isAuthenticated);
 
 		if (isAuthenticated) {
-			// User logged in, connect to WebSocket
-			if (!this.isConnected) {
-				this.connect();
+			// User logged in - reconnect to include auth token
+			// First disconnect to clear old connection, then reconnect with token
+			if (this.isConnected) {
+				this.cleanup();
+				this.connectionState = ConnectionState.DISCONNECTED;
 			}
+			this.connect();
 		} else {
-			// User logged out, disconnect from WebSocket
-			this.disconnect();
+			// User logged out - reconnect without auth token for anonymous real-time updates
+			if (this.isConnected) {
+				this.cleanup();
+				this.connectionState = ConnectionState.DISCONNECTED;
+			}
+			this.connect();
 		}
 	}
 

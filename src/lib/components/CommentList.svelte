@@ -92,13 +92,8 @@
 	$effect(() => {
 		const room = postSlug; // Always use postSlug as the room name for consistency
 
-		// Subscribe to this room BEFORE triggering auth change
-		// This ensures room is queued before connection starts
+		// Subscribe to this room - the manager will queue it if not connected yet
 		wsManager.subscribeToRooms([room]);
-
-		// Now trigger auth-based connection if authenticated
-		// This ensures room subscription is set up before connect() reads subscribedRooms
-		wsManager.onAuthChange(authState.isAuthenticated);
 
 		// Set up event listeners for real-time updates
 		const handleNewComment = (payload: unknown) => {
@@ -143,6 +138,7 @@
 
 		// Add handler for comment deletion
 		const handleCommentDelete = (payload: unknown) => {
+			console.log('[CommentList] handleCommentDelete called with:', payload);
 			// Remove the deleted comment from the list if payload is valid
 			if (payload && typeof payload === 'object' && 'message_id' in payload) {
 				const deletePayload = payload as { message_id: string };
@@ -166,6 +162,17 @@
 				console.error('Error during WebSocket cleanup:', error);
 			}
 		};
+	});
+
+	// Handle auth state changes separately - only reconnect when auth actually changes
+	let prevAuthState: boolean | null = $state(null);
+	$effect(() => {
+		const currentAuth = authState.isAuthenticated;
+		if (prevAuthState !== null && prevAuthState !== currentAuth) {
+			// Auth state actually changed, trigger reconnection
+			wsManager.onAuthChange(currentAuth);
+		}
+		prevAuthState = currentAuth;
 	});
 
 	// Load comments when component mounts or refresh trigger changes
@@ -536,12 +543,10 @@
 		</div>
 
 		<!-- WebSocket connection status indicator -->
-		{#if authState.isAuthenticated}
-			<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
-				<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
-				<span>{getConnectionStatusDisplay()}</span>
-			</div>
-		{/if}
+		<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
+			<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
+			<span>{getConnectionStatusDisplay()}</span>
+		</div>
 	{/if}
 
 	<!-- Comment Form should be imported and used here with the callback -->
