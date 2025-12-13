@@ -214,6 +214,11 @@
 						}
 						break;
 					} else {
+						// Don't retry on auth errors (401, 403) - they won't succeed
+						if (response.status === 401 || response.status === 403) {
+							error = `Failed to load comments (HTTP ${response.status})`;
+							break;
+						}
 						console.warn(`Attempt ${attempt}/${maxRetries} failed:`, response.status);
 						if (attempt < maxRetries) {
 							await new Promise((resolve) => setTimeout(resolve, retryDelay));
