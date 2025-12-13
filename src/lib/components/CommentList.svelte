@@ -34,43 +34,6 @@
 	let wsConnected = $state(false);
 	let wsState = $state('disconnected');
 
-	// Helper function to add comment - defined outside $effect to properly access reactive state
-	function addCommentIfNotExists(wsComment: Comment) {
-		const exists = comments.some((c) => c.id === wsComment.id);
-		console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
-		if (!exists) {
-			comments = [wsComment, ...comments];
-			console.log('[CommentList] Added new comment, total:', comments.length);
-		}
-	}
-
-	// Initialize WebSocket manager only once
-	// Note: We defer init and auth change handling until after room subscription is set up
-	$effect(() => {
-		wsManager.init();
-	});
-
-	// Monitor WebSocket connection status with improved tracking
-	$effect(() => {
-		const updateConnectionStatus = () => {
-			const connected = wsManager.isConnected;
-			const state = wsManager.state;
-
-			if (wsConnected !== connected || wsState !== state) {
-				wsConnected = connected;
-				wsState = state;
-			}
-		};
-
-		// Check immediately
-		updateConnectionStatus();
-
-		// Check periodically but less frequently to reduce overhead
-		const interval = setInterval(updateConnectionStatus, 2000);
-
-		return () => clearInterval(interval);
-	});
-
 	// Reactive sorted comments - use $derived.by for complex computations
 	let sortedComments = $derived.by(() => {
 		const sorted = [...comments];
@@ -88,27 +51,28 @@
 		return sorted;
 	});
 
-	// Set up WebSocket subscription for this post/blog with improved cleanup
+	// Combined WebSocket setup - handles init, subscription, and event listeners in correct order
 	$effect(() => {
-		const room = postSlug; // Always use postSlug as the room name for consistency
+		if (!browser) return;
 
-		// Subscribe to this room - the manager will queue it if not connected yet
-		wsManager.subscribeToRooms([room]);
+		const room = postSlug;
+		console.log('[CommentList] Setting up WebSocket for room:', room);
 
-		// Set up event listeners for real-time updates
+		// Event handlers - these access the reactive `comments` state directly
 		const handleNewComment = (payload: unknown) => {
 			console.log('[CommentList] handleNewComment called with:', payload);
-			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
 				const wsComment = payload as Comment;
-				// Use callback pattern to get latest comments state
-				addCommentIfNotExists(wsComment);
+				const exists = comments.some((c) => c.id === wsComment.id);
+				console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
+				if (!exists) {
+					comments = [wsComment, ...comments];
+					console.log('[CommentList] Added new comment, total:', comments.length);
+				}
 			}
 		};
 
 		const handleThumbUpdate = (payload: unknown) => {
-			// Only update if this change came from a different user and payload is valid
-			// (to avoid duplicate updates from our own actions)
 			if (
 				payload &&
 				typeof payload === 'object' &&
@@ -127,7 +91,6 @@
 							return {
 								...comment,
 								thumb_count: thumbPayload.thumb_count
-								// Keep our own user_thumbed status unchanged
 							};
 						}
 						return comment;
@@ -136,23 +99,33 @@
 			}
 		};
 
-		// Add handler for comment deletion
 		const handleCommentDelete = (payload: unknown) => {
 			console.log('[CommentList] handleCommentDelete called with:', payload);
-			// Remove the deleted comment from the list if payload is valid
 			if (payload && typeof payload === 'object' && 'message_id' in payload) {
 				const deletePayload = payload as { message_id: string };
+				console.log('[CommentList] Deleting comment:', deletePayload.message_id);
+				console.log('[CommentList] Current comments:', comments.map((c) => c.id));
 				comments = comments.filter((comment) => comment.id !== deletePayload.message_id);
+				console.log('[CommentList] After delete, comments:', comments.map((c) => c.id));
 			}
 		};
 
-		// Add event listeners
+		// Step 1: Register event listeners FIRST (before connection)
 		wsManager.addEventListener('new_comment', handleNewComment);
 		wsManager.addEventListener('thumb_update', handleThumbUpdate);
 		wsManager.addEventListener('comment_delete', handleCommentDelete);
+		console.log('[CommentList] Event listeners registered');
 
-		// Cleanup function with better error handling
+		// Step 2: Subscribe to room (will be queued if not connected)
+		wsManager.subscribeToRooms([room]);
+		console.log('[CommentList] Subscribed to room:', room);
+
+		// Step 3: Initialize WebSocket manager (triggers connection if not already done)
+		wsManager.init();
+
+		// Cleanup
 		return () => {
+			console.log('[CommentList] Cleaning up WebSocket for room:', room);
 			try {
 				wsManager.removeEventListener('new_comment', handleNewComment);
 				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
@@ -164,12 +137,32 @@
 		};
 	});
 
-	// Handle auth state changes separately - only reconnect when auth actually changes
+	// Monitor WebSocket connection status
+	$effect(() => {
+		if (!browser) return;
+
+		const updateConnectionStatus = () => {
+			const connected = wsManager.isConnected;
+			const state = wsManager.state;
+			if (wsConnected !== connected || wsState !== state) {
+				wsConnected = connected;
+				wsState = state;
+			}
+		};
+
+		updateConnectionStatus();
+		const interval = setInterval(updateConnectionStatus, 2000);
+		return () => clearInterval(interval);
+	});
+
+	// Handle auth state changes - reconnect with new token when auth changes
 	let prevAuthState: boolean | null = $state(null);
 	$effect(() => {
+		if (!browser) return;
+
 		const currentAuth = authState.isAuthenticated;
 		if (prevAuthState !== null && prevAuthState !== currentAuth) {
-			// Auth state actually changed, trigger reconnection
+			console.log('[CommentList] Auth state changed:', prevAuthState, '->', currentAuth);
 			wsManager.onAuthChange(currentAuth);
 		}
 		prevAuthState = currentAuth;

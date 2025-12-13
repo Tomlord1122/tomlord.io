@@ -364,10 +364,17 @@ class WebSocketManager {
 	// Handle incoming messages
 	private handleMessage(message: WSMessage) {
 		console.log('[WS] Received message:', message.type, 'for room:', message.room);
+		console.log('[WS] Currently subscribed rooms:', Array.from(this.subscribedRooms));
+
+		// Only process messages for rooms we're subscribed to
+		if (message.room && !this.subscribedRooms.has(message.room)) {
+			console.log('[WS] Ignoring message for unsubscribed room:', message.room);
+			return;
+		}
 
 		const listeners = this.listeners.get(message.type);
 		console.log('[WS] Found', listeners?.size || 0, 'listeners for type:', message.type);
-		if (listeners) {
+		if (listeners && listeners.size > 0) {
 			listeners.forEach((callback) => {
 				try {
 					console.log('[WS] Calling listener callback for:', message.type);
@@ -376,6 +383,8 @@ class WebSocketManager {
 					console.error('[WS] Error in message handler:', error);
 				}
 			});
+		} else {
+			console.warn('[WS] No listeners registered for message type:', message.type);
 		}
 	}
 
