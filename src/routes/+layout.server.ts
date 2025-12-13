@@ -1,6 +1,10 @@
 import type { LayoutServerLoad } from './$types.js';
 
-export const load: LayoutServerLoad = async () => {
+export const load: LayoutServerLoad = async ({ setHeaders }) => {
+	// Cache layout data for 1 hour (photos rarely change)
+	setHeaders({
+		'cache-control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+	});
 	// Load available photos using import.meta.glob for production compatibility
 	let availablePhotos: string[] = [];
 

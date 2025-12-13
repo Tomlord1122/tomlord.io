@@ -312,7 +312,11 @@
 						class="mb-1 border-b border-l border-gray-300 pt-2 pl-2"
 						transition:slide={{ duration: 400, delay: (index * 20) % 100 }}
 					>
-						<a href="/blog/{post.slug}" class="inline-block underline underline-offset-4">
+						<a
+							href="/blog/{post.slug}"
+							class="inline-block underline underline-offset-4"
+							data-sveltekit-preload-data="hover"
+						>
 							<h2 class="prose prose-sm sm:prose-lg text-gray-700 hover:text-gray-900">
 								{post.title}
 							</h2>

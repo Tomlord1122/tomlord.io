@@ -137,49 +137,48 @@
 		<!-- Scrollable content area -->
 		<div class="grow overflow-y-auto px-6 py-4">
 			<div class="space-y-4">
-					<div class="mt-3">
-						<div class="mb-1 flex items-center justify-between">
-							<label for="page-content-textarea" class="block text-sm font-medium text-gray-700">
-								{showPreview ? 'Live Preview' : 'Content (Markdown)'}
-							</label>
-							<div class="flex gap-2">
-								<button
-									type="button"
-									onclick={resetContent}
-									class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-								>
-									Reset
-								</button>
-								<button
-									type="button"
-									onclick={togglePreview}
-									class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-								>
-									{showPreview ? 'Edit Content' : 'Show Preview'}
-								</button>
-							</div>
-						</div>
-
-						{#if showPreview}
-							<div
-								class="prose prose-sm sm:prose-base max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
-								style="min-height: calc(25em + 40px);"
+				<div class="mt-3">
+					<div class="mb-1 flex items-center justify-between">
+						<label for="page-content-textarea" class="block text-sm font-medium text-gray-700">
+							{showPreview ? 'Live Preview' : 'Content (Markdown)'}
+						</label>
+						<div class="flex gap-2">
+							<button
+								type="button"
+								onclick={resetContent}
+								class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
 							>
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-								{@html previewHtml}
-							</div>
-						{:else}
-							<textarea
-								id="page-content-textarea"
-								value={content}
-								oninput={onContentInput}
-								rows="20"
-								class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
-								placeholder="Edit your page content here using Markdown..."
-							></textarea>
-						{/if}
+								Reset
+							</button>
+							<button
+								type="button"
+								onclick={togglePreview}
+								class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+							>
+								{showPreview ? 'Edit Content' : 'Show Preview'}
+							</button>
+						</div>
 					</div>
 
+					{#if showPreview}
+						<div
+							class="prose prose-sm sm:prose-base max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
+							style="min-height: calc(25em + 40px);"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html previewHtml}
+						</div>
+					{:else}
+						<textarea
+							id="page-content-textarea"
+							value={content}
+							oninput={onContentInput}
+							rows="20"
+							class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
+							placeholder="Edit your page content here using Markdown..."
+						></textarea>
+					{/if}
+				</div>
 			</div>
 		</div>
 

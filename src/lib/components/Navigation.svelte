@@ -62,7 +62,9 @@
 			</a>
 
 			<!-- Navigation Links -->
-			<div class="flex flex-wrap items-center justify-end gap-1.5 font-serif text-sm sm:gap-3 sm:text-lg">
+			<div
+				class="flex flex-wrap items-center justify-end gap-1.5 font-serif text-sm sm:gap-3 sm:text-lg"
+			>
 				{#each navItems as item (item.href)}
 					{@const active = isActive(item.href)}
 					{@const isNavigatingTo = navigating?.to?.url.pathname === item.href}

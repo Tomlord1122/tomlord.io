@@ -17,7 +17,11 @@ function getDefaultPost(slug: string): Post {
 	};
 }
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, setHeaders }) => {
+	// Cache individual blog posts for 10 minutes, stale for 1 day
+	setHeaders({
+		'cache-control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=86400'
+	});
 	const { slug } = params;
 
 	// In development mode, skip API call and use default post for faster loading
@@ -29,7 +33,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		const response = await fetchWithTimeout(
 			`${config.API.BLOGS}/${slug}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
-			10000 // 10 second timeout for server-side
+			5000 // 5 second timeout - faster fallback on slow connections
 		);
 
 		if (!response.ok) {
