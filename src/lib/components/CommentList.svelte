@@ -5,14 +5,13 @@
 	import CommentItem from './CommentItem.svelte';
 	import type { Comment } from '$lib/types/comment.js';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { browser } from '$app/environment';
 
 	interface Props {
 		postSlug: string;
-		newComment?: Comment | null;
+		refreshTrigger?: number;
 	}
 
-	let { postSlug, newComment = null }: Props = $props();
+	let { postSlug, refreshTrigger = 0 }: Props = $props();
 
 	let comments = $state<Comment[]>([]);
 	let isLoading = $state(false);
@@ -27,9 +26,6 @@
 	// Scroll container ref
 	let listEl: HTMLDivElement | null = $state(null);
 
-	// Track pending deletions to avoid race conditions with WebSocket events
-	const pendingDeletions = new Set<string>();
-
 	// Reactive access to auth state
 	let authState = $derived(authStore.state);
 
@@ -37,8 +33,39 @@
 	let wsConnected = $state(false);
 	let wsState = $state('disconnected');
 
-	// Reactive sorted comments - use $derived.by for complex computations
-	let sortedComments = $derived.by(() => {
+	// Initialize WebSocket manager only once
+	$effect(() => {
+		wsManager.init();
+	});
+
+	// Handle authentication state changes
+	$effect(() => {
+		wsManager.onAuthChange(authState.isAuthenticated);
+	});
+
+	// Monitor WebSocket connection status with improved tracking
+	$effect(() => {
+		const updateConnectionStatus = () => {
+			const connected = wsManager.isConnected;
+			const state = wsManager.state;
+
+			if (wsConnected !== connected || wsState !== state) {
+				wsConnected = connected;
+				wsState = state;
+			}
+		};
+
+		// Check immediately
+		updateConnectionStatus();
+
+		// Check periodically but less frequently to reduce overhead
+		const interval = setInterval(updateConnectionStatus, 2000);
+
+		return () => clearInterval(interval);
+	});
+
+	// Reactive sorted comments
+	let sortedComments = $derived(() => {
 		const sorted = [...comments];
 		if (sortBy === 'oldest') {
 			return sorted.sort(
@@ -54,100 +81,67 @@
 		return sorted;
 	});
 
-	// WebSocket event handlers - defined outside $effect to properly access reactive state
-	// These functions use a getter pattern to always access the current `comments` value
-	function handleNewComment(payload: unknown) {
-		console.log('[CommentList] handleNewComment called with:', payload);
-		if (payload && typeof payload === 'object' && 'id' in payload) {
-			const wsComment = payload as Comment;
-			const currentComments = comments; // Read current value
-			const exists = currentComments.some((c) => c.id === wsComment.id);
-			console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
-			if (!exists) {
-				comments = [wsComment, ...currentComments];
-				console.log('[CommentList] Added new comment, total:', comments.length);
-			}
-		}
-	}
-
-	function handleThumbUpdate(payload: unknown) {
-		if (
-			payload &&
-			typeof payload === 'object' &&
-			'user_id' in payload &&
-			'message_id' in payload &&
-			'thumb_count' in payload
-		) {
-			const thumbPayload = payload as {
-				user_id: string;
-				message_id: string;
-				thumb_count: number;
-			};
-			const currentUser = authState.user;
-			if (currentUser?.id !== thumbPayload.user_id) {
-				comments = comments.map((comment) => {
-					if (comment.id === thumbPayload.message_id) {
-						return {
-							...comment,
-							thumb_count: thumbPayload.thumb_count
-						};
-					}
-					return comment;
-				});
-			}
-		}
-	}
-
-	function handleCommentDelete(payload: unknown) {
-		console.log('[CommentList] handleCommentDelete called with:', payload);
-		if (payload && typeof payload === 'object' && 'message_id' in payload) {
-			const deletePayload = payload as { message_id: string };
-			const messageId = deletePayload.message_id;
-
-			// Skip if this deletion was initiated by us (already handled optimistically)
-			if (pendingDeletions.has(messageId)) {
-				console.log('[CommentList] Skipping WebSocket delete for pending deletion:', messageId);
-				pendingDeletions.delete(messageId);
-				return;
-			}
-
-			console.log('[CommentList] Deleting comment via WebSocket:', messageId);
-			const currentComments = comments;
-			const commentExists = currentComments.some((c) => c.id === messageId);
-
-			if (commentExists) {
-				console.log('[CommentList] Comment found, removing:', messageId);
-				comments = currentComments.filter((comment) => comment.id !== messageId);
-				console.log('[CommentList] After delete, comments count:', comments.length);
-			} else {
-				console.log('[CommentList] Comment already removed:', messageId);
-			}
-		}
-	}
-
-	// Combined WebSocket setup - handles init, subscription, and event listeners in correct order
+	// Set up WebSocket subscription for this post/blog with improved cleanup
 	$effect(() => {
-		if (!browser) return;
+		const room = postSlug; // Always use postSlug as the room name for consistency
 
-		const room = postSlug;
-		console.log('[CommentList] Setting up WebSocket for room:', room);
+		// Subscribe to this room
+		wsManager.subscribeToRooms([room]);
 
-		// Step 1: Register event listeners FIRST (before connection)
+		// Set up event listeners for real-time updates
+		const handleNewComment = (payload: unknown) => {
+			// Add new comment to the list if it's a valid comment
+			if (payload && typeof payload === 'object' && 'id' in payload) {
+				comments = [payload as Comment, ...comments];
+			}
+		};
+
+		const handleThumbUpdate = (payload: unknown) => {
+			// Only update if this change came from a different user and payload is valid
+			// (to avoid duplicate updates from our own actions)
+			if (
+				payload &&
+				typeof payload === 'object' &&
+				'user_id' in payload &&
+				'message_id' in payload &&
+				'thumb_count' in payload
+			) {
+				const thumbPayload = payload as {
+					user_id: string;
+					message_id: string;
+					thumb_count: number;
+				};
+				if (authState.user?.id !== thumbPayload.user_id) {
+					comments = comments.map((comment) => {
+						if (comment.id === thumbPayload.message_id) {
+							return {
+								...comment,
+								thumb_count: thumbPayload.thumb_count
+								// Keep our own user_thumbed status unchanged
+							};
+						}
+						return comment;
+					});
+				}
+			}
+		};
+
+		// Add handler for comment deletion
+		const handleCommentDelete = (payload: unknown) => {
+			// Remove the deleted comment from the list if payload is valid
+			if (payload && typeof payload === 'object' && 'message_id' in payload) {
+				const deletePayload = payload as { message_id: string };
+				comments = comments.filter((comment) => comment.id !== deletePayload.message_id);
+			}
+		};
+
+		// Add event listeners
 		wsManager.addEventListener('new_comment', handleNewComment);
 		wsManager.addEventListener('thumb_update', handleThumbUpdate);
 		wsManager.addEventListener('comment_delete', handleCommentDelete);
-		console.log('[CommentList] Event listeners registered');
 
-		// Step 2: Subscribe to room (will be queued if not connected)
-		wsManager.subscribeToRooms([room]);
-		console.log('[CommentList] Subscribed to room:', room);
-
-		// Step 3: Initialize WebSocket manager (triggers connection if not already done)
-		wsManager.init();
-
-		// Cleanup
+		// Cleanup function with better error handling
 		return () => {
-			console.log('[CommentList] Cleaning up WebSocket for room:', room);
 			try {
 				wsManager.removeEventListener('new_comment', handleNewComment);
 				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
@@ -159,55 +153,17 @@
 		};
 	});
 
-	// Monitor WebSocket connection status
-	$effect(() => {
-		if (!browser) return;
-
-		const updateConnectionStatus = () => {
-			const connected = wsManager.isConnected;
-			const state = wsManager.state;
-			if (wsConnected !== connected || wsState !== state) {
-				wsConnected = connected;
-				wsState = state;
-			}
-		};
-
-		updateConnectionStatus();
-		const interval = setInterval(updateConnectionStatus, 2000);
-		return () => clearInterval(interval);
-	});
-
-	// Handle auth state changes - reconnect with new token when auth changes
-	let prevAuthState: boolean | null = $state(null);
-	$effect(() => {
-		if (!browser) return;
-
-		const currentAuth = authState.isAuthenticated;
-		if (prevAuthState !== null && prevAuthState !== currentAuth) {
-			console.log('[CommentList] Auth state changed:', prevAuthState, '->', currentAuth);
-			wsManager.onAuthChange(currentAuth);
-		}
-		prevAuthState = currentAuth;
-	});
-
 	// Load comments when component mounts or refresh trigger changes
-	// Use browser check to avoid SSR fetch warnings
 	let didInit = $state(false);
 	$effect(() => {
-		if (!browser || didInit) return;
+		if (didInit) return;
 		didInit = true;
 		void loadComments(true);
 	});
 
-	// Handle new comment passed from CommentForm
 	$effect(() => {
-		if (!browser) return;
-		if (newComment && newComment.id) {
-			// Check if comment already exists (avoid duplicates from WebSocket)
-			const exists = comments.some((c) => c.id === newComment.id);
-			if (!exists) {
-				comments = [newComment, ...comments];
-			}
+		if (refreshTrigger > 0) {
+			void loadComments(false);
 		}
 	});
 
@@ -255,11 +211,6 @@
 						}
 						break;
 					} else {
-						// Don't retry on auth errors (401, 403) - they won't succeed
-						if (response.status === 401 || response.status === 403) {
-							error = `Failed to load comments (HTTP ${response.status})`;
-							break;
-						}
 						console.warn(`Attempt ${attempt}/${maxRetries} failed:`, response.status);
 						if (attempt < maxRetries) {
 							await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -400,14 +351,8 @@
 		const currentComment = comments.find((c) => c.id === commentId);
 		if (!currentComment) return;
 
-		// Mark as pending deletion to avoid WebSocket race condition
-		pendingDeletions.add(commentId);
-		console.log('[CommentList] Starting delete for:', commentId);
-
 		// Optimistically update the UI immediately
-		const previousComments = [...comments];
 		comments = comments.filter((c) => c.id !== commentId);
-		console.log('[CommentList] Optimistic delete done, count:', comments.length);
 
 		try {
 			const token = localStorage.getItem('auth_token');
@@ -419,22 +364,16 @@
 			});
 
 			if (response.ok) {
-				console.log('[CommentList] Delete API success for:', commentId);
-				// Remove from pending after a short delay to handle any late WebSocket events
-				setTimeout(() => {
-					pendingDeletions.delete(commentId);
-				}, 1000);
+				console.log('Message deleted successfully');
 			} else {
 				// If the request failed, revert the optimistic update
-				console.error('[CommentList] Delete API failed for:', commentId);
-				pendingDeletions.delete(commentId);
-				comments = previousComments;
+				comments = [currentComment, ...comments];
+				console.error('Failed to delete message');
 			}
 		} catch (err) {
 			// If there was an error, revert the optimistic update
-			console.error('[CommentList] Delete error for:', commentId, err);
-			pendingDeletions.delete(commentId);
-			comments = previousComments;
+			comments = [currentComment, ...comments];
+			console.error('Error deleting message:', err);
 		}
 	}
 
@@ -537,7 +476,7 @@
 			class="max-h-96 overflow-y-auto rounded-lg border border-gray-300"
 		>
 			<div class="divide-y divide-gray-100">
-				{#each sortedComments as comment (comment.id)}
+				{#each sortedComments() as comment (comment.id)}
 					<CommentItem
 						{comment}
 						onLikeToggle={() => handleLikeToggle(comment.id)}
@@ -570,10 +509,12 @@
 		</div>
 
 		<!-- WebSocket connection status indicator -->
-		<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
-			<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
-			<span>{getConnectionStatusDisplay()}</span>
-		</div>
+		{#if authState.isAuthenticated}
+			<div class="mt-2 flex items-center space-x-2 text-xs text-gray-500">
+				<div class="h-2 w-2 rounded-full {getStatusColor()}"></div>
+				<span>{getConnectionStatusDisplay()}</span>
+			</div>
+		{/if}
 	{/if}
 
 	<!-- Comment Form should be imported and used here with the callback -->

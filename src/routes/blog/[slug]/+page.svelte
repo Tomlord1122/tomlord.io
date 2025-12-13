@@ -7,8 +7,7 @@
 	import CommentList from '$lib/components/CommentList.svelte';
 	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 	import type { PostData } from '$lib/types/post.js';
-	import type { Comment } from '$lib/types/comment.js';
-	import { auth } from '$lib/stores/auth.svelte.js';
+		import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 
 	let { data } = $props();
@@ -39,7 +38,7 @@
 	let showEditModal = $state(false);
 	let postData = $state<PostData>({} as PostData);
 	let allTags = $state<string[]>([]);
-	let newComment = $state<Comment | null>(null);
+	let refreshTrigger = $state(0);
 
 	// Initialize tags from the current post
 	$effect(() => {
@@ -96,8 +95,8 @@
 		console.log('Edit cancelled.');
 	}
 
-	function handleCommentAdded(comment: Comment) {
-		newComment = comment;
+	function handleCommentAdded() {
+		refreshTrigger++;
 	}
 
 	// Function to open the edit modal
@@ -179,7 +178,7 @@
 
 	<!-- Comments Section -->
 	<div in:fly={{ y: 50, duration: 600, delay: 400 }} class="mt-12">
-		<CommentList postSlug={slug} {newComment} />
+		<CommentList postSlug={slug} {refreshTrigger} />
 		<CommentForm postSlug={slug} onCommentAdded={handleCommentAdded} />
 	</div>
 

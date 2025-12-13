@@ -1,6 +1,6 @@
 import { authStore } from './auth.svelte';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
-import { config } from '$lib/config.js';
+import { config, checkBackendHealth } from '$lib/config.js';
 
 // WebSocket message types - matching backend
 type MessageType =
@@ -94,15 +94,31 @@ class WebSocketManager {
 		// Start connection health monitoring
 		this.startConnectionMonitoring();
 
-		// Always connect to WebSocket for real-time updates (authenticated or not)
-		// Delay WebSocket connection to not block initial page load
-		setTimeout(() => {
-			this.connect();
-		}, 500); // Increased delay to prioritize page rendering
+		// Check auth state and backend health before connecting - optimized for initial load
+		const authState = authStore.state;
+		if (authState.isAuthenticated) {
+			// Delay WebSocket connection to not block initial page load
+			setTimeout(async () => {
+				const isBackendHealthy = await checkBackendHealth(true, true); // Allow immediate return
+				if (isBackendHealthy) {
+					this.connect();
+				} else {
+					console.log('🔴 Backend unhealthy, skipping WebSocket connection');
+				}
+			}, 500); // Increased delay to prioritize page rendering
+		}
 	}
 
 	// Connect to WebSocket with improved error handling
-	connect(rooms: string[] = []) {
+	async connect(rooms: string[] = []) {
+		// Check backend health before attempting connection
+		const isBackendHealthy = await checkBackendHealth();
+		if (!isBackendHealthy) {
+			console.log('🔴 Backend unhealthy, skipping WebSocket connection');
+			this.connectionState = ConnectionState.FAILED;
+			return;
+		}
+
 		// Prevent multiple simultaneous connection attempts
 		if (
 			this.connectionState === ConnectionState.CONNECTING ||
@@ -165,7 +181,7 @@ class WebSocketManager {
 			}, config.WEBSOCKET_TIMEOUT); // Use config timeout (1 second)
 
 			this.ws.onopen = () => {
-				console.log('[WS] WebSocket connected successfully');
+				console.log('WebSocket connected successfully');
 				this.connectionState = ConnectionState.CONNECTED;
 				this.reconnectAttempts = 0;
 
@@ -181,23 +197,13 @@ class WebSocketManager {
 					this.reconnectTimer = null;
 				}
 
-				// Subscribe to rooms if any - check both passed rooms and queued rooms
+				// Subscribe to rooms if any
 				const allRooms = rooms.length > 0 ? rooms : Array.from(this.subscribedRooms);
-				console.log('[WS] onopen - will subscribe to rooms:', allRooms);
 				if (allRooms.length > 0) {
 					// Wait a bit for connection to stabilize before subscribing
 					setTimeout(() => {
 						this.subscribeToRooms(allRooms);
 					}, 100);
-				} else {
-					// No rooms yet, but check again after a delay in case effects haven't run
-					setTimeout(() => {
-						const queuedRooms = Array.from(this.subscribedRooms);
-						console.log('[WS] Delayed check for queued rooms:', queuedRooms);
-						if (queuedRooms.length > 0) {
-							this.subscribeToRooms(queuedRooms);
-						}
-					}, 200);
 				}
 			};
 
@@ -248,10 +254,9 @@ class WebSocketManager {
 	// Subscribe to rooms (for comments on specific posts/blogs)
 	subscribeToRooms(rooms: string[]) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-			console.log('[WS] Not connected, queuing rooms for subscription:', rooms);
+			console.warn('WebSocket not connected, queuing rooms for subscription:', rooms);
 			// Add to subscribed rooms for when connection is restored
 			rooms.forEach((room) => this.subscribedRooms.add(room));
-			console.log('[WS] Current queued rooms:', Array.from(this.subscribedRooms));
 			return;
 		}
 
@@ -266,9 +271,9 @@ class WebSocketManager {
 					rooms: rooms
 				})
 			);
-			console.log('[WS] Sent subscription for rooms:', rooms);
+			console.log('Subscribed to rooms:', rooms);
 		} catch (error) {
-			console.error('[WS] Failed to send subscription message:', error);
+			console.error('Failed to send subscription message:', error);
 		}
 	}
 
@@ -363,28 +368,17 @@ class WebSocketManager {
 
 	// Handle incoming messages
 	private handleMessage(message: WSMessage) {
-		console.log('[WS] Received message:', message.type, 'for room:', message.room);
-		console.log('[WS] Currently subscribed rooms:', Array.from(this.subscribedRooms));
-
-		// Only process messages for rooms we're subscribed to
-		if (message.room && !this.subscribedRooms.has(message.room)) {
-			console.log('[WS] Ignoring message for unsubscribed room:', message.room);
-			return;
-		}
+		console.log('Received WebSocket message:', message);
 
 		const listeners = this.listeners.get(message.type);
-		console.log('[WS] Found', listeners?.size || 0, 'listeners for type:', message.type);
-		if (listeners && listeners.size > 0) {
+		if (listeners) {
 			listeners.forEach((callback) => {
 				try {
-					console.log('[WS] Calling listener callback for:', message.type);
 					callback(message.payload);
 				} catch (error) {
-					console.error('[WS] Error in message handler:', error);
+					console.error('Error in WebSocket message handler:', error);
 				}
 			});
-		} else {
-			console.warn('[WS] No listeners registered for message type:', message.type);
 		}
 	}
 
@@ -476,20 +470,13 @@ class WebSocketManager {
 		console.log('Auth state changed:', isAuthenticated);
 
 		if (isAuthenticated) {
-			// User logged in - reconnect to include auth token
-			// First disconnect to clear old connection, then reconnect with token
-			if (this.isConnected) {
-				this.cleanup();
-				this.connectionState = ConnectionState.DISCONNECTED;
+			// User logged in, connect to WebSocket
+			if (!this.isConnected) {
+				this.connect();
 			}
-			this.connect();
 		} else {
-			// User logged out - reconnect without auth token for anonymous real-time updates
-			if (this.isConnected) {
-				this.cleanup();
-				this.connectionState = ConnectionState.DISCONNECTED;
-			}
-			this.connect();
+			// User logged out, disconnect from WebSocket
+			this.disconnect();
 		}
 	}
 
