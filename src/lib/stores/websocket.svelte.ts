@@ -355,6 +355,7 @@ class WebSocketManager {
 		const listeners = this.listeners.get(type);
 		if (listeners) {
 			listeners.add(callback);
+			console.log(`Added listener for '${type}', total listeners: ${listeners.size}`);
 		}
 	}
 
@@ -362,7 +363,9 @@ class WebSocketManager {
 	removeEventListener(type: MessageType, callback: (payload: MessagePayload) => void) {
 		const listeners = this.listeners.get(type);
 		if (listeners) {
+			const hadListener = listeners.has(callback);
 			listeners.delete(callback);
+			console.log(`Removed listener for '${type}', was present: ${hadListener}, remaining: ${listeners.size}`);
 		}
 	}
 
@@ -371,14 +374,18 @@ class WebSocketManager {
 		console.log('Received WebSocket message:', message);
 
 		const listeners = this.listeners.get(message.type);
+		console.log(`Found ${listeners?.size || 0} listeners for message type '${message.type}'`);
 		if (listeners) {
 			listeners.forEach((callback) => {
 				try {
+					console.log('Calling listener callback for', message.type);
 					callback(message.payload);
 				} catch (error) {
 					console.error('Error in WebSocket message handler:', error);
 				}
 			});
+		} else {
+			console.warn(`No listeners registered for message type '${message.type}'`);
 		}
 	}
 

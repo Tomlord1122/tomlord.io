@@ -84,13 +84,17 @@
 	$effect(() => {
 		const room = postSlug; // Always use postSlug as the room name for consistency
 
+		console.log('[CommentList] Setting up WebSocket for room:', room);
+
 		// Subscribe to this room
 		wsManager.subscribeToRooms([room]);
 
 		// Set up event listeners for real-time updates
 		const handleNewComment = (payload: unknown) => {
+			console.log('[CommentList] handleNewComment called with payload:', payload);
 			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
+				console.log('[CommentList] Adding new comment to list');
 				comments = [payload as Comment, ...comments];
 			}
 		};
@@ -135,12 +139,14 @@
 		};
 
 		// Add event listeners
+		console.log('[CommentList] Adding event listeners');
 		wsManager.addEventListener('new_comment', handleNewComment);
 		wsManager.addEventListener('thumb_update', handleThumbUpdate);
 		wsManager.addEventListener('comment_delete', handleCommentDelete);
 
 		// Cleanup function with better error handling
 		return () => {
+			console.log('[CommentList] Cleaning up WebSocket listeners for room:', room);
 			try {
 				wsManager.removeEventListener('new_comment', handleNewComment);
 				wsManager.removeEventListener('thumb_update', handleThumbUpdate);
