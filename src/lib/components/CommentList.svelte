@@ -51,64 +51,74 @@
 		return sorted;
 	});
 
+	// WebSocket event handlers - defined outside $effect to properly access reactive state
+	// These functions use a getter pattern to always access the current `comments` value
+	function handleNewComment(payload: unknown) {
+		console.log('[CommentList] handleNewComment called with:', payload);
+		if (payload && typeof payload === 'object' && 'id' in payload) {
+			const wsComment = payload as Comment;
+			const currentComments = comments; // Read current value
+			const exists = currentComments.some((c) => c.id === wsComment.id);
+			console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
+			if (!exists) {
+				comments = [wsComment, ...currentComments];
+				console.log('[CommentList] Added new comment, total:', comments.length);
+			}
+		}
+	}
+
+	function handleThumbUpdate(payload: unknown) {
+		if (
+			payload &&
+			typeof payload === 'object' &&
+			'user_id' in payload &&
+			'message_id' in payload &&
+			'thumb_count' in payload
+		) {
+			const thumbPayload = payload as {
+				user_id: string;
+				message_id: string;
+				thumb_count: number;
+			};
+			const currentUser = authState.user;
+			if (currentUser?.id !== thumbPayload.user_id) {
+				comments = comments.map((comment) => {
+					if (comment.id === thumbPayload.message_id) {
+						return {
+							...comment,
+							thumb_count: thumbPayload.thumb_count
+						};
+					}
+					return comment;
+				});
+			}
+		}
+	}
+
+	function handleCommentDelete(payload: unknown) {
+		console.log('[CommentList] handleCommentDelete called with:', payload);
+		if (payload && typeof payload === 'object' && 'message_id' in payload) {
+			const deletePayload = payload as { message_id: string };
+			console.log('[CommentList] Deleting comment:', deletePayload.message_id);
+			const currentComments = comments; // Read current value
+			console.log(
+				'[CommentList] Current comments:',
+				currentComments.map((c) => c.id)
+			);
+			comments = currentComments.filter((comment) => comment.id !== deletePayload.message_id);
+			console.log(
+				'[CommentList] After delete, comments:',
+				comments.map((c) => c.id)
+			);
+		}
+	}
+
 	// Combined WebSocket setup - handles init, subscription, and event listeners in correct order
 	$effect(() => {
 		if (!browser) return;
 
 		const room = postSlug;
 		console.log('[CommentList] Setting up WebSocket for room:', room);
-
-		// Event handlers - these access the reactive `comments` state directly
-		const handleNewComment = (payload: unknown) => {
-			console.log('[CommentList] handleNewComment called with:', payload);
-			if (payload && typeof payload === 'object' && 'id' in payload) {
-				const wsComment = payload as Comment;
-				const exists = comments.some((c) => c.id === wsComment.id);
-				console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
-				if (!exists) {
-					comments = [wsComment, ...comments];
-					console.log('[CommentList] Added new comment, total:', comments.length);
-				}
-			}
-		};
-
-		const handleThumbUpdate = (payload: unknown) => {
-			if (
-				payload &&
-				typeof payload === 'object' &&
-				'user_id' in payload &&
-				'message_id' in payload &&
-				'thumb_count' in payload
-			) {
-				const thumbPayload = payload as {
-					user_id: string;
-					message_id: string;
-					thumb_count: number;
-				};
-				if (authState.user?.id !== thumbPayload.user_id) {
-					comments = comments.map((comment) => {
-						if (comment.id === thumbPayload.message_id) {
-							return {
-								...comment,
-								thumb_count: thumbPayload.thumb_count
-							};
-						}
-						return comment;
-					});
-				}
-			}
-		};
-
-		const handleCommentDelete = (payload: unknown) => {
-			console.log('[CommentList] handleCommentDelete called with:', payload);
-			if (payload && typeof payload === 'object' && 'message_id' in payload) {
-				const deletePayload = payload as { message_id: string };
-				console.log('[CommentList] Deleting comment:', deletePayload.message_id);
-				console.log('[CommentList] Current comments:', comments.map((c) => c.id));
-				comments = comments.filter((comment) => comment.id !== deletePayload.message_id);
-				console.log('[CommentList] After delete, comments:', comments.map((c) => c.id));
-			}
-		};
 
 		// Step 1: Register event listeners FIRST (before connection)
 		wsManager.addEventListener('new_comment', handleNewComment);
