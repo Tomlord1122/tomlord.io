@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { config, fetchWithTimeout } from '$lib/config.js';
-	import type { Comment, CreateCommentRequest } from '$lib/types/comment.js';
+	import type { CreateCommentRequest } from '$lib/types/comment.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
 		postSlug: string;
 		blogId?: string;
-		onCommentAdded?: (comment: Comment) => void;
 	}
 
-	let { postSlug, blogId, onCommentAdded }: Props = $props();
+	let { postSlug, blogId }: Props = $props();
 
 	let message = $state('');
 	let isSubmitting = $state(false);
@@ -66,15 +65,9 @@
 			);
 
 			if (response.ok) {
-				const data = await response.json();
-				const newComment = data.message as Comment;
 				message = '';
 				error = ''; // Clear any previous errors
-				// Pass the new comment to the callback for immediate display
-				// WebSocket will handle real-time updates for other users
-				if (onCommentAdded && newComment) {
-					onCommentAdded(newComment);
-				}
+				// WebSocket will handle real-time updates for all users including the sender
 			} else {
 				const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
 				error = errorData.error || 'Failed to post comment';

@@ -8,10 +8,9 @@
 
 	interface Props {
 		postSlug: string;
-		refreshTrigger?: number;
 	}
 
-	let { postSlug, refreshTrigger = 0 }: Props = $props();
+	let { postSlug }: Props = $props();
 
 	let comments = $state<Comment[]>([]);
 	let isLoading = $state(false);
@@ -153,18 +152,12 @@
 		};
 	});
 
-	// Load comments when component mounts or refresh trigger changes
+	// Load comments when component mounts
 	let didInit = $state(false);
 	$effect(() => {
 		if (didInit) return;
 		didInit = true;
 		void loadComments(true);
-	});
-
-	$effect(() => {
-		if (refreshTrigger > 0) {
-			void loadComments(false);
-		}
 	});
 
 	async function loadComments(reset = false) {

@@ -38,7 +38,6 @@
 	let showEditModal = $state(false);
 	let postData = $state<PostData>({} as PostData);
 	let allTags = $state<string[]>([]);
-	let refreshTrigger = $state(0);
 
 	// Initialize tags from the current post
 	$effect(() => {
@@ -95,9 +94,6 @@
 		console.log('Edit cancelled.');
 	}
 
-	function handleCommentAdded() {
-		refreshTrigger++;
-	}
 
 	// Function to open the edit modal
 	function openEditModal() {
@@ -178,8 +174,8 @@
 
 	<!-- Comments Section -->
 	<div in:fly={{ y: 50, duration: 600, delay: 400 }} class="mt-12">
-		<CommentList postSlug={slug} {refreshTrigger} />
-		<CommentForm postSlug={slug} onCommentAdded={handleCommentAdded} />
+		<CommentList postSlug={slug} />
+		<CommentForm postSlug={slug} />
 	</div>
 
 	<div in:fly={{ y: 50, duration: 600, delay: 500 }} class="mt-12 border-t border-gray-200 pt-8">
