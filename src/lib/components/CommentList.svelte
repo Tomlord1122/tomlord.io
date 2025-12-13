@@ -27,6 +27,9 @@
 	// Scroll container ref
 	let listEl: HTMLDivElement | null = $state(null);
 
+	// Track pending deletions to avoid race conditions with WebSocket events
+	const pendingDeletions = new Set<string>();
+
 	// Reactive access to auth state
 	let authState = $derived(authStore.state);
 
@@ -99,17 +102,26 @@
 		console.log('[CommentList] handleCommentDelete called with:', payload);
 		if (payload && typeof payload === 'object' && 'message_id' in payload) {
 			const deletePayload = payload as { message_id: string };
-			console.log('[CommentList] Deleting comment:', deletePayload.message_id);
-			const currentComments = comments; // Read current value
-			console.log(
-				'[CommentList] Current comments:',
-				currentComments.map((c) => c.id)
-			);
-			comments = currentComments.filter((comment) => comment.id !== deletePayload.message_id);
-			console.log(
-				'[CommentList] After delete, comments:',
-				comments.map((c) => c.id)
-			);
+			const messageId = deletePayload.message_id;
+
+			// Skip if this deletion was initiated by us (already handled optimistically)
+			if (pendingDeletions.has(messageId)) {
+				console.log('[CommentList] Skipping WebSocket delete for pending deletion:', messageId);
+				pendingDeletions.delete(messageId);
+				return;
+			}
+
+			console.log('[CommentList] Deleting comment via WebSocket:', messageId);
+			const currentComments = comments;
+			const commentExists = currentComments.some((c) => c.id === messageId);
+
+			if (commentExists) {
+				console.log('[CommentList] Comment found, removing:', messageId);
+				comments = currentComments.filter((comment) => comment.id !== messageId);
+				console.log('[CommentList] After delete, comments count:', comments.length);
+			} else {
+				console.log('[CommentList] Comment already removed:', messageId);
+			}
 		}
 	}
 
@@ -388,8 +400,14 @@
 		const currentComment = comments.find((c) => c.id === commentId);
 		if (!currentComment) return;
 
+		// Mark as pending deletion to avoid WebSocket race condition
+		pendingDeletions.add(commentId);
+		console.log('[CommentList] Starting delete for:', commentId);
+
 		// Optimistically update the UI immediately
+		const previousComments = [...comments];
 		comments = comments.filter((c) => c.id !== commentId);
+		console.log('[CommentList] Optimistic delete done, count:', comments.length);
 
 		try {
 			const token = localStorage.getItem('auth_token');
@@ -401,16 +419,22 @@
 			});
 
 			if (response.ok) {
-				console.log('Message deleted successfully');
+				console.log('[CommentList] Delete API success for:', commentId);
+				// Remove from pending after a short delay to handle any late WebSocket events
+				setTimeout(() => {
+					pendingDeletions.delete(commentId);
+				}, 1000);
 			} else {
 				// If the request failed, revert the optimistic update
-				comments = [currentComment, ...comments];
-				console.error('Failed to delete message');
+				console.error('[CommentList] Delete API failed for:', commentId);
+				pendingDeletions.delete(commentId);
+				comments = previousComments;
 			}
 		} catch (err) {
 			// If there was an error, revert the optimistic update
-			comments = [currentComment, ...comments];
-			console.error('Error deleting message:', err);
+			console.error('[CommentList] Delete error for:', commentId, err);
+			pendingDeletions.delete(commentId);
+			comments = previousComments;
 		}
 	}
 
