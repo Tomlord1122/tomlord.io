@@ -34,6 +34,16 @@
 	let wsConnected = $state(false);
 	let wsState = $state('disconnected');
 
+	// Helper function to add comment - defined outside $effect to properly access reactive state
+	function addCommentIfNotExists(wsComment: Comment) {
+		const exists = comments.some((c) => c.id === wsComment.id);
+		console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
+		if (!exists) {
+			comments = [wsComment, ...comments];
+			console.log('[CommentList] Added new comment, total:', comments.length);
+		}
+	}
+
 	// Initialize WebSocket manager only once
 	// Note: We defer init and auth change handling until after room subscription is set up
 	$effect(() => {
@@ -61,8 +71,8 @@
 		return () => clearInterval(interval);
 	});
 
-	// Reactive sorted comments
-	let sortedComments = $derived(() => {
+	// Reactive sorted comments - use $derived.by for complex computations
+	let sortedComments = $derived.by(() => {
 		const sorted = [...comments];
 		if (sortBy === 'oldest') {
 			return sorted.sort(
@@ -96,13 +106,8 @@
 			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
 				const wsComment = payload as Comment;
-				// Check if comment already exists (avoid duplicates from direct prop)
-				const exists = comments.some((c) => c.id === wsComment.id);
-				console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
-				if (!exists) {
-					comments = [wsComment, ...comments];
-					console.log('[CommentList] Added new comment, total:', comments.length);
-				}
+				// Use callback pattern to get latest comments state
+				addCommentIfNotExists(wsComment);
 			}
 		};
 
@@ -498,7 +503,7 @@
 			class="max-h-96 overflow-y-auto rounded-lg border border-gray-300"
 		>
 			<div class="divide-y divide-gray-100">
-				{#each sortedComments() as comment (comment.id)}
+				{#each sortedComments as comment (comment.id)}
 					<CommentItem
 						{comment}
 						onLikeToggle={() => handleLikeToggle(comment.id)}
