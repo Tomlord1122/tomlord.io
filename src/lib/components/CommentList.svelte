@@ -35,13 +35,9 @@
 	let wsState = $state('disconnected');
 
 	// Initialize WebSocket manager only once
+	// Note: We defer init and auth change handling until after room subscription is set up
 	$effect(() => {
 		wsManager.init();
-	});
-
-	// Handle authentication state changes
-	$effect(() => {
-		wsManager.onAuthChange(authState.isAuthenticated);
 	});
 
 	// Monitor WebSocket connection status with improved tracking
@@ -86,18 +82,26 @@
 	$effect(() => {
 		const room = postSlug; // Always use postSlug as the room name for consistency
 
-		// Subscribe to this room
+		// Subscribe to this room BEFORE triggering auth change
+		// This ensures room is queued before connection starts
 		wsManager.subscribeToRooms([room]);
+
+		// Now trigger auth-based connection if authenticated
+		// This ensures room subscription is set up before connect() reads subscribedRooms
+		wsManager.onAuthChange(authState.isAuthenticated);
 
 		// Set up event listeners for real-time updates
 		const handleNewComment = (payload: unknown) => {
+			console.log('[CommentList] handleNewComment called with:', payload);
 			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
 				const wsComment = payload as Comment;
 				// Check if comment already exists (avoid duplicates from direct prop)
 				const exists = comments.some((c) => c.id === wsComment.id);
+				console.log('[CommentList] Comment exists?', exists, 'id:', wsComment.id);
 				if (!exists) {
 					comments = [wsComment, ...comments];
+					console.log('[CommentList] Added new comment, total:', comments.length);
 				}
 			}
 		};

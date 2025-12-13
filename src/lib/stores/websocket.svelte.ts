@@ -168,7 +168,7 @@ class WebSocketManager {
 			}, config.WEBSOCKET_TIMEOUT); // Use config timeout (1 second)
 
 			this.ws.onopen = () => {
-				console.log('WebSocket connected successfully');
+				console.log('[WS] WebSocket connected successfully');
 				this.connectionState = ConnectionState.CONNECTED;
 				this.reconnectAttempts = 0;
 
@@ -184,13 +184,23 @@ class WebSocketManager {
 					this.reconnectTimer = null;
 				}
 
-				// Subscribe to rooms if any
+				// Subscribe to rooms if any - check both passed rooms and queued rooms
 				const allRooms = rooms.length > 0 ? rooms : Array.from(this.subscribedRooms);
+				console.log('[WS] onopen - will subscribe to rooms:', allRooms);
 				if (allRooms.length > 0) {
 					// Wait a bit for connection to stabilize before subscribing
 					setTimeout(() => {
 						this.subscribeToRooms(allRooms);
 					}, 100);
+				} else {
+					// No rooms yet, but check again after a delay in case effects haven't run
+					setTimeout(() => {
+						const queuedRooms = Array.from(this.subscribedRooms);
+						console.log('[WS] Delayed check for queued rooms:', queuedRooms);
+						if (queuedRooms.length > 0) {
+							this.subscribeToRooms(queuedRooms);
+						}
+					}, 200);
 				}
 			};
 
@@ -241,9 +251,10 @@ class WebSocketManager {
 	// Subscribe to rooms (for comments on specific posts/blogs)
 	subscribeToRooms(rooms: string[]) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-			console.warn('WebSocket not connected, queuing rooms for subscription:', rooms);
+			console.log('[WS] Not connected, queuing rooms for subscription:', rooms);
 			// Add to subscribed rooms for when connection is restored
 			rooms.forEach((room) => this.subscribedRooms.add(room));
+			console.log('[WS] Current queued rooms:', Array.from(this.subscribedRooms));
 			return;
 		}
 
@@ -258,9 +269,9 @@ class WebSocketManager {
 					rooms: rooms
 				})
 			);
-			console.log('Subscribed to rooms:', rooms);
+			console.log('[WS] Sent subscription for rooms:', rooms);
 		} catch (error) {
-			console.error('Failed to send subscription message:', error);
+			console.error('[WS] Failed to send subscription message:', error);
 		}
 	}
 
@@ -355,15 +366,17 @@ class WebSocketManager {
 
 	// Handle incoming messages
 	private handleMessage(message: WSMessage) {
-		console.log('Received WebSocket message:', message);
+		console.log('[WS] Received message:', message.type, 'for room:', message.room);
 
 		const listeners = this.listeners.get(message.type);
+		console.log('[WS] Found', listeners?.size || 0, 'listeners for type:', message.type);
 		if (listeners) {
 			listeners.forEach((callback) => {
 				try {
+					console.log('[WS] Calling listener callback for:', message.type);
 					callback(message.payload);
 				} catch (error) {
-					console.error('Error in WebSocket message handler:', error);
+					console.error('[WS] Error in message handler:', error);
 				}
 			});
 		}
