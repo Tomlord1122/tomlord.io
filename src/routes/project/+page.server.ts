@@ -23,11 +23,7 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 	}
 }
 
-export const load: PageServerLoad = async ({ setHeaders }) => {
-	// Cache project page for 10 minutes, stale for 1 hour
-	setHeaders({
-		'cache-control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=3600'
-	});
+export const load: PageServerLoad = async () => {
 	// In development mode, skip API call and use default content for faster loading
 	if (dev) {
 		return { pageContent: getDefaultProjectContent() };

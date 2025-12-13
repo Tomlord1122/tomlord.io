@@ -17,15 +17,9 @@ function getDefaultPosts(): PostMetadata[] {
 	];
 }
 
-export const load: LayoutServerLoad = async ({
-	setHeaders
-}): Promise<{
+export const load: LayoutServerLoad = async (): Promise<{
 	posts: PostMetadata[];
 }> => {
-	// Cache blog list for 5 minutes, allow stale for 1 hour while revalidating
-	setHeaders({
-		'cache-control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600'
-	});
 	// In development mode, skip API call and use default posts for faster loading
 	if (dev) {
 		return { posts: getDefaultPosts() };
