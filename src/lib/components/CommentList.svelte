@@ -9,10 +9,10 @@
 
 	interface Props {
 		postSlug: string;
-		refreshTrigger?: number;
+		newComment?: Comment | null;
 	}
 
-	let { postSlug, refreshTrigger = 0 }: Props = $props();
+	let { postSlug, newComment = null }: Props = $props();
 
 	let comments = $state<Comment[]>([]);
 	let isLoading = $state(false);
@@ -93,7 +93,12 @@
 		const handleNewComment = (payload: unknown) => {
 			// Add new comment to the list if it's a valid comment
 			if (payload && typeof payload === 'object' && 'id' in payload) {
-				comments = [payload as Comment, ...comments];
+				const wsComment = payload as Comment;
+				// Check if comment already exists (avoid duplicates from direct prop)
+				const exists = comments.some((c) => c.id === wsComment.id);
+				if (!exists) {
+					comments = [wsComment, ...comments];
+				}
 			}
 		};
 
@@ -163,10 +168,15 @@
 		void loadComments(true);
 	});
 
+	// Handle new comment passed from CommentForm
 	$effect(() => {
 		if (!browser) return;
-		if (refreshTrigger > 0) {
-			void loadComments(false);
+		if (newComment && newComment.id) {
+			// Check if comment already exists (avoid duplicates from WebSocket)
+			const exists = comments.some((c) => c.id === newComment.id);
+			if (!exists) {
+				comments = [newComment, ...comments];
+			}
 		}
 	});
 

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { config, fetchWithTimeout } from '$lib/config.js';
-	import type { CreateCommentRequest } from '$lib/types/comment.js';
+	import type { Comment, CreateCommentRequest } from '$lib/types/comment.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
 		postSlug: string;
 		blogId?: string;
-		onCommentAdded?: () => void;
+		onCommentAdded?: (comment: Comment) => void;
 	}
 
 	let { postSlug, blogId, onCommentAdded }: Props = $props();
@@ -66,12 +66,14 @@
 			);
 
 			if (response.ok) {
+				const data = await response.json();
+				const newComment = data.message as Comment;
 				message = '';
 				error = ''; // Clear any previous errors
-				// Call the callback once for immediate feedback
+				// Pass the new comment to the callback for immediate display
 				// WebSocket will handle real-time updates for other users
-				if (onCommentAdded) {
-					onCommentAdded();
+				if (onCommentAdded && newComment) {
+					onCommentAdded(newComment);
 				}
 			} else {
 				const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
