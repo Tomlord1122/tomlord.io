@@ -220,24 +220,38 @@ ${content}`;
 </script>
 
 {#if show}
+	<!-- Backdrop with blur effect -->
 	<div
-		class="bg-opacity-75 fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black p-4"
-	>
-		<div class="flex max-h-[90vh] w-4xl flex-col rounded-lg bg-white p-6 shadow-xl sm:p-8">
-			<div class="mb-6 flex items-center justify-between">
-				<h2 class="text-2xl font-semibold text-gray-800">Edit Post</h2>
-				<button
-					onclick={() => {
-						onCancel();
-						show = false;
-					}}
-					class="text-2xl text-gray-500 hover:text-gray-700"
-				>
-					&times;
-				</button>
-			</div>
+		class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+		onclick={() => {
+			onCancel();
+			show = false;
+		}}
+		role="button"
+		tabindex="-1"
+		onkeydown={(e) => e.key === 'Escape' && (show = false)}
+	></div>
 
-			<div class="grow overflow-y-auto pr-2">
+	<!-- Modal content - full width with max constraint -->
+	<div
+		class="fixed inset-4 z-50 mx-auto flex max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-6 md:inset-8"
+	>
+		<!-- Header -->
+		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+			<h2 class="text-2xl font-semibold text-gray-800">Edit Post</h2>
+			<button
+				onclick={() => {
+					onCancel();
+					show = false;
+				}}
+				class="rounded-full p-2 text-2xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+			>
+				&times;
+			</button>
+		</div>
+
+		<!-- Scrollable content area -->
+		<div class="grow overflow-y-auto px-6 py-4">
 				<form
 					onsubmit={() => {
 						/* handleUpdatePost is called by button */
@@ -430,38 +444,37 @@ ${content}`;
 						{/if}
 					</div>
 
-					<div
-						class="sticky bottom-0 z-20 mt-6 flex justify-between border-t border-gray-200 bg-white pt-4 pb-2"
-					>
-						<button
-							type="button"
-							onclick={handleDeletePost}
-							class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:ring-4 focus:ring-red-300"
-						>
-							Delete Post
-						</button>
-						<div class="flex space-x-3">
-							<button
-								type="button"
-								onclick={() => {
-									onCancel();
-									show = false;
-								}}
-								class="rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								onclick={handleUpdatePost}
-								class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:ring-4 focus:ring-green-300"
-							>
-								Update Post
-							</button>
-						</div>
-					</div>
 				</form>
 			</div>
+
+			<!-- Footer with action buttons -->
+			<div class="flex shrink-0 justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
+				<button
+					type="button"
+					onclick={handleDeletePost}
+					class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:ring-4 focus:ring-red-300"
+				>
+					Delete Post
+				</button>
+				<div class="flex space-x-3">
+					<button
+						type="button"
+						onclick={() => {
+							onCancel();
+							show = false;
+						}}
+						class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						onclick={handleUpdatePost}
+						class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+					>
+						Update Post
+					</button>
+				</div>
+			</div>
 		</div>
-	</div>
 {/if}

@@ -1,17 +1,19 @@
 import type { User } from '$lib/stores/auth.svelte.js';
-import { config } from '$lib/config.js';
+
 /**
  * Check if a user has super user privileges
+ * Uses the is_super_user flag from backend (set during /auth/me response)
  * @param user - The user object to check
  * @returns true if the user is a super user, false otherwise
  */
 export function isSuperUser(user: User | null): boolean {
-	if (!user || !user.email) {
+	if (!user) {
 		return false;
 	}
 
-	const superUserEmail = config.AUTH_SUPER_USER_EMAIL;
-	return user.email === superUserEmail;
+	// Use the backend-provided flag for security
+	// This ensures super user check is done server-side
+	return user.is_super_user === true;
 }
 
 /**

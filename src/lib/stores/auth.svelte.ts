@@ -7,6 +7,7 @@ export interface User {
 	email: string;
 	name: string;
 	picture_url?: string;
+	is_super_user?: boolean;
 }
 
 export interface AuthState {
