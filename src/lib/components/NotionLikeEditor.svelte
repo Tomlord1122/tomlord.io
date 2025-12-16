@@ -48,10 +48,11 @@
 			clearTimeout(scrollSyncTimeout);
 		}
 
-		// Debounce scroll sync for better performance
-		scrollSyncTimeout = setTimeout(() => {
-			isScrollingSynced = true;
+		// Mark as syncing immediately to prevent feedback loops
+		isScrollingSynced = true;
 
+		// Small debounce for smooth scrolling
+		scrollSyncTimeout = setTimeout(() => {
 			try {
 				if (source === 'editor' && editorRef && previewRef) {
 					// Calculate scroll ratio with bounds checking
@@ -74,11 +75,11 @@
 				console.warn('Scroll sync error:', error);
 			}
 
-			// Reset sync flag after a short delay
+			// Reset sync flag after a delay to allow the synced scroll to complete
 			setTimeout(() => {
 				isScrollingSynced = false;
-			});
-		}); // 10ms debounce for smooth experience
+			}, 50);
+		}, 16); // ~60fps debounce
 	}
 
 	// Slash command definitions
@@ -347,13 +348,13 @@
 		cursorSpan.textContent = '|';
 		mirror.appendChild(cursorSpan);
 
-		// Get textarea position relative to viewport
-		const textareaRect = editorRef.getBoundingClientRect();
+		// Get cursor position relative to viewport
 		const cursorSpanRect = cursorSpan.getBoundingClientRect();
 
-		// Calculate position relative to textarea
-		let x = cursorSpanRect.left - textareaRect.left + editorRef.scrollLeft;
-		let y = cursorSpanRect.top - textareaRect.top + editorRef.scrollTop;
+		// Calculate FIXED position (relative to viewport, not container)
+		// This ensures the menu stays visible even with scrollable content
+		let x = cursorSpanRect.left;
+		let y = cursorSpanRect.top + 24; // Position below cursor line
 
 		// Cleanup
 		document.body.removeChild(mirror);
@@ -363,21 +364,20 @@
 		const menuHeight = 300; // Approximate menu height
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight;
-		const textareaViewportRect = editorRef.getBoundingClientRect();
 
 		// Adjust X position if menu would go off right edge
-		if (textareaViewportRect.left + x + menuWidth > viewportWidth) {
-			x = Math.max(0, viewportWidth - textareaViewportRect.left - menuWidth - 10);
+		if (x + menuWidth > viewportWidth) {
+			x = Math.max(10, viewportWidth - menuWidth - 10);
 		}
 
 		// Adjust Y position if menu would go off bottom edge
-		if (textareaViewportRect.top + y + menuHeight > viewportHeight) {
-			y = Math.max(0, y - menuHeight - 40); // Position above cursor instead
+		if (y + menuHeight > viewportHeight) {
+			y = Math.max(10, cursorSpanRect.top - menuHeight - 10); // Position above cursor
 		}
 
 		// Ensure minimum positioning
-		x = Math.max(0, x);
-		y = Math.max(0, y);
+		x = Math.max(10, x);
+		y = Math.max(10, y);
 
 		return { x, y };
 	}
@@ -507,7 +507,7 @@
 	<!-- Enhanced Slash Command Menu -->
 	{#if showSlashMenu}
 		<div
-			class="slash-menu absolute z-50 w-72 rounded-lg border border-gray-200 bg-white shadow-lg"
+			class="slash-menu fixed z-100 w-72 rounded-lg border border-gray-200 bg-white shadow-lg"
 			style="left: {slashMenuPosition.x}px; top: {slashMenuPosition.y}px;"
 		>
 			<!-- Search Input -->

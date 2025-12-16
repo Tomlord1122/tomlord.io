@@ -20,6 +20,18 @@
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
 
+	// Lock body scroll when modal is open
+	$effect(() => {
+		if (show) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = '';
+		}
+		return () => {
+			document.body.style.overflow = '';
+		};
+	});
+
 	// Function to close the modal
 	function closeModal() {
 		show = false; // This updates the 'show' prop in the parent component
@@ -136,9 +148,9 @@ ${content}`;
 		onkeydown={(e) => e.key === 'Escape' && (show = false)}
 	></div>
 
-	<!-- Modal content - full width with max constraint -->
+	<!-- Modal content - full screen with small margin -->
 	<div
-		class="fixed inset-4 z-50 mx-auto flex max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-6 md:inset-8"
+		class="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-4"
 	>
 		<!-- Header -->
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">

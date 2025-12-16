@@ -24,7 +24,7 @@
 	let newTagInput = $state('');
 	let lang = $state('en');
 
-	// Initialize form data when modal opens
+	// Initialize form data when modal opens and lock body scroll
 	$effect(() => {
 		if (show && postData) {
 			title = postData.title || '';
@@ -33,7 +33,15 @@
 			postTags = [...(postData.tags || [])];
 			lang = postData.lang || 'en';
 			newTagInput = '';
+			// Prevent background scrolling when modal is open
+			document.body.style.overflow = 'hidden';
+		} else {
+			// Restore scrolling when modal closes
+			document.body.style.overflow = '';
 		}
+		return () => {
+			document.body.style.overflow = '';
+		};
 	});
 
 	// Function to handle post update
@@ -201,9 +209,9 @@ ${content}`;
 		onkeydown={(e) => e.key === 'Escape' && (show = false)}
 	></div>
 
-	<!-- Modal content - full width with max constraint -->
+	<!-- Modal content - full screen with small margin -->
 	<div
-		class="fixed inset-4 z-50 mx-auto flex max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-6 md:inset-8"
+		class="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-4"
 	>
 		<!-- Header -->
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">

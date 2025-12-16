@@ -16,11 +16,20 @@
 	// State for the content being edited
 	let content = $state('');
 
-	// Initialize content when modal opens
+	// Initialize content when modal opens and lock body scroll
 	$effect(() => {
 		if (show) {
 			content = initialContent;
+			// Prevent background scrolling when modal is open
+			document.body.style.overflow = 'hidden';
+		} else {
+			// Restore scrolling when modal closes
+			document.body.style.overflow = '';
 		}
+		// Cleanup on unmount
+		return () => {
+			document.body.style.overflow = '';
+		};
 	});
 
 	// Function to close the modal
@@ -74,9 +83,9 @@
 		onkeydown={(e) => e.key === 'Escape' && (show = false)}
 	></div>
 
-	<!-- Modal content - full width with max constraint -->
+	<!-- Modal content - full screen with small margin -->
 	<div
-		class="fixed inset-4 z-50 mx-auto flex max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-6 md:inset-8"
+		class="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-4"
 	>
 		<!-- Header -->
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
