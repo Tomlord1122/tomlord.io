@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { marked } from 'marked';
-	import { tick } from 'svelte';
+	import NotionLikeEditor from './NotionLikeEditor.svelte';
 	// Props for the modal
 	import type { EditPageModalType } from '../types/page.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -16,49 +15,13 @@
 
 	// State for the content being edited
 	let content = $state('');
-	let showPreview = $state(false);
-
-	// Performance: throttle content updates and debounce preview rendering
-	let rafId: number | null = null;
-	let previewHtml = $state('');
-	let previewTimeoutId: number | null = null;
 
 	// Initialize content when modal opens
 	$effect(() => {
 		if (show) {
 			content = initialContent;
-			showPreview = false;
-			// Focus the content area after DOM update
-			tick().then(() => {
-				const contentEl = document.getElementById('page-content-textarea');
-				contentEl?.focus();
-			});
 		}
 	});
-
-	// Debounce preview rendering to avoid heavy work on every keystroke
-	$effect(() => {
-		if (!showPreview) return;
-		if (previewTimeoutId !== null) {
-			clearTimeout(previewTimeoutId);
-		}
-		previewTimeoutId = window.setTimeout(() => {
-			const maybeHtml = marked(content || '');
-			Promise.resolve(maybeHtml).then((html) => {
-				previewHtml = html;
-			});
-			previewTimeoutId = null;
-		}, 120);
-	});
-
-	function onContentInput(event: Event) {
-		const value = (event.target as HTMLTextAreaElement).value;
-		if (rafId !== null) cancelAnimationFrame(rafId);
-		rafId = requestAnimationFrame(() => {
-			content = value;
-			rafId = null;
-		});
-	}
 
 	// Function to close the modal
 	function closeModal() {
@@ -88,11 +51,6 @@
 			console.error('Error saving page:', error);
 			alert(`Failed to save page: ${error instanceof Error ? error.message : 'Unknown error'}`);
 		}
-	}
-
-	// Function to toggle between preview and editor
-	function togglePreview() {
-		showPreview = !showPreview;
 	}
 
 	// Function to reset content to initial state
@@ -134,51 +92,24 @@
 			</button>
 		</div>
 
-		<!-- Scrollable content area -->
-		<div class="grow overflow-y-auto px-6 py-4">
-			<div class="space-y-4">
-				<div class="mt-3">
-					<div class="mb-1 flex items-center justify-between">
-						<label for="page-content-textarea" class="block text-sm font-medium text-gray-700">
-							{showPreview ? 'Live Preview' : 'Content (Markdown)'}
-						</label>
-						<div class="flex gap-2">
-							<button
-								type="button"
-								onclick={resetContent}
-								class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-							>
-								Reset
-							</button>
-							<button
-								type="button"
-								onclick={togglePreview}
-								class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-							>
-								{showPreview ? 'Edit Content' : 'Show Preview'}
-							</button>
-						</div>
-					</div>
-
-					{#if showPreview}
-						<div
-							class="prose prose-sm sm:prose-base max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
-							style="min-height: calc(25em + 40px);"
-						>
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html previewHtml}
-						</div>
-					{:else}
-						<textarea
-							id="page-content-textarea"
-							value={content}
-							oninput={onContentInput}
-							rows="20"
-							class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
-							placeholder="Edit your page content here using Markdown..."
-						></textarea>
-					{/if}
-				</div>
+		<!-- Content area with NotionLikeEditor -->
+		<div class="flex grow flex-col overflow-hidden">
+			<div class="mb-2 flex items-center justify-between px-6 pt-4">
+				<span class="text-sm font-medium text-gray-700">Content (Markdown)</span>
+				<button
+					type="button"
+					onclick={resetContent}
+					class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+				>
+					Reset
+				</button>
+			</div>
+			<div class="flex-1 overflow-hidden px-6 pb-4">
+				<NotionLikeEditor
+					{content}
+					onContentChange={(value) => (content = value)}
+					placeholder="Edit your page content here using Markdown. Type '/' for commands..."
+				/>
 			</div>
 		</div>
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { marked } from 'marked';
+	import NotionLikeEditor from './NotionLikeEditor.svelte';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { NewPostModalType } from '../types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -19,40 +19,10 @@
 	let content = $state('');
 	let postTags = $state<string[]>([]); // Tags selected for this new post
 	let newTagInput = $state(''); // For typing a new tag
-	let showPreview = $state(false); // Controls whether to show preview or editor
-
-	// Performance: throttle content updates and debounce preview rendering
-	let rafId: number | null = null;
-	let previewHtml = $state('');
-	let previewTimeoutId: number | null = null;
 
 	// Function to close the modal
 	function closeModal() {
 		show = false; // This updates the 'show' prop in the parent component
-	}
-
-	// Debounce preview rendering to avoid heavy work on every keystroke
-	$effect(() => {
-		if (!showPreview) return;
-		if (previewTimeoutId !== null) {
-			clearTimeout(previewTimeoutId);
-		}
-		previewTimeoutId = window.setTimeout(() => {
-			const maybeHtml = marked(content || '');
-			Promise.resolve(maybeHtml).then((html) => {
-				previewHtml = html;
-			});
-			previewTimeoutId = null;
-		}, 120);
-	});
-
-	function onContentInput(event: Event) {
-		const value = (event.target as HTMLTextAreaElement).value;
-		if (rafId !== null) cancelAnimationFrame(rafId);
-		rafId = requestAnimationFrame(() => {
-			content = value;
-			rafId = null;
-		});
 	}
 
 	// Function to handle post creation
@@ -335,37 +305,14 @@ ${content}`;
 				{/if}
 
 				<div class="mt-3">
-					<div class="mb-1 flex items-center justify-between">
-						<label for="post-content" class="block text-sm font-medium text-gray-700">
-							{showPreview ? 'Live Preview' : 'Content (Markdown)'}
-						</label>
-						<button
-							type="button"
-							onclick={() => (showPreview = !showPreview)}
-							class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-						>
-							{showPreview ? 'Edit Content' : 'Show Preview'}
-						</button>
+					<div class="mb-1">
+						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
 					</div>
-
-					{#if showPreview}
-						<div
-							class="prose prose-sm sm:prose-base z-20 max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
-							style="min-height: calc(20em + 40px);"
-						>
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html previewHtml}
-						</div>
-					{:else}
-						<textarea
-							id="post-content"
-							value={content}
-							oninput={onContentInput}
-							rows="15"
-							class="z-20 w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
-							placeholder="Write your blog post content here using Markdown..."
-						></textarea>
-					{/if}
+					<NotionLikeEditor
+						{content}
+						onContentChange={(value) => (content = value)}
+						placeholder="Write your blog post content here using Markdown. Type '/' for commands..."
+					/>
 				</div>
 			</form>
 		</div>

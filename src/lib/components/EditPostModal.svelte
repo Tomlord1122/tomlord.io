@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { marked } from 'marked';
+	import NotionLikeEditor from './NotionLikeEditor.svelte';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { PostData } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -22,13 +22,7 @@
 	let content = $state('');
 	let postTags = $state<string[]>([]);
 	let newTagInput = $state('');
-	let showPreview = $state(false);
 	let lang = $state('en');
-
-	// Performance: throttle content updates and debounce preview rendering
-	let rafId: number | null = null;
-	let previewHtml = $state('');
-	let previewTimeoutId: number | null = null;
 
 	// Initialize form data when modal opens
 	$effect(() => {
@@ -38,34 +32,9 @@
 			content = postData.content || '';
 			postTags = [...(postData.tags || [])];
 			lang = postData.lang || 'en';
-			showPreview = false; // Ensure preview is off initially
 			newTagInput = '';
 		}
 	});
-
-	// Debounce preview rendering to avoid heavy work on every keystroke
-	$effect(() => {
-		if (!showPreview) return;
-		if (previewTimeoutId !== null) {
-			clearTimeout(previewTimeoutId);
-		}
-		previewTimeoutId = window.setTimeout(() => {
-			const maybeHtml = marked(content);
-			Promise.resolve(maybeHtml).then((html) => {
-				previewHtml = html;
-			});
-			previewTimeoutId = null;
-		}, 120);
-	});
-
-	function onContentInput(event: Event) {
-		const value = (event.target as HTMLTextAreaElement).value;
-		if (rafId !== null) cancelAnimationFrame(rafId);
-		rafId = requestAnimationFrame(() => {
-			content = value;
-			rafId = null;
-		});
-	}
 
 	// Function to handle post update
 	async function handleUpdatePost() {
@@ -402,45 +371,20 @@ ${content}`;
 
 				<div class="mt-3">
 					<div class="mb-1 flex items-center justify-between">
-						<label for="edit-post-content" class="block text-sm font-medium text-gray-700">
-							{showPreview ? 'Live Preview' : 'Content (Markdown)'}
-						</label>
-						<div class="flex gap-2">
-							<button
-								type="button"
-								onclick={resetForm}
-								class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-							>
-								Reset
-							</button>
-							<button
-								type="button"
-								onclick={() => (showPreview = !showPreview)}
-								class="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-							>
-								{showPreview ? 'Edit Content' : 'Show Preview'}
-							</button>
-						</div>
-					</div>
-
-					{#if showPreview}
-						<div
-							class="prose prose-sm sm:prose-base max-w-none overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-3"
-							style="min-height: calc(20em + 40px);"
+						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
+						<button
+							type="button"
+							onclick={resetForm}
+							class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
 						>
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html previewHtml}
-						</div>
-					{:else}
-						<textarea
-							id="edit-post-content"
-							value={content}
-							oninput={onContentInput}
-							rows="15"
-							class="w-full rounded-md border border-gray-300 p-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:ring-gray-500"
-							placeholder="Edit your blog post content here using Markdown..."
-						></textarea>
-					{/if}
+							Reset
+						</button>
+					</div>
+					<NotionLikeEditor
+						{content}
+						onContentChange={(value) => (content = value)}
+						placeholder="Edit your blog post content here using Markdown. Type '/' for commands..."
+					/>
 				</div>
 			</form>
 		</div>

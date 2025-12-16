@@ -365,7 +365,9 @@ class WebSocketManager {
 		if (listeners) {
 			const hadListener = listeners.has(callback);
 			listeners.delete(callback);
-			console.log(`Removed listener for '${type}', was present: ${hadListener}, remaining: ${listeners.size}`);
+			console.log(
+				`Removed listener for '${type}', was present: ${hadListener}, remaining: ${listeners.size}`
+			);
 		}
 	}
 

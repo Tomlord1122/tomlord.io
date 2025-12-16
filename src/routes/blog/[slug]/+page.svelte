@@ -7,7 +7,7 @@
 	import CommentList from '$lib/components/CommentList.svelte';
 	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
 	import type { PostData } from '$lib/types/post.js';
-		import { auth } from '$lib/stores/auth.svelte.js';
+	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 
 	let { data } = $props();
@@ -93,7 +93,6 @@
 	function handleEditCancel() {
 		console.log('Edit cancelled.');
 	}
-
 
 	// Function to open the edit modal
 	function openEditModal() {
