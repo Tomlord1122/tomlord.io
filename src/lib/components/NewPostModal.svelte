@@ -202,7 +202,7 @@ ${content}`;
 								id="post-slug-input"
 								bind:value={slug}
 								placeholder="your-post-url"
-								class="flex-grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
+								class="grow rounded-r-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 								required
 							/>
 						</div>
@@ -251,7 +251,7 @@ ${content}`;
 							type="text"
 							bind:value={newTagInput}
 							placeholder="Add new tag"
-							class="flex-grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
+							class="grow rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500 focus:ring-gray-500"
 							onkeypress={(e) => {
 								if (e.key === 'Enter') {
 									e.preventDefault();
@@ -284,35 +284,31 @@ ${content}`;
 				<!-- Section to display available images -->
 				{#if availableImages.length > 0}
 					<div class="mt-4 border-t border-gray-200 pt-4">
-						<h4 class="text-md mb-2 font-medium text-gray-700">Available Images</h4>
+						<h4 class="mb-2 text-sm font-medium text-gray-700">Available Images</h4>
 						<div
-							class="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto rounded-md border bg-gray-50 p-2 sm:grid-cols-3 md:grid-cols-4"
+							class="grid max-h-40 grid-cols-4 gap-1.5 overflow-y-auto rounded-md border bg-gray-50 p-1.5 sm:grid-cols-4 md:grid-cols-6"
 						>
 							{#each availableImages as imagePath (imagePath)}
-								<div
-									class="rounded border border-gray-200 bg-white p-1.5 text-xs shadow-sm transition-shadow hover:shadow-md"
+								<button
+									type="button"
+									onclick={() => copyImageMarkdown(imagePath)}
+									class="group relative rounded border border-gray-200 bg-white p-1 transition-shadow hover:shadow-md"
+									title="Click to copy: {imagePath.split('/').pop()}"
 								>
 									<img
 										src={imagePath}
 										alt="Preview {imagePath.split('/').pop()}"
-										class="mb-1.5 h-24 w-full rounded object-cover"
+										class="h-12 w-full rounded object-cover"
 									/>
-									<p class="truncate text-gray-600" title={imagePath}>
-										{imagePath.split('/').pop()}
-									</p>
-									<button
-										type="button"
-										onclick={() => copyImageMarkdown(imagePath)}
-										class="mt-1 w-full rounded bg-blue-500 px-2 py-1 text-center text-[10px] leading-tight text-white hover:bg-blue-600"
+									<span
+										class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-[8px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
 									>
-										Copy MD
-									</button>
-								</div>
+										Copy
+									</span>
+								</button>
 							{/each}
 						</div>
-						<p class="mt-1 text-xs text-gray-500">
-							Click "Copy MD" to get the Markdown for an image.
-						</p>
+						<p class="mt-1 text-xs text-gray-500">Click an image to copy its Markdown.</p>
 					</div>
 				{/if}
 

@@ -102,7 +102,7 @@
 		</div>
 
 		<!-- Content area with NotionLikeEditor -->
-		<div class="flex grow flex-col overflow-hidden">
+		<div class="flex min-h-0 grow flex-col">
 			<div class="mb-2 flex items-center justify-between px-6 pt-4">
 				<span class="text-sm font-medium text-gray-700">Content (Markdown)</span>
 				<button
@@ -113,7 +113,7 @@
 					Reset
 				</button>
 			</div>
-			<div class="flex-1 overflow-hidden px-6 pb-4">
+			<div class="min-h-0 flex-1 px-6 pb-4">
 				<NotionLikeEditor
 					{content}
 					onContentChange={(value) => (content = value)}

@@ -420,7 +420,7 @@
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
-<div class="relative w-full">
+<div class="relative flex h-full w-full flex-col">
 	<!-- Mode Switcher Toolbar -->
 	<div class="border-b border-gray-200 bg-gray-50 p-2">
 		<div class="flex items-center justify-between">
@@ -463,8 +463,7 @@
 
 	<!-- Editor Content -->
 	<div
-		class="flex {editorMode === 'split' ? 'divide-x divide-gray-200' : ''}"
-		style="height: 600px;"
+		class="flex min-h-0 flex-1 {editorMode === 'split' ? 'divide-x divide-gray-200' : ''}"
 	>
 		<!-- Editor Pane -->
 		{#if editorMode === 'edit' || editorMode === 'split'}
