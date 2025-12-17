@@ -23,25 +23,15 @@
 	let slashMenuItems = $state<Array<{ label: string; action: () => void; icon: string }>>([]);
 	let selectedSlashIndex = $state(0);
 	let slashSearchQuery = $state('');
+	let menuItemRefs = $state<HTMLButtonElement[]>([]);
 
-	// Editor mode state
-	let editorMode = $state<'edit' | 'preview' | 'split'>('edit');
-	let isMobile = $state(false);
-
-	function checkMobile() {
-		if (typeof window !== 'undefined') {
-			isMobile = window.innerWidth < 768; // md breakpoint
-			// Set responsive defaults
-			editorMode = isMobile ? 'edit' : 'split';
-		}
-	}
 
 	// Sync scroll between editor and preview with debouncing
 	let scrollSyncTimeout: ReturnType<typeof setTimeout>;
 	let isScrollingSynced = false;
 
 	function syncScroll(source: 'editor' | 'preview') {
-		if (editorMode !== 'split' || isScrollingSynced) return;
+		if (isScrollingSynced) return;
 
 		// Clear previous timeout
 		if (scrollSyncTimeout) {
@@ -315,6 +305,11 @@
 	function getCursorPosition() {
 		if (!editorRef) return { x: 0, y: 0 };
 
+		// Get textarea's position and scroll offset
+		const textareaRect = editorRef.getBoundingClientRect();
+		const scrollTop = editorRef.scrollTop;
+		const scrollLeft = editorRef.scrollLeft;
+
 		// Create a temporary element to measure text dimensions
 		const mirror = document.createElement('div');
 		const computed = window.getComputedStyle(editorRef);
@@ -348,16 +343,16 @@
 		cursorSpan.textContent = '|';
 		mirror.appendChild(cursorSpan);
 
-		// Get cursor position relative to viewport
+		// Get cursor position relative to the mirror
 		const cursorSpanRect = cursorSpan.getBoundingClientRect();
-
-		// Calculate FIXED position (relative to viewport, not container)
-		// This ensures the menu stays visible even with scrollable content
-		let x = cursorSpanRect.left;
-		let y = cursorSpanRect.top + 24; // Position below cursor line
 
 		// Cleanup
 		document.body.removeChild(mirror);
+
+		// Calculate position relative to viewport, accounting for scroll
+		// The cursor's actual position = textarea position + cursor offset in mirror - scroll offset
+		let x = textareaRect.left + (cursorSpanRect.left - scrollLeft);
+		let y = textareaRect.top + (cursorSpanRect.top - scrollTop) + 24; // 24px offset below cursor
 
 		// Boundary checking to keep menu within viewport
 		const menuWidth = 288; // w-72 = 288px
@@ -372,7 +367,9 @@
 
 		// Adjust Y position if menu would go off bottom edge
 		if (y + menuHeight > viewportHeight) {
-			y = Math.max(10, cursorSpanRect.top - menuHeight - 10); // Position above cursor
+			// Position above cursor instead
+			const cursorActualY = textareaRect.top + (cursorSpanRect.top - scrollTop);
+			y = Math.max(10, cursorActualY - menuHeight - 10);
 		}
 
 		// Ensure minimum positioning
@@ -394,6 +391,19 @@
 			);
 		}
 		selectedSlashIndex = 0;
+		menuItemRefs = [];
+	}
+
+	function scrollSelectedItemIntoView() {
+		setTimeout(() => {
+			const selectedElement = menuItemRefs[selectedSlashIndex];
+			if (selectedElement) {
+				selectedElement.scrollIntoView({
+					block: 'nearest',
+					behavior: 'smooth'
+				});
+			}
+		}, 0);
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -403,104 +413,50 @@
 	}
 
 	onMount(() => {
-		checkMobile();
-
-		const handleResize = () => {
-			checkMobile();
-		};
-
 		document.addEventListener('click', handleClickOutside);
-		window.addEventListener('resize', handleResize);
 
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
-			window.removeEventListener('resize', handleResize);
 		};
 	});
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
 <div class="relative flex h-full w-full flex-col">
-	<!-- Mode Switcher Toolbar -->
-	<div class="border-b border-gray-200 bg-gray-50 p-2">
-		<div class="flex items-center justify-between">
-			<div class="flex rounded-md border border-gray-300 bg-white p-0.5">
-				<button
-					type="button"
-					onclick={() => (editorMode = 'edit')}
-					class="rounded px-2 py-1 text-xs font-medium transition-colors {editorMode === 'edit'
-						? 'bg-gray-600 text-white shadow-sm'
-						: 'text-gray-600 hover:text-gray-900'}"
-				>
-					Edit
-				</button>
-				{#if !isMobile}
-					<button
-						type="button"
-						onclick={() => (editorMode = 'split')}
-						class="rounded px-2 py-1 text-xs font-medium transition-colors {editorMode === 'split'
-							? 'bg-gray-600 text-white shadow-sm'
-							: 'text-gray-600 hover:text-gray-900'}"
-					>
-						Split
-					</button>
-				{/if}
-				<button
-					type="button"
-					onclick={() => (editorMode = 'preview')}
-					class="rounded px-2 py-1 text-xs font-medium transition-colors {editorMode === 'preview'
-						? 'bg-gray-600 text-white shadow-sm'
-						: 'text-gray-600 hover:text-gray-900'}"
-				>
-					Preview
-				</button>
-			</div>
-			<span class="text-xs text-gray-500">
-				{isMobile ? 'Mobile' : 'Desktop'} Mode
-			</span>
-		</div>
-	</div>
-
-	<!-- Editor Content -->
-	<div
-		class="flex min-h-0 flex-1 {editorMode === 'split' ? 'divide-x divide-gray-200' : ''}"
-	>
+	<!-- Editor Content - Split View -->
+	<div class="flex min-h-0 flex-1 divide-x divide-gray-200">
 		<!-- Editor Pane -->
-		{#if editorMode === 'edit' || editorMode === 'split'}
-			<div class="flex-1 {editorMode === 'split' ? 'w-1/2' : 'w-full'} flex flex-col">
-				<textarea
-					bind:this={editorRef}
-					value={content}
-					oninput={handleInput}
-					onkeydown={handleKeyDown}
-					onscroll={() => syncScroll('editor')}
-					{placeholder}
-					class="scrollbar-stable text-editor w-full flex-1 resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
-					style="min-height: {minHeight};"
-				></textarea>
-			</div>
-		{/if}
+		<div class="flex w-1/2 flex-col">
+			<textarea
+				bind:this={editorRef}
+				value={content}
+				oninput={handleInput}
+				onkeydown={handleKeyDown}
+				onscroll={() => syncScroll('editor')}
+				{placeholder}
+				class="scrollbar-stable text-editor w-full flex-1 resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				style="min-height: {minHeight};"
+			></textarea>
+		</div>
 
 		<!-- Live Preview Pane -->
-		{#if editorMode === 'preview' || editorMode === 'split'}
-			<div class="flex-1 {editorMode === 'split' ? 'w-1/2' : 'w-full'} flex flex-col">
-				<div
-					bind:this={previewRef}
-					onscroll={() => syncScroll('preview')}
-					class="scrollbar-stable markdown-content compact flex-1 overflow-y-auto p-4 text-wrap"
-					style="min-height: {minHeight};"
-				>
-					{#if content.trim()}
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html renderMarkdown(content)}
-					{:else}
-						<p class="text-gray-500 italic">
-							{placeholder}
-						</p>
-					{/if}
-				</div>
+		<div class="flex w-1/2 flex-col">
+			<div
+				bind:this={previewRef}
+				onscroll={() => syncScroll('preview')}
+				class="scrollbar-stable markdown-content compact flex-1 overflow-y-auto p-4 text-wrap"
+				style="min-height: {minHeight};"
+			>
+				{#if content.trim()}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					{@html renderMarkdown(content)}
+				{:else}
+					<p class="text-gray-500 italic">
+						{placeholder}
+					</p>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 
 	<!-- Enhanced Slash Command Menu -->
@@ -520,10 +476,12 @@
 							case 'ArrowDown':
 								e.preventDefault();
 								selectedSlashIndex = Math.min(selectedSlashIndex + 1, slashMenuItems.length - 1);
+								scrollSelectedItemIntoView();
 								break;
 							case 'ArrowUp':
 								e.preventDefault();
 								selectedSlashIndex = Math.max(selectedSlashIndex - 1, 0);
+								scrollSelectedItemIntoView();
 								break;
 							case 'Enter':
 								if (slashMenuItems.length > 0) {
@@ -547,6 +505,7 @@
 				{#if slashMenuItems.length > 0}
 					{#each slashMenuItems as item, index (item.label)}
 						<button
+							bind:this={menuItemRefs[index]}
 							type="button"
 							onclick={item.action}
 							class="flex w-full items-center rounded-md px-3 py-2 text-left text-sm transition-colors {index ===
