@@ -2,6 +2,7 @@
 	import '../app.css';
 	import InteractiveBackground from '$lib/components/InteractiveBackground.svelte';
 	import Navigation from '$lib/components/Navigation.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { browser } from '$app/environment';
 	import { config } from '$lib/config.js';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
@@ -35,3 +36,4 @@
 		{@render children()}
 	</main>
 </div>
+<Toast />

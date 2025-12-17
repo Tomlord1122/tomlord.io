@@ -25,7 +25,6 @@
 	let slashSearchQuery = $state('');
 	let menuItemRefs = $state<HTMLButtonElement[]>([]);
 
-
 	// Slash command definitions
 	const slashCommands = [
 		{

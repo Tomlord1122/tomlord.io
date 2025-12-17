@@ -23,6 +23,7 @@
 	let postTags = $state<string[]>([]);
 	let newTagInput = $state('');
 	let lang = $state('en');
+	let isImageSectionActive = $state(false);
 
 	// Initialize form data when modal opens and lock body scroll
 	$effect(() => {
@@ -346,8 +347,14 @@ ${content}`;
 				{#if availableImages && availableImages.length > 0}
 					<div class="mt-4 border-t border-gray-200 pt-4">
 						<h4 class="mb-2 text-sm font-medium text-gray-700">Available Images</h4>
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<div
-							class="grid max-h-96 grid-cols-3 gap-2 overflow-y-auto rounded-md border bg-gray-50 p-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
+							onclick={() => (isImageSectionActive = true)}
+							onmouseleave={() => (isImageSectionActive = false)}
+							class="grid max-h-96 grid-cols-3 gap-2 rounded-md border p-2 transition-colors sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 {isImageSectionActive
+								? 'overflow-y-auto border-blue-300 bg-blue-50'
+								: 'overflow-hidden bg-gray-50'}"
 						>
 							{#each availableImages as imagePath (imagePath)}
 								<button
@@ -369,7 +376,10 @@ ${content}`;
 								</button>
 							{/each}
 						</div>
-						<p class="mt-1 text-xs text-gray-500">Click an image to copy its Markdown.</p>
+						<p class="mt-1 text-xs text-gray-500">
+							{isImageSectionActive ? 'Scroll to browse. ' : 'Click to enable scrolling. '}Click an
+							image to copy its Markdown.
+						</p>
 					</div>
 				{/if}
 

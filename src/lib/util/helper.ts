@@ -15,14 +15,15 @@ export function calculateDuration(text: string, language: string): number {
 }
 
 export async function copyImageMarkdown(imagePath: string) {
+	const { showToast } = await import('$lib/stores/toast.svelte.js');
 	const markdown = `<div class="flex justify-center">
 <img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
 </div>`;
 	try {
 		await navigator.clipboard.writeText(markdown);
-		alert(`Copied to clipboard: ${markdown}`);
+		showToast('Copied to clipboard!', 'success', 1000);
 	} catch (err) {
 		console.error('Failed to copy text: ', err);
-		alert('Failed to copy markdown. You can manually copy: ' + markdown);
+		showToast('Failed to copy. Please try again.', 'error', 2000);
 	}
 }
