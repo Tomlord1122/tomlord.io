@@ -306,6 +306,8 @@ ${content}`;
 									<img
 										src={imagePath}
 										alt="Preview {imagePath.split('/').pop()}"
+										loading="lazy"
+										decoding="async"
 										class="h-full w-full rounded object-cover"
 									/>
 									<span
