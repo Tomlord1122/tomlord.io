@@ -352,6 +352,7 @@ ${content}`;
 						<div
 							onclick={() => (isImageSectionActive = true)}
 							onmouseleave={() => (isImageSectionActive = false)}
+							style="scrollbar-gutter: stable;"
 							class="grid max-h-96 grid-cols-3 gap-2 rounded-md border p-2 transition-colors sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 {isImageSectionActive
 								? 'overflow-y-auto border-blue-300 bg-blue-50'
 								: 'overflow-hidden bg-gray-50'}"
