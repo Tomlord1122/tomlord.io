@@ -286,22 +286,22 @@ ${content}`;
 					<div class="mt-4 border-t border-gray-200 pt-4">
 						<h4 class="mb-2 text-sm font-medium text-gray-700">Available Images</h4>
 						<div
-							class="grid max-h-40 grid-cols-4 gap-1.5 overflow-y-auto rounded-md border bg-gray-50 p-1.5 sm:grid-cols-4 md:grid-cols-6"
+							class="grid max-h-96 grid-cols-3 gap-2 overflow-y-auto rounded-md border bg-gray-50 p-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
 						>
 							{#each availableImages as imagePath (imagePath)}
 								<button
 									type="button"
 									onclick={() => copyImageMarkdown(imagePath)}
-									class="group relative rounded border border-gray-200 bg-white p-1 transition-shadow hover:shadow-md"
+									class="group relative aspect-square rounded border border-gray-200 bg-white p-1 transition-shadow hover:shadow-md"
 									title="Click to copy: {imagePath.split('/').pop()}"
 								>
 									<img
 										src={imagePath}
 										alt="Preview {imagePath.split('/').pop()}"
-										class="h-12 w-full rounded object-cover"
+										class="h-full w-full rounded object-cover"
 									/>
 									<span
-										class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-[8px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
+										class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
 									>
 										Copy
 									</span>
