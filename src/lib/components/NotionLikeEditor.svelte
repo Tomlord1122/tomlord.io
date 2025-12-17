@@ -26,52 +26,6 @@
 	let menuItemRefs = $state<HTMLButtonElement[]>([]);
 
 
-	// Sync scroll between editor and preview with debouncing
-	let scrollSyncTimeout: ReturnType<typeof setTimeout>;
-	let isScrollingSynced = false;
-
-	function syncScroll(source: 'editor' | 'preview') {
-		if (isScrollingSynced) return;
-
-		// Clear previous timeout
-		if (scrollSyncTimeout) {
-			clearTimeout(scrollSyncTimeout);
-		}
-
-		// Mark as syncing immediately to prevent feedback loops
-		isScrollingSynced = true;
-
-		// Small debounce for smooth scrolling
-		scrollSyncTimeout = setTimeout(() => {
-			try {
-				if (source === 'editor' && editorRef && previewRef) {
-					// Calculate scroll ratio with bounds checking
-					const maxScrollTop = Math.max(0, editorRef.scrollHeight - editorRef.clientHeight);
-					if (maxScrollTop > 0) {
-						const scrollRatio = Math.min(1, Math.max(0, editorRef.scrollTop / maxScrollTop));
-						const previewMaxScroll = Math.max(0, previewRef.scrollHeight - previewRef.clientHeight);
-						previewRef.scrollTop = scrollRatio * previewMaxScroll;
-					}
-				} else if (source === 'preview' && previewRef && editorRef) {
-					// Calculate scroll ratio with bounds checking
-					const maxScrollTop = Math.max(0, previewRef.scrollHeight - previewRef.clientHeight);
-					if (maxScrollTop > 0) {
-						const scrollRatio = Math.min(1, Math.max(0, previewRef.scrollTop / maxScrollTop));
-						const editorMaxScroll = Math.max(0, editorRef.scrollHeight - editorRef.clientHeight);
-						editorRef.scrollTop = scrollRatio * editorMaxScroll;
-					}
-				}
-			} catch (error) {
-				console.warn('Scroll sync error:', error);
-			}
-
-			// Reset sync flag after a delay to allow the synced scroll to complete
-			setTimeout(() => {
-				isScrollingSynced = false;
-			}, 50);
-		}, 16); // ~60fps debounce
-	}
-
 	// Slash command definitions
 	const slashCommands = [
 		{
@@ -432,9 +386,8 @@
 				value={content}
 				oninput={handleInput}
 				onkeydown={handleKeyDown}
-				onscroll={() => syncScroll('editor')}
 				{placeholder}
-				class="scrollbar-stable text-editor w-full flex-1 resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				class=" text-editor w-full flex-1 resize-none border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 				style="min-height: {minHeight};"
 			></textarea>
 		</div>
@@ -443,8 +396,7 @@
 		<div class="flex w-1/2 flex-col">
 			<div
 				bind:this={previewRef}
-				onscroll={() => syncScroll('preview')}
-				class="scrollbar-stable markdown-content compact flex-1 overflow-y-auto p-4 text-wrap"
+				class="markdown-content compact flex-1 p-4 text-wrap"
 				style="min-height: {minHeight};"
 			>
 				{#if content.trim()}
