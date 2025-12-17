@@ -386,7 +386,7 @@
 				oninput={handleInput}
 				onkeydown={handleKeyDown}
 				{placeholder}
-				class=" text-editor w-full flex-1 resize-none border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				class="scrollbar-stable overflow-y-auto text-editor w-full flex-1 resize-none border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 				style="min-height: {minHeight};"
 			></textarea>
 		</div>
@@ -395,7 +395,7 @@
 		<div class="flex w-1/2 flex-col">
 			<div
 				bind:this={previewRef}
-				class="markdown-content compact flex-1 p-4 text-wrap"
+				class="scrollbar-stable overflow-y-auto markdown-content compact flex-1 p-4 text-wrap"
 				style="min-height: {minHeight};"
 			>
 				{#if content.trim()}
