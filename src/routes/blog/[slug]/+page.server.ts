@@ -18,9 +18,9 @@ function getDefaultPost(slug: string): Post {
 }
 
 export const load: PageServerLoad = async ({ params, setHeaders }) => {
-	// Cache blog posts for 10 minutes, stale for 1 day
+	// Cache blog posts for 1 minute, stale for 1 minute
 	setHeaders({
-		'cache-control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=86400'
+		'cache-control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=60'
 	});
 
 	const { slug } = params;
