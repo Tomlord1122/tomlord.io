@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/util/markdown.js';
+	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
 		content: string;
@@ -380,15 +381,15 @@
 	<div class="flex min-h-0 flex-1 divide-x divide-gray-200">
 		<!-- Editor Pane -->
 		<div class="flex w-1/2 flex-col">
-			<textarea
-				bind:this={editorRef}
+			<TypewriterTextarea
+				bind:textareaRef={editorRef}
 				value={content}
-				oninput={handleInput}
-				onkeydown={handleKeyDown}
+				onInput={handleInput}
+				onKeydown={handleKeyDown}
 				{placeholder}
 				class="scrollbar-stable overflow-y-auto text-editor w-full flex-1 resize-none border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 				style="min-height: {minHeight};"
-			></textarea>
+			/>
 		</div>
 
 		<!-- Live Preview Pane -->
