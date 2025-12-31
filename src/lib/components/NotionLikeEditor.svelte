@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/util/markdown.js';
+	import { debounce } from '$lib/util/debounce.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
@@ -20,6 +21,26 @@
 	let editorRef = $state<HTMLTextAreaElement>();
 	let previewRef = $state<HTMLDivElement>();
 	let showSlashMenu = $state(false);
+
+	// Preview panel state
+	let showPreview = $state(true);
+	let renderedPreview = $state('');
+
+	// Debounced markdown rendering (300ms delay)
+	const debouncedRender = debounce((text: string) => {
+		if (text.trim()) {
+			renderedPreview = renderMarkdown(text);
+		} else {
+			renderedPreview = '';
+		}
+	}, 300);
+
+	// Trigger debounced render when content changes
+	$effect(() => {
+		if (showPreview) {
+			debouncedRender(content);
+		}
+	});
 	let slashMenuPosition = $state({ x: 0, y: 0 });
 	let slashMenuItems = $state<Array<{ label: string; action: () => void; icon: string }>>([]);
 	let selectedSlashIndex = $state(0);
@@ -371,44 +392,59 @@
 
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
+			debouncedRender.cancel();
 		};
 	});
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
 <div class="relative flex h-full w-full flex-col">
+	<!-- Header with Preview Toggle -->
+	<div class="flex shrink-0 items-center justify-end border-b border-gray-100 px-2 py-1">
+		<button
+			type="button"
+			onclick={() => (showPreview = !showPreview)}
+			class="rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+			title={showPreview ? 'Hide preview' : 'Show preview'}
+		>
+			{showPreview ? 'Hide Preview' : 'Show Preview'}
+		</button>
+	</div>
+
 	<!-- Editor Content - Split View -->
-	<div class="flex min-h-0 flex-1 divide-x divide-gray-200">
+	<div class="flex min-h-0 flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
 		<!-- Editor Pane -->
-		<div class="flex w-1/2 flex-col">
+		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} flex-col transition-all duration-200">
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
 				value={content}
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
 				{placeholder}
-				class="scrollbar-stable overflow-y-auto text-editor w-full flex-1 resize-none border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				class="scrollbar-stable text-editor w-full flex-1 resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 				style="min-height: {minHeight};"
 			/>
 		</div>
 
-		<!-- Live Preview Pane -->
-		<div class="flex w-1/2 flex-col">
-			<div
-				bind:this={previewRef}
-				class="scrollbar-stable overflow-y-auto markdown-content compact flex-1 p-4 text-wrap"
-				style="min-height: {minHeight};"
-			>
-				{#if content.trim()}
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					{@html renderMarkdown(content)}
-				{:else}
-					<p class="text-gray-500 italic">
-						{placeholder}
-					</p>
-				{/if}
+		<!-- Live Preview Pane (conditional) -->
+		{#if showPreview}
+			<div class="flex w-1/2 flex-col">
+				<div
+					bind:this={previewRef}
+					class="scrollbar-stable markdown-content compact flex-1 overflow-y-auto p-4 text-wrap"
+					style="min-height: {minHeight};"
+				>
+					{#if renderedPreview}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						{@html renderedPreview}
+					{:else}
+						<p class="text-gray-500 italic">
+							{placeholder}
+						</p>
+					{/if}
+				</div>
 			</div>
-		</div>
+		{/if}
 	</div>
 
 	<!-- Enhanced Slash Command Menu -->
