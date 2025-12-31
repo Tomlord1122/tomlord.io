@@ -409,9 +409,9 @@
 	</div>
 
 	<!-- Editor Content - Split View -->
-	<div class="flex min-h-0 flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
+	<div class="flex h-full flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
 		<!-- Editor Pane -->
-		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} min-h-0 flex-col transition-all duration-200">
+		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} h-full flex-col transition-all duration-200">
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
 				value={content}
@@ -424,7 +424,7 @@
 
 		<!-- Live Preview Pane (conditional) -->
 		{#if showPreview}
-			<div class="flex w-1/2 min-h-0 flex-col">
+			<div class="flex w-1/2 h-full flex-col">
 				<div
 					bind:this={previewRef}
 					class="scrollbar-stable markdown-content compact h-full overflow-y-auto p-4 text-wrap"
