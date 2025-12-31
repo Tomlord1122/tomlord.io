@@ -8,14 +8,12 @@
 		content: string;
 		onContentChange: (value: string) => void;
 		placeholder?: string;
-		minHeight?: string;
 	}
 
 	let {
 		content,
 		onContentChange,
 		placeholder = "Type '/' for commands or start writing...",
-		minHeight = '400px'
 	}: Props = $props();
 
 	let editorRef = $state<HTMLTextAreaElement>();
@@ -293,7 +291,6 @@
 		mirror.style.position = 'absolute';
 		mirror.style.visibility = 'hidden';
 		mirror.style.whiteSpace = 'pre-wrap';
-		mirror.style.wordWrap = 'break-word';
 		mirror.style.top = '0';
 		mirror.style.left = '0';
 		mirror.style.width = computed.width;
@@ -398,7 +395,7 @@
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
-<div class="relative flex w-full flex-col" style="height: {minHeight};">
+<div class="relative flex w-full flex-col h-full">
 	<!-- Header with Preview Toggle -->
 	<div class="flex shrink-0 items-center justify-end border-b border-gray-100 px-2 py-1">
 		<button
