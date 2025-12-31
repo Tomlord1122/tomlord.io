@@ -396,11 +396,13 @@ ${content}`;
 							Reset
 						</button>
 					</div>
-					<NotionLikeEditor
-						{content}
-						onContentChange={(value) => (content = value)}
-						placeholder="Edit your blog post content here using Markdown. Type '/' for commands..."
-					/>
+					<div class="h-[500px]">
+						<NotionLikeEditor
+							{content}
+							onContentChange={(value) => (content = value)}
+							placeholder="Edit your blog post content here using Markdown. Type '/' for commands..."
+						/>
+					</div>
 				</div>
 			</form>
 		</div>

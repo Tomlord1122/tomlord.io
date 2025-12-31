@@ -113,7 +113,7 @@
 					Reset
 				</button>
 			</div>
-			<div class="min-h-0 flex-1 px-6 pb-4">
+			<div class="min-h-0 flex-1 px-6 pb-4 h-full">
 				<NotionLikeEditor
 					{content}
 					onContentChange={(value) => (content = value)}

@@ -328,11 +328,13 @@ ${content}`;
 					<div class="mb-1">
 						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
 					</div>
-					<NotionLikeEditor
-						{content}
-						onContentChange={(value) => (content = value)}
-						placeholder="Write your blog post content here using Markdown. Type '/' for commands..."
-					/>
+					<div class="h-[500px]">
+						<NotionLikeEditor
+							{content}
+							onContentChange={(value) => (content = value)}
+							placeholder="Write your blog post content here using Markdown. Type '/' for commands..."
+						/>
+					</div>
 				</div>
 			</form>
 		</div>
