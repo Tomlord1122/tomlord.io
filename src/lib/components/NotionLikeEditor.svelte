@@ -418,7 +418,7 @@
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
 				{placeholder}
-				class="scrollbar-stable text-editor h-full w-full resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 			/>
 		</div>
 

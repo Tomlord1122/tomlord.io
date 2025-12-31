@@ -7,20 +7,14 @@
 		id?: string;
 		required?: boolean;
 		disabled?: boolean;
-		readonly?: boolean;
 		rows?: number;
-		cols?: number;
-		maxlength?: number;
-		minlength?: number;
 		wrap?: 'soft' | 'hard' | null;
-		resize?: 'none' | 'both' | 'horizontal' | 'vertical';
 		onKeydown?: (e: KeyboardEvent) => void;
 		onInput?: (e: Event) => void;
 		onFocus?: (e: FocusEvent) => void;
 		onBlur?: (e: FocusEvent) => void;
 		onCompositionstart?: (e: CompositionEvent) => void;
 		onCompositionend?: (e: CompositionEvent) => void;
-		style?: string;
 	}
 
 	let {
@@ -31,20 +25,14 @@
 		id = '',
 		required = false,
 		disabled = false,
-		readonly = false,
-		rows = 4,
-		cols,
-		maxlength,
-		minlength,
+		rows,
 		wrap = 'soft',
-		resize = 'vertical',
 		onKeydown,
 		onInput,
 		onFocus,
 		onBlur,
 		onCompositionstart,
 		onCompositionend,
-		style = ''
 	}: Props = $props();
 
 	let textareaElement = $state<HTMLTextAreaElement>();
@@ -86,18 +74,14 @@
 	};
 </script>
 
-<div class="typewriter-textarea-container">
+<div class="typewriter-textarea-container h-full">
 	<textarea
 		bind:this={textareaElement}
 		{placeholder}
 		{id}
 		{required}
 		{disabled}
-		{readonly}
 		{rows}
-		{cols}
-		{maxlength}
-		{minlength}
 		{wrap}
 		{value}
 		class={`
@@ -106,7 +90,6 @@
 			${isFocused ? 'typewriter-focused' : ''}
 			${disabled ? 'typewriter-disabled' : ''}
 		`}
-		style="{style}; resize: {resize};"
 		onkeydown={handleKeydown}
 		oninput={handleInput}
 		onfocus={handleFocus}

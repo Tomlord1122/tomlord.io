@@ -47,9 +47,6 @@
 		scrollbar-gutter: stable;
 	}
 
-	.text-editor {
-		@apply bg-white;
-	}
 
 	.markdown-content {
 		@apply prose prose-sm sm:prose-base max-w-none;
