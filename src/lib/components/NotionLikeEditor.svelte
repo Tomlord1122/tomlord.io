@@ -398,7 +398,7 @@
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
-<div class="relative flex h-full w-full flex-col">
+<div class="relative flex w-full flex-col" style="height: {minHeight};">
 	<!-- Header with Preview Toggle -->
 	<div class="flex shrink-0 items-center justify-end border-b border-gray-100 px-2 py-1">
 		<button
@@ -414,25 +414,23 @@
 	<!-- Editor Content - Split View -->
 	<div class="flex min-h-0 flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
 		<!-- Editor Pane -->
-		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} flex-col transition-all duration-200">
+		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} min-h-0 flex-col transition-all duration-200">
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
 				value={content}
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
 				{placeholder}
-				class="scrollbar-stable text-editor w-full flex-1 resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
-				style="min-height: {minHeight};"
+				class="scrollbar-stable text-editor h-full w-full resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 			/>
 		</div>
 
 		<!-- Live Preview Pane (conditional) -->
 		{#if showPreview}
-			<div class="flex w-1/2 flex-col">
+			<div class="flex w-1/2 min-h-0 flex-col">
 				<div
 					bind:this={previewRef}
-					class="scrollbar-stable markdown-content compact flex-1 overflow-y-auto p-4 text-wrap"
-					style="min-height: {minHeight};"
+					class="scrollbar-stable markdown-content compact h-full overflow-y-auto p-4 text-wrap"
 				>
 					{#if renderedPreview}
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->

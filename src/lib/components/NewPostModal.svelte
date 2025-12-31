@@ -1,5 +1,6 @@
 <script lang="ts">
 	import NotionLikeEditor from './NotionLikeEditor.svelte';
+	import LazyImage from './LazyImage.svelte';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { NewPostModalType } from '../types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -137,9 +138,9 @@ ${content}`;
 </script>
 
 {#if show}
-	<!-- Backdrop with blur effect -->
+	<!-- Backdrop -->
 	<div
-		class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+		class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-300"
 		onclick={() => {
 			onCancel();
 			show = false;
@@ -303,11 +304,9 @@ ${content}`;
 									class="group relative aspect-square rounded border border-gray-200 bg-white p-1 transition-shadow hover:shadow-md"
 									title="Click to copy: {imagePath.split('/').pop()}"
 								>
-									<img
+									<LazyImage
 										src={imagePath}
-										alt="Preview {imagePath.split('/').pop()}"
-										loading="lazy"
-										decoding="async"
+										alt="Preview {imagePath.split('/').pop() ?? ''}"
 										class="h-full w-full rounded object-cover"
 									/>
 									<span

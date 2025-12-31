@@ -71,9 +71,9 @@
 </script>
 
 {#if show}
-	<!-- Backdrop with blur effect -->
+	<!-- Backdrop -->
 	<div
-		class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+		class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-300"
 		onclick={() => {
 			onCancel();
 			show = false;
