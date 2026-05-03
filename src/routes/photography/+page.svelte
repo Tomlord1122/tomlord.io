@@ -327,12 +327,8 @@
 			if (!response.ok) {
 				throw new Error(result.message || 'Failed to save order');
 			}
-			exitEditMode();
-			await invalidateAll();
-			// Show all photos after reorder so the full grid renders correctly
-			if (photos.length > 0) {
-				visiblePhotosCount = photos.length;
-			}
+			// Full page reload to ensure fresh data and bust image cache
+			window.location.reload();
 		} catch (err) {
 			console.error('Failed to save order:', err);
 			alert(err instanceof Error ? err.message : 'Failed to save order');
@@ -439,29 +435,57 @@
 <main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area mt-10">
 	{#if isEditOrderMode && reorderedPhotos.length > 0}
 		<!-- Edit mode: show all photos with drag-and-drop -->
-		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-			{#each reorderedPhotos as photo, i (photo.id)}
-				<div
-					draggable="true"
-					ondragstart={handleDragStart(i)}
-					ondragover={handleDragOver(i)}
-					ondrop={handleDrop(i)}
-					ondragend={handleDragEnd}
-					class="cursor-grab transition-all {draggedIndex === i
-						? 'opacity-50'
-						: ''} {dragOverIndex === i && draggedIndex !== i
-						? 'scale-105 ring-2 ring-blue-400'
-						: ''}"
-					role="button"
-					aria-label="Drag to reorder photo {i + 1}"
-					tabindex="0"
-				>
-					<div class="pointer-events-none">
-						<ResponsiveImage src={photo.src} alt={photo.alt} loading="eager" onclick={() => {}} />
+		<div class="relative">
+			<div
+				class="grid grid-cols-2 gap-2 transition-opacity md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 {isSavingOrder
+					? 'pointer-events-none opacity-50'
+					: ''}"
+			>
+				{#each reorderedPhotos as photo, i (photo.id)}
+					<div
+						draggable={!isSavingOrder}
+						ondragstart={handleDragStart(i)}
+						ondragover={handleDragOver(i)}
+						ondrop={handleDrop(i)}
+						ondragend={handleDragEnd}
+						class="cursor-grab transition-all {draggedIndex === i
+							? 'opacity-50'
+							: ''} {dragOverIndex === i && draggedIndex !== i
+							? 'scale-105 ring-2 ring-blue-400'
+							: ''}"
+						role="button"
+						aria-label="Drag to reorder photo {i + 1}"
+						tabindex="0"
+					>
+						<div class="pointer-events-none">
+							<ResponsiveImage
+								src={photo.src}
+								alt={photo.alt}
+								loading="eager"
+								onclick={() => {}}
+							/>
+						</div>
+						<div class="mt-1 text-center text-xs text-gray-500">{i + 1}</div>
 					</div>
-					<div class="mt-1 text-center text-xs text-gray-500">{i + 1}</div>
+				{/each}
+			</div>
+
+			{#if isSavingOrder}
+				<!-- Saving overlay -->
+				<div
+					class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm dark:bg-black/60"
+					in:fade={{ duration: 150 }}
+				>
+					<div class="flex flex-col items-center gap-3">
+						<div
+							class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"
+						></div>
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-200"
+							>Saving order...</span
+						>
+					</div>
 				</div>
-			{/each}
+			{/if}
 		</div>
 	{:else if displayedPhotos && displayedPhotos.length > 0}
 		<!-- Optimized grid with stable keys and virtual scrolling -->
