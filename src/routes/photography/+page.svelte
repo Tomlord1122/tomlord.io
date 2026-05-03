@@ -34,6 +34,15 @@
 	let showFullSizeImage = $state(false);
 	let currentFullSizeImage = $state('');
 
+	// Edit order mode state
+	let isEditOrderMode = $state(false);
+	let reorderedPhotos = $state<
+		Array<{ id: string; src: string; alt: string; filename: string; index: number }>
+	>([]);
+	let draggedIndex = $state<number | null>(null);
+	let dragOverIndex = $state<number | null>(null);
+	let isSavingOrder = $state(false);
+
 	// Virtual scrolling and pagination optimization
 	const PHOTOS_TO_LOAD_AT_ONCE = 10; // Optimized batch size
 	const PRELOAD_THRESHOLD = 3; // Preload when 3 items before the end
@@ -247,6 +256,91 @@
 		console.log('Image upload modal cancelled.');
 	}
 
+	// Edit order mode functions
+	function enterEditMode() {
+		reorderedPhotos = [...photos];
+		isEditOrderMode = true;
+	}
+
+	function exitEditMode() {
+		isEditOrderMode = false;
+		reorderedPhotos = [];
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
+
+	function handleDragStart(index: number) {
+		return (event: DragEvent) => {
+			draggedIndex = index;
+			event.dataTransfer!.effectAllowed = 'move';
+		};
+	}
+
+	function handleDragOver(index: number) {
+		return (event: DragEvent) => {
+			event.preventDefault();
+			event.dataTransfer!.dropEffect = 'move';
+			if (draggedIndex !== null && draggedIndex !== index) {
+				dragOverIndex = index;
+			}
+		};
+	}
+
+	function handleDrop(targetIndex: number) {
+		return (event: DragEvent) => {
+			event.preventDefault();
+			if (draggedIndex === null || draggedIndex === targetIndex) {
+				draggedIndex = null;
+				dragOverIndex = null;
+				return;
+			}
+
+			// Swap two photos
+			const newPhotos = [...reorderedPhotos];
+			const temp = newPhotos[draggedIndex];
+			newPhotos[draggedIndex] = newPhotos[targetIndex];
+			newPhotos[targetIndex] = temp;
+
+			reorderedPhotos = newPhotos;
+			draggedIndex = null;
+			dragOverIndex = null;
+		};
+	}
+
+	function handleDragEnd() {
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
+
+	async function saveOrder() {
+		if (reorderedPhotos.length === 0) return;
+
+		isSavingOrder = true;
+		try {
+			const order = reorderedPhotos.map((p) => p.filename);
+			const response = await fetch('/api/reorder-photos', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ order })
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				throw new Error(result.message || 'Failed to save order');
+			}
+			exitEditMode();
+			await invalidateAll();
+			// Show all photos after reorder so the full grid renders correctly
+			if (photos.length > 0) {
+				visiblePhotosCount = photos.length;
+			}
+		} catch (err) {
+			console.error('Failed to save order:', err);
+			alert(err instanceof Error ? err.message : 'Failed to save order');
+		} finally {
+			isSavingOrder = false;
+		}
+	}
+
 	// Performance optimization: Keyboard navigation enhancement
 	function handleKeydown(event: KeyboardEvent) {
 		if (showFullSizeImage && event.key === 'Escape') {
@@ -284,22 +378,92 @@
 			tom.photography
 		{/if}
 
-		<!-- Carousel view toggle button - hidden on mobile -->
-		{#if photos && photos.length > 0 && !isMobile}
-			<button
-				onclick={() => openCarouselView()}
-				class="ml-2 rounded-lg bg-gray-100 px-2 py-1 text-xs transition-colors hover:bg-gray-200 sm:ml-4 sm:px-3 dark:bg-gray-800 dark:hover:bg-gray-700"
-				title="Carousel View"
-			>
-				<span class="sm:hidden">Carousel</span>
-				<span class="hidden sm:inline">Carousel View</span>
-			</button>
-		{/if}
+		<div class="flex items-center gap-2">
+			<!-- Edit Order button - dev only -->
+			{#if isDev && photos && photos.length > 0 && !isEditOrderMode}
+				<button
+					onclick={() => enterEditMode()}
+					class="rounded-lg bg-gray-100 px-2 py-1 text-xs transition-colors hover:bg-gray-200 sm:px-3 dark:bg-gray-800 dark:hover:bg-gray-700"
+					title="Edit Photo Order"
+				>
+					<span class="sm:hidden">Order</span>
+					<span class="hidden sm:inline">Edit Order</span>
+				</button>
+			{/if}
+
+			<!-- Save / Cancel buttons in edit mode -->
+			{#if isDev && isEditOrderMode}
+				<button
+					onclick={saveOrder}
+					disabled={isSavingOrder}
+					class="rounded-lg bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+				>
+					{#if isSavingOrder}
+						<div class="flex items-center gap-1">
+							<div
+								class="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
+							></div>
+							<span class="sm:hidden">Save</span>
+							<span class="hidden sm:inline">Saving...</span>
+						</div>
+					{:else}
+						<span class="sm:hidden">Save</span>
+						<span class="hidden sm:inline">Save Order</span>
+					{/if}
+				</button>
+				<button
+					onclick={exitEditMode}
+					disabled={isSavingOrder}
+					class="rounded-lg bg-gray-200 px-2 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+				>
+					<span class="sm:hidden">Cancel</span>
+					<span class="hidden sm:inline">Cancel</span>
+				</button>
+			{/if}
+
+			<!-- Carousel view toggle button - hidden on mobile -->
+			{#if photos && photos.length > 0 && !isMobile && !isEditOrderMode}
+				<button
+					onclick={() => openCarouselView()}
+					class="ml-2 rounded-lg bg-gray-100 px-2 py-1 text-xs transition-colors hover:bg-gray-200 sm:ml-4 sm:px-3 dark:bg-gray-800 dark:hover:bg-gray-700"
+					title="Carousel View"
+				>
+					<span class="sm:hidden">Carousel</span>
+					<span class="hidden sm:inline">Carousel View</span>
+				</button>
+			{/if}
+		</div>
 	</h1>
 </div>
 
 <main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area mt-10">
-	{#if displayedPhotos && displayedPhotos.length > 0}
+	{#if isEditOrderMode && reorderedPhotos.length > 0}
+		<!-- Edit mode: show all photos with drag-and-drop -->
+		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			{#each reorderedPhotos as photo, i (photo.id)}
+				<div
+					draggable="true"
+					ondragstart={handleDragStart(i)}
+					ondragover={handleDragOver(i)}
+					ondrop={handleDrop(i)}
+					ondragend={handleDragEnd}
+					class="cursor-grab transition-all {draggedIndex === i
+						? 'opacity-50'
+						: ''} {dragOverIndex === i && draggedIndex !== i
+						? 'scale-105 ring-2 ring-blue-400'
+						: ''}"
+					role="button"
+					aria-label="Drag to reorder photo {i + 1}"
+					tabindex="0"
+				>
+					<div class="pointer-events-none">
+						<ResponsiveImage src={photo.src} alt={photo.alt} loading="eager" onclick={() => {}} />
+					</div>
+					<div class="mt-1 text-center text-xs text-gray-500">{i + 1}</div>
+				</div>
+			{/each}
+		</div>
+	{:else if displayedPhotos && displayedPhotos.length > 0}
 		<!-- Optimized grid with stable keys and virtual scrolling -->
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.id)}

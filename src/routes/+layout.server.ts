@@ -1,30 +1,29 @@
 import type { LayoutServerLoad } from './$types.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const photoDir = path.join(process.cwd(), 'static', 'photography_assets');
 
 export const load: LayoutServerLoad = async () => {
-	// Load available photos using import.meta.glob for production compatibility
 	let availablePhotos: string[] = [];
 
 	try {
-		const photoModules = import.meta.glob('/static/photography_assets/*', {
-			eager: true,
-			query: '?url',
-			import: 'default'
-		});
+		const files = await fs.readdir(photoDir);
 
 		// Extract the URLs and filter for image files
 		const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-		availablePhotos = Object.keys(photoModules)
-			.filter((path) => {
-				const ext = path.substring(path.lastIndexOf('.')).toLowerCase();
+		availablePhotos = files
+			.filter((filename) => {
+				const ext = path.extname(filename).toLowerCase();
 				return imageExtensions.includes(ext);
 			})
-			.map((path) => {
-				// Convert from /static/photography_assets/filename.ext to /photography_assets/filename.ext
-				return path.replace('/static', '');
+			.map((filename) => {
+				// Convert to public URL path
+				return `/photography_assets/${filename}`;
 			})
 			.sort((a, b) => {
-				const getNumber = (path: string) => {
-					const filename = path.split('/').pop();
+				const getNumber = (url: string) => {
+					const filename = url.split('/').pop();
 					const numberPart = filename?.split('.')[0];
 					return parseInt(numberPart || '0') || 0;
 				};
