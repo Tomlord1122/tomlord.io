@@ -118,6 +118,12 @@
 			action: () => insertText('---\n'),
 			icon: '—',
 			keywords: ['rule', 'line', 'divider']
+		},
+		{
+			label: 'Mermaid Diagram',
+			action: () => insertText('```mermaid\n', '\n```'),
+			icon: 'M',
+			keywords: ['mermaid', 'diagram', 'chart', 'graph', 'flowchart']
 		}
 	];
 
