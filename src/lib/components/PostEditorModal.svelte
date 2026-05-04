@@ -1,5 +1,6 @@
 <script lang="ts">
 	import NotionLikeEditor from './NotionLikeEditor.svelte';
+	import ExcalidrawModal from './ExcalidrawModal.svelte';
 	import LazyImage from './LazyImage.svelte';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
 	import type { PostData } from '$lib/types/post.js';
@@ -30,6 +31,7 @@
 	// Image picker state — default to Content collection
 	let imagePickerCollection = $state<'photography' | 'content'>('content');
 	let isImageSectionActive = $state(false);
+	let showExcalidrawModal = $state(false);
 
 	let activeImages = $derived(
 		imagePickerCollection === 'photography' ? availablePhotos : availableAssets
@@ -212,6 +214,11 @@ ${content}`;
 	function handleSave() {
 		if (mode === 'create') handleCreatePost();
 		else handleUpdatePost();
+	}
+
+	function handleDrawingInsert(imageMarkdown: string) {
+		const separator = content.trim().length > 0 && !content.endsWith('\n\n') ? '\n\n' : '';
+		content = content + separator + imageMarkdown + '\n';
 	}
 </script>
 
@@ -411,13 +418,22 @@ ${content}`;
 				<div class="mt-3">
 					<div class="mb-1 flex items-center justify-between">
 						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
-						<button
-							type="button"
-							onclick={resetForm}
-							class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-						>
-							Reset
-						</button>
+						<div class="flex items-center gap-2">
+							<button
+								type="button"
+								onclick={() => (showExcalidrawModal = true)}
+								class="rounded-md bg-purple-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+							>
+								Draw
+							</button>
+							<button
+								type="button"
+								onclick={resetForm}
+								class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+							>
+								Reset
+							</button>
+						</div>
 					</div>
 					<div class="h-[500px]">
 						<NotionLikeEditor
@@ -464,3 +480,8 @@ ${content}`;
 		</div>
 	</div>
 {/if}
+
+<ExcalidrawModal
+	bind:show={showExcalidrawModal}
+	onInsert={handleDrawingInsert}
+/>
