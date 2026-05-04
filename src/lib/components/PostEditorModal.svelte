@@ -1,7 +1,9 @@
 <script lang="ts">
 	import NotionLikeEditor from './NotionLikeEditor.svelte';
+	import ExcalidrawModal from './ExcalidrawModal.svelte';
 	import LazyImage from './LazyImage.svelte';
 	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
+	import { listDrawings, type StorageFile } from '$lib/supabase.js';
 	import type { PostData } from '$lib/types/post.js';
 	import type { PostEditorModalType } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -30,6 +32,29 @@
 	// Image picker state — default to Content collection
 	let imagePickerCollection = $state<'photography' | 'content'>('content');
 	let isImageSectionActive = $state(false);
+	let showExcalidrawModal = $state(false);
+
+	// Drawings gallery state
+	let drawings = $state<StorageFile[]>([]);
+	let showDrawings = $state(false);
+	let drawingsLoading = $state(false);
+
+	async function loadDrawings() {
+		drawingsLoading = true;
+		const { files, error } = await listDrawings();
+		if (error) {
+			console.error('Failed to load drawings:', error.message);
+		} else {
+			drawings = files;
+		}
+		drawingsLoading = false;
+	}
+
+	function insertDrawingMarkdown(publicUrl: string) {
+		const markdown = `<div class="flex justify-center">\n<img src="${publicUrl}" alt="Drawing" class="photo-post">\n</div>`;
+		const separator = content.trim().length > 0 && !content.endsWith('\n\n') ? '\n\n' : '';
+		content = content + separator + markdown + '\n';
+	}
 
 	let activeImages = $derived(
 		imagePickerCollection === 'photography' ? availablePhotos : availableAssets
@@ -212,6 +237,14 @@ ${content}`;
 	function handleSave() {
 		if (mode === 'create') handleCreatePost();
 		else handleUpdatePost();
+	}
+
+	function handleDrawingInsert(imageMarkdown: string) {
+		const separator = content.trim().length > 0 && !content.endsWith('\n\n') ? '\n\n' : '';
+		content = content + separator + imageMarkdown + '\n';
+		if (showDrawings) {
+			loadDrawings();
+		}
 	}
 </script>
 
@@ -407,17 +440,79 @@ ${content}`;
 					</div>
 				{/if}
 
+				<!-- Drawings gallery -->
+				<div class="mt-4 border-t border-gray-200 pt-4">
+					<div class="mb-2 flex items-center justify-between">
+						<h4 class="text-sm font-medium text-gray-700">My Drawings</h4>
+						<div class="flex items-center gap-2">
+							<button
+								type="button"
+								onclick={() => { showDrawings = !showDrawings; if (showDrawings) loadDrawings(); }}
+								class="rounded-md bg-purple-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+							>
+								{showDrawings ? 'Hide Drawings' : 'Show Drawings'}
+							</button>
+							<button
+								type="button"
+								onclick={() => (showExcalidrawModal = true)}
+								class="rounded-md border border-purple-300 px-3 py-1 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-50"
+							>
+								+ New
+							</button>
+						</div>
+					</div>
+
+					{#if showDrawings}
+						{#if drawingsLoading}
+							<p class="rounded-md bg-gray-50 p-3 text-xs text-gray-500">Loading drawings...</p>
+						{:else if drawings.length > 0}
+							<div class="grid max-h-96 grid-cols-3 gap-2 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-2 sm:grid-cols-4 md:grid-cols-6">
+								{#each drawings as drawing (drawing.name)}
+									<button
+										type="button"
+										onclick={() => insertDrawingMarkdown(drawing.publicUrl)}
+										class="group relative aspect-square rounded border border-gray-200 bg-white p-1 transition-shadow hover:shadow-md"
+										title="Click to insert: {drawing.name}"
+									>
+										<LazyImage
+											src={drawing.publicUrl}
+											alt="Drawing {drawing.name}"
+											class="h-full w-full rounded object-cover"
+										/>
+										<span class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+											Insert
+										</span>
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<p class="rounded-md bg-gray-50 p-3 text-xs text-gray-500">
+								No drawings yet. Click "+ New" to create one.
+							</p>
+						{/if}
+					{/if}
+				</div>
+
 				<!-- Content editor -->
 				<div class="mt-3">
 					<div class="mb-1 flex items-center justify-between">
 						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
-						<button
-							type="button"
-							onclick={resetForm}
-							class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-						>
-							Reset
-						</button>
+						<div class="flex items-center gap-2">
+							<button
+								type="button"
+								onclick={() => (showExcalidrawModal = true)}
+								class="rounded-md bg-purple-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+							>
+								Draw
+							</button>
+							<button
+								type="button"
+								onclick={resetForm}
+								class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+							>
+								Reset
+							</button>
+						</div>
 					</div>
 					<div class="h-[500px]">
 						<NotionLikeEditor
@@ -464,3 +559,8 @@ ${content}`;
 		</div>
 	</div>
 {/if}
+
+<ExcalidrawModal
+	bind:show={showExcalidrawModal}
+	onInsert={handleDrawingInsert}
+/>
