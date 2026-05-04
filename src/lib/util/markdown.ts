@@ -34,7 +34,7 @@ marked.use(
 	{
 		renderer: {
 			code({ text, lang, escaped }) {
-				if (lang === 'mermaid') {
+				if (lang?.trim().toLowerCase() === 'mermaid') {
 					try {
 						const svg = renderMermaidSVG(text, {
 							bg: '#ffffff',
