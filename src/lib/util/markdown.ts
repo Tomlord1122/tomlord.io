@@ -2,6 +2,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { markedHighlight } from 'marked-highlight';
 import { gfmHeadingId } from 'marked-gfm-heading-id';
+import { renderMermaidSVG } from 'beautiful-mermaid';
 import Prism from 'prismjs';
 
 // Import Prism languages
@@ -29,7 +30,29 @@ marked.use(
 			}
 			return code;
 		}
-	})
+	}),
+	{
+		renderer: {
+			code({ text, lang, escaped }) {
+				if (lang?.trim().toLowerCase() === 'mermaid') {
+					try {
+						const svg = renderMermaidSVG(text, {
+							bg: '#ffffff',
+							fg: '#27272a',
+							accent: '#52525b',
+							transparent: true
+						});
+						return `<div class="mermaid-diagram">${svg}</div>`;
+					} catch (err) {
+						console.error('Mermaid rendering error:', err);
+						const safeText = escaped ? text : escapeHtml(text);
+						return `<pre class="mermaid-error"><code class="language-mermaid">${safeText}</code></pre>`;
+					}
+				}
+				return false;
+			}
+		}
+	}
 );
 
 // Configure marked options
@@ -37,6 +60,15 @@ marked.setOptions({
 	breaks: true, // Convert line breaks to <br>
 	gfm: true // Enable GitHub Flavored Markdown
 });
+
+function escapeHtml(text: string): string {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
 
 /**
  * Render markdown text to HTML safely with enhanced features
@@ -47,8 +79,76 @@ export function renderMarkdown(text: string): string {
 	try {
 		const html = marked(text) as string;
 		return DOMPurify.sanitize(html, {
-			ADD_TAGS: ['iframe'], // Allow iframes for embeds
-			ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+			ADD_TAGS: [
+				'iframe',
+				'svg',
+				'g',
+				'path',
+				'rect',
+				'text',
+				'line',
+				'polygon',
+				'polyline',
+				'circle',
+				'ellipse',
+				'marker',
+				'defs',
+				'use',
+				'title',
+				'foreignObject',
+				'tspan',
+				'clipPath',
+				'pattern',
+				'stop',
+				'linearGradient',
+				'radialGradient',
+				'desc'
+			],
+			ADD_ATTR: [
+				'allow',
+				'allowfullscreen',
+				'frameborder',
+				'scrolling',
+				'viewBox',
+				'fill',
+				'stroke',
+				'stroke-width',
+				'd',
+				'points',
+				'marker-end',
+				'marker-start',
+				'marker-mid',
+				'transform',
+				'x',
+				'y',
+				'width',
+				'height',
+				'rx',
+				'ry',
+				'cx',
+				'cy',
+				'r',
+				'x1',
+				'y1',
+				'x2',
+				'y2',
+				'font-family',
+				'font-size',
+				'font-weight',
+				'text-anchor',
+				'dominant-baseline',
+				'opacity',
+				'class',
+				'id',
+				'style',
+				'xmlns',
+				'version',
+				'fill-opacity',
+				'stroke-opacity',
+				'stroke-dasharray',
+				'stroke-linecap',
+				'stroke-linejoin'
+			]
 		});
 	} catch (error) {
 		console.error('Markdown rendering error:', error);

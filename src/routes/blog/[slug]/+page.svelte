@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/util/markdown.js';
 	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
@@ -26,10 +26,7 @@
 
 	$effect(() => {
 		if (content) {
-			const result = marked(content);
-			Promise.resolve(result).then((html) => {
-				contentHtml = html;
-			});
+			contentHtml = renderMarkdown(content);
 		}
 	});
 
