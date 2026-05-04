@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import type { ImageUploadModalType } from '../types/image.js';
-	// Props for the modal
+	import type { ImageUploadModalType, UploadTarget } from '../types/image.js';
+
 	let {
 		show = $bindable(),
+		defaultTarget = 'photography',
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		onUploadSuccess = (_filePaths: string[]) => {},
 		onCancel = () => {}
@@ -16,19 +17,22 @@
 	let statusMessage = $state<string | null>(null);
 	let statusIsError = $state(false);
 	let overallProgressMessage = $state<string | null>(null);
+	let selectedTarget = $state<UploadTarget>('photography');
+
+	// Sync with the prop value whenever it changes
+	$effect(() => {
+		selectedTarget = defaultTarget;
+	});
 
 	function handleFileChange(event: Event) {
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
-			// Clean up old preview URLs first
 			const oldUrls = [...previewUrls];
 			oldUrls.forEach((url) => URL.revokeObjectURL(url));
 
-			// Create new arrays instead of mutating
 			const newFiles = Array.from(input.files);
 			const newUrls = newFiles.map((file) => URL.createObjectURL(file));
 
-			// Replace state (not mutate)
 			selectedFiles = newFiles;
 			previewUrls = newUrls;
 
@@ -36,11 +40,9 @@
 			statusIsError = false;
 			overallProgressMessage = null;
 		} else {
-			// Clean up preview URLs
 			const oldUrls = [...previewUrls];
 			oldUrls.forEach((url) => URL.revokeObjectURL(url));
 
-			// Reset with new arrays
 			selectedFiles = [];
 			previewUrls = [];
 		}
@@ -62,7 +64,6 @@
 		let errorOccurred = false;
 		let currentErrorMessages = '';
 
-		// Use local copies to prevent reactivity issues during iteration
 		const filesToUpload = [...selectedFiles];
 
 		for (let i = 0; i < filesToUpload.length; i++) {
@@ -71,6 +72,7 @@
 
 			const formData = new FormData();
 			formData.append('imageFile', file);
+			formData.append('targetDir', selectedTarget);
 
 			try {
 				const response = await fetch('/api/upload-image', {
@@ -84,8 +86,8 @@
 					throw new Error(result.message || `Error uploading ${file.name}: ${response.status}`);
 				}
 
-				if (result.fileName) {
-					successfulUploadPaths.push(result.fileName);
+				if (result.filePath) {
+					successfulUploadPaths.push(result.filePath);
 				}
 			} catch (err: unknown) {
 				console.error(`Upload error for ${file.name}:`, err);
@@ -96,7 +98,6 @@
 			}
 		}
 
-		// Update status only once after the loop
 		if (currentErrorMessages) {
 			statusMessage = currentErrorMessages;
 			statusIsError = true;
@@ -130,17 +131,12 @@
 	}
 
 	function resetState() {
-		// Copy URLs to local array before iterating
 		const urlsToRevoke = [...previewUrls];
 		urlsToRevoke.forEach((url) => URL.revokeObjectURL(url));
 
-		// Reset all state with new values instead of mutations
 		selectedFiles = [];
 		previewUrls = [];
-		// statusMessage = null;
-		// statusIsError = false;
 		isLoading = false;
-		// overallProgressMessage = null;
 	}
 </script>
 
@@ -157,12 +153,46 @@
 		in:fly={{ y: 20, duration: 300, delay: 50 }}
 	>
 		<div class="mb-4 flex items-center justify-between">
-			<h2 class="text-xl font-semibold text-gray-800">Upload New Photo(s)</h2>
+			<h2 class="text-xl font-semibold text-gray-800">Upload New Image(s)</h2>
 			<button
 				onclick={closeModal}
 				class="text-3xl leading-none text-gray-500 hover:text-gray-700"
 				aria-label="Close modal">&times;</button
 			>
+		</div>
+
+		<!-- Target toggle -->
+		<div class="mb-4">
+			<p class="mb-2 text-sm font-medium text-gray-700">Upload to:</p>
+			<div class="flex overflow-hidden rounded-lg border border-gray-300">
+				<button
+					type="button"
+					onclick={() => (selectedTarget = 'photography')}
+					disabled={isLoading}
+					class="flex-1 px-4 py-2 text-sm font-medium transition-colors duration-150
+						{selectedTarget === 'photography'
+						? 'bg-gray-800 text-white'
+						: 'bg-white text-gray-700 hover:bg-gray-50'}"
+				>
+					Photography
+				</button>
+				<button
+					type="button"
+					onclick={() => (selectedTarget = 'content')}
+					disabled={isLoading}
+					class="flex-1 border-l border-gray-300 px-4 py-2 text-sm font-medium transition-colors duration-150
+						{selectedTarget === 'content'
+						? 'bg-gray-800 text-white'
+						: 'bg-white text-gray-700 hover:bg-gray-50'}"
+				>
+					Content
+				</button>
+			</div>
+			<p class="mt-1 text-xs text-gray-500">
+				{selectedTarget === 'photography'
+					? 'Images will appear in the Photography gallery.'
+					: 'Images will be available for use in pages and blog posts.'}
+			</p>
 		</div>
 
 		<div class="my-4">
@@ -226,7 +256,7 @@
 						></path>
 					</svg>
 				{:else}
-					Upload {selectedFiles.length > 0 ? selectedFiles.length : ''} Image(s)
+					Upload {selectedFiles.length > 0 ? selectedFiles.length : ''} Image(s) to {selectedTarget === 'photography' ? 'Photography' : 'Content'}
 				{/if}
 			</button>
 

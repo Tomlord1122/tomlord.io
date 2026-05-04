@@ -5,8 +5,11 @@ export type ResponsiveImageType = {
 	onclick?: () => void;
 };
 
+export type UploadTarget = 'photography' | 'content';
+
 export type ImageUploadModalType = {
 	show: boolean;
+	defaultTarget?: UploadTarget;
 	onUploadSuccess: (filePaths: string[]) => void;
 	onCancel: () => void;
 };

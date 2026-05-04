@@ -4,9 +4,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const photoDir = path.join(process.cwd(), 'static', 'photography_assets');
+const assetDir = path.join(process.cwd(), 'static', 'content_assets');
 const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
 
 const productionPhotoModules = import.meta.glob('/static/photography_assets/*', {
+	eager: true,
+	query: '?url',
+	import: 'default'
+});
+
+const productionAssetModules = import.meta.glob('/static/content_assets/*', {
 	eager: true,
 	query: '?url',
 	import: 'default'
@@ -23,22 +30,28 @@ function sortPhotoUrls(urls: string[]) {
 	});
 }
 
-async function loadPhotosFromFilesystem() {
-	const files = await fs.readdir(photoDir);
-
-	return sortPhotoUrls(
-		files
-			.filter((filename) => {
-				const ext = path.extname(filename).toLowerCase();
-				return imageExtensions.includes(ext);
-			})
-			.map((filename) => `/photography_assets/${filename}`)
-	);
+async function loadImagesFromFilesystem(dir: string, urlPrefix: string) {
+	try {
+		const files = await fs.readdir(dir);
+		return sortPhotoUrls(
+			files
+				.filter((filename) => {
+					const ext = path.extname(filename).toLowerCase();
+					return imageExtensions.includes(ext);
+				})
+				.map((filename) => `/${urlPrefix}/${filename}`)
+		);
+	} catch {
+		return [];
+	}
 }
 
-function loadPhotosFromBuildManifest() {
+function loadImagesFromBuildManifest(
+	modules: Record<string, unknown>,
+	staticPrefix: string
+) {
 	return sortPhotoUrls(
-		Object.keys(productionPhotoModules)
+		Object.keys(modules)
 			.filter((filePath) => {
 				const ext = path.extname(filePath).toLowerCase();
 				return imageExtensions.includes(ext);
@@ -49,17 +62,20 @@ function loadPhotosFromBuildManifest() {
 
 export const load: LayoutServerLoad = async () => {
 	let availablePhotos: string[] = [];
+	let availableAssets: string[] = [];
 
-	try {
-		availablePhotos = dev ? await loadPhotosFromFilesystem() : loadPhotosFromBuildManifest();
-	} catch (err) {
-		// Only log in development
-		if (process.env.NODE_ENV === 'development') {
-			console.error('Error loading photos in layout:', err);
-		}
+	if (dev) {
+		[availablePhotos, availableAssets] = await Promise.all([
+			loadImagesFromFilesystem(photoDir, 'photography_assets'),
+			loadImagesFromFilesystem(assetDir, 'content_assets')
+		]);
+	} else {
+		availablePhotos = loadImagesFromBuildManifest(productionPhotoModules, 'photography_assets');
+		availableAssets = loadImagesFromBuildManifest(productionAssetModules, 'content_assets');
 	}
 
 	return {
-		availablePhotos
+		availablePhotos,
+		availableAssets
 	};
 };

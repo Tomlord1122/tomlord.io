@@ -2,7 +2,7 @@
 	import { fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import { marked } from 'marked';
-	import EditPostModal from '$lib/components/EditPostModal.svelte';
+	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
 	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
@@ -183,12 +183,15 @@
 </article>
 
 {#if canEdit}
-	<EditPostModal
+	<PostEditorModal
 		bind:show={showEditModal}
-		{postData}
+		mode="edit"
+		bind:postData
 		bind:allCurrentTags={allTags}
-		availableImages={data.availablePhotos || []}
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
 		onSaved={handlePostSaved}
 		onCancel={handleEditCancel}
+		onDeleted={() => window.location.href = '/blog'}
 	/>
 {/if}

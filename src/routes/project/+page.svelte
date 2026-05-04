@@ -73,6 +73,8 @@
 		pageTitle="Project Page"
 		initialContent={pageContent}
 		pageName="project"
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
 		onSaved={handlePageSaved}
 		onCancel={handleEditCancel}
 	/>

@@ -77,6 +77,8 @@
 		pageTitle="Home Page"
 		initialContent={pageContent}
 		pageName="home"
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
 		onSaved={handlePageSaved}
 		onCancel={handleEditCancel}
 	/>

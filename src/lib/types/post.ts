@@ -30,14 +30,14 @@ export interface PostData {
 	updated_at?: string;
 }
 
-export interface NewPostModalType {
+export interface PostEditorModalType {
 	show: boolean;
+	mode: 'create' | 'edit';
+	postData?: PostData;
 	allCurrentTags: string[];
-	availableImages?: string[];
+	availablePhotos?: string[];
+	availableAssets?: string[];
 	onSaved: () => void;
 	onCancel: () => void;
-}
-
-export interface EditPostModalType extends NewPostModalType {
-	postData: PostData;
+	onDeleted?: () => void; // only used in edit mode
 }

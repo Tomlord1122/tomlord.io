@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, fly, slide } from 'svelte/transition';
-	import NewPostModal from '$lib/components/NewPostModal.svelte';
+	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 
@@ -379,10 +379,12 @@
 </div>
 
 {#if showCreatePostModal && canEdit}
-	<NewPostModal
+	<PostEditorModal
 		bind:show={showCreatePostModal}
+		mode="create"
 		bind:allCurrentTags={allTags}
-		availableImages={data.availablePhotos || []}
+		availablePhotos={data.availablePhotos || []}
+		availableAssets={data.availableAssets || []}
 		onSaved={handlePostCreationSuccess}
 		onCancel={handlePostCreationCancel}
 	/>

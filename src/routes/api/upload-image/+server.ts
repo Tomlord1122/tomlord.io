@@ -4,13 +4,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { dev } from '$app/environment';
 
-const uploadDir = path.join(process.cwd(), 'static', 'photography_assets');
+const DIRS = {
+	photography: path.join(process.cwd(), 'static', 'photography_assets'),
+	content: path.join(process.cwd(), 'static', 'content_assets')
+} as const;
 
-async function ensureUploadDir() {
+type TargetDir = keyof typeof DIRS;
+
+async function ensureDir(dir: string) {
 	try {
-		await fs.access(uploadDir);
+		await fs.access(dir);
 	} catch {
-		await fs.mkdir(uploadDir, { recursive: true });
+		await fs.mkdir(dir, { recursive: true });
 	}
 }
 
@@ -20,10 +25,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	try {
-		await ensureUploadDir();
-
 		const formData = await request.formData();
 		const imageFile = formData.get('imageFile') as File | null;
+		const targetParam = (formData.get('targetDir') as string | null) ?? 'photography';
 
 		if (!imageFile) {
 			throw error(400, 'No image file provided.');
@@ -32,6 +36,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (!imageFile.type.startsWith('image/')) {
 			throw error(400, 'Invalid file type. Only images are allowed.');
 		}
+
+		if (!(targetParam in DIRS)) {
+			throw error(400, `Invalid targetDir. Must be one of: ${Object.keys(DIRS).join(', ')}`);
+		}
+
+		const uploadDir = DIRS[targetParam as TargetDir];
+		await ensureDir(uploadDir);
 
 		const existingFiles = await fs.readdir(uploadDir);
 		let maxNumber = 0;
@@ -58,10 +69,18 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		await fs.writeFile(filePath, webpBuffer);
 
+		// Return the public URL path based on the target directory
+		const publicPath =
+			targetParam === 'photography'
+				? `/photography_assets/${newFileName}`
+				: `/content_assets/${newFileName}`;
+
 		return json(
 			{
 				message: 'File uploaded and converted to WebP successfully!',
-				fileName: newFileName
+				fileName: newFileName,
+				filePath: publicPath,
+				targetDir: targetParam
 			},
 			{ status: 201 }
 		);

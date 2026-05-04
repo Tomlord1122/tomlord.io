@@ -590,6 +590,7 @@
 {#if isDev}
 	<ImageUploadModal
 		bind:show={showImageUploadModal}
+		defaultTarget="photography"
 		onUploadSuccess={handleModalUploadSuccess}
 		onCancel={handleModalCancel}
 	/>
