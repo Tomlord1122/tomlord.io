@@ -6,6 +6,7 @@
 	import { browser } from '$app/environment';
 	import { config } from '$lib/config.js';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
+	import { onMount } from 'svelte';
 
 	injectAnalytics();
 	let { children } = $props();
@@ -18,6 +19,44 @@
 				performanceOptimizer.init();
 			});
 		}
+	});
+
+	// Image skeleton loading: mark images as loaded when they finish downloading
+	onMount(() => {
+		if (!browser) return;
+
+		function markLoaded(img: HTMLImageElement) {
+			img.setAttribute('data-loaded', '');
+		}
+
+		function handleImage(img: HTMLImageElement) {
+			if (img.complete && img.naturalHeight !== 0) {
+				markLoaded(img);
+			} else {
+				img.addEventListener('load', () => markLoaded(img), { once: true });
+				img.addEventListener('error', () => markLoaded(img), { once: true });
+			}
+		}
+
+		// Handle images already in the DOM
+		document.querySelectorAll('img').forEach(handleImage);
+
+		// Watch for dynamically added images (e.g. route changes, markdown re-renders)
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				mutation.addedNodes.forEach((node) => {
+					if (node instanceof HTMLImageElement) {
+						handleImage(node);
+					} else if (node instanceof HTMLElement) {
+						node.querySelectorAll('img').forEach(handleImage);
+					}
+				});
+			});
+		});
+
+		observer.observe(document.body, { childList: true, subtree: true });
+
+		return () => observer.disconnect();
 	});
 </script>
 

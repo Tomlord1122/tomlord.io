@@ -1,9 +1,14 @@
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+// Isomorphic, sync HTML sanitizer (sanitize-html under the hood). DOMPurify
+// can't be used here because every server-side strategy we tried (jsdom,
+// linkedom) either crashes Vercel or fails DOMPurify's environment check.
+import { sanitize } from './sanitize.js';
 import { markedHighlight } from 'marked-highlight';
 import { gfmHeadingId } from 'marked-gfm-heading-id';
 import { renderMermaidSVG } from 'beautiful-mermaid';
 import Prism from 'prismjs';
+import { buildEmbedHTML } from './embed.js';
+import type { LinkPreview } from '$lib/types/preview.js';
 
 // Import Prism languages
 import 'prismjs/components/prism-javascript';
@@ -71,88 +76,24 @@ function escapeHtml(text: string): string {
 }
 
 /**
- * Render markdown text to HTML safely with enhanced features
+ * Render markdown text to HTML safely with enhanced features.
+ * Optionally provides a map of pre-fetched link previews for [[embed|url]] blocks.
  */
-export function renderMarkdown(text: string): string {
+export function renderMarkdown(text: string, previews?: Record<string, LinkPreview>): string {
 	if (!text) return '';
 
 	try {
-		const html = marked(text) as string;
-		return DOMPurify.sanitize(html, {
-			ADD_TAGS: [
-				'iframe',
-				'svg',
-				'g',
-				'path',
-				'rect',
-				'text',
-				'line',
-				'polygon',
-				'polyline',
-				'circle',
-				'ellipse',
-				'marker',
-				'defs',
-				'use',
-				'title',
-				'foreignObject',
-				'tspan',
-				'clipPath',
-				'pattern',
-				'stop',
-				'linearGradient',
-				'radialGradient',
-				'desc'
-			],
-			ADD_ATTR: [
-				'allow',
-				'allowfullscreen',
-				'frameborder',
-				'scrolling',
-				'viewBox',
-				'fill',
-				'stroke',
-				'stroke-width',
-				'd',
-				'points',
-				'marker-end',
-				'marker-start',
-				'marker-mid',
-				'transform',
-				'x',
-				'y',
-				'width',
-				'height',
-				'rx',
-				'ry',
-				'cx',
-				'cy',
-				'r',
-				'x1',
-				'y1',
-				'x2',
-				'y2',
-				'font-family',
-				'font-size',
-				'font-weight',
-				'text-anchor',
-				'dominant-baseline',
-				'opacity',
-				'class',
-				'id',
-				'style',
-				'xmlns',
-				'version',
-				'fill-opacity',
-				'stroke-opacity',
-				'stroke-dasharray',
-				'stroke-linecap',
-				'stroke-linejoin'
-			]
+		// Preprocess custom [[embed|url]] blocks before marked parsing.
+		// Embeds are inline chips, so they can appear anywhere in the text.
+		const processed = text.replace(/\[\[embed\|([^|\]]+)(?:\|([^\]]*))?\]\]/g, (_match, url, customLabel) => {
+			return buildEmbedHTML(url.trim(), previews?.[url.trim()], customLabel);
 		});
+
+		const html = marked(processed) as string;
+		return sanitize(html);
 	} catch (error) {
 		console.error('Markdown rendering error:', error);
-		return DOMPurify.sanitize(text);
+		return sanitize(text);
 	}
 }
 
@@ -169,6 +110,15 @@ export function getMarkdownPreview(text: string, maxLength: number = 150): strin
 		.replace(/\*(.*?)\*/g, '$1') // Remove italic
 		.replace(/`(.*?)`/g, '$1') // Remove inline code
 		.replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links, keep text
+		.replace(/\[\[embed\|([^|\]]+)(?:\|([^\]]*))?\]\]/g, (_match, url, customLabel) => {
+			// Custom label takes priority, otherwise show the domain.
+			if (customLabel?.trim()) return customLabel.trim();
+			try {
+				return new URL(url).hostname.replace(/^www\./, '');
+			} catch {
+				return '';
+			}
+		})
 		.replace(/^\s*[-*+]\s+/gm, '') // Remove list markers
 		.replace(/^\s*\d+\.\s+/gm, '') // Remove numbered list markers
 		.replace(/\n+/g, ' ') // Replace newlines with spaces

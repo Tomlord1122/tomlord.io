@@ -458,12 +458,7 @@
 						tabindex="0"
 					>
 						<div class="pointer-events-none">
-							<ResponsiveImage
-								src={photo.src}
-								alt={photo.alt}
-								loading="eager"
-								onclick={() => {}}
-							/>
+							<ResponsiveImage src={photo.src} alt={photo.alt} loading="eager" onclick={() => {}} />
 						</div>
 						<div class="mt-1 text-center text-xs text-gray-500">{i + 1}</div>
 					</div>
@@ -480,8 +475,7 @@
 						<div
 							class="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"
 						></div>
-						<span class="text-sm font-medium text-gray-700 dark:text-gray-200"
-							>Saving order...</span
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-200">Saving order...</span
 						>
 					</div>
 				</div>

@@ -9,6 +9,7 @@
 	import type { PostData } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 
 	let { data } = $props();
 
@@ -21,12 +22,12 @@
 	let duration = $derived(post.duration);
 	let slug = $derived(post.slug);
 
-	// Convert markdown content to HTML
+	// Convert markdown content to HTML (with pre-fetched embed previews)
 	let contentHtml = $state('');
 
 	$effect(() => {
 		if (content) {
-			contentHtml = renderMarkdown(content);
+			contentHtml = renderMarkdown(content, data.previews);
 		}
 	});
 
@@ -81,14 +82,21 @@
 	}
 
 	// Callback for successful save
-	function handlePostSaved() {
+	async function handlePostSaved() {
 		console.log('Post saved successfully.');
+		await revalidateISR(`/blog/${slug}`);
 		window.location.reload();
 	}
 
 	// Callback for modal cancellation
 	function handleEditCancel() {
 		console.log('Edit cancelled.');
+	}
+
+	// Callback for successful delete
+	async function handlePostDeleted() {
+		await revalidateISR('/blog');
+		window.location.href = '/blog';
 	}
 
 	// Function to open the edit modal
@@ -189,6 +197,6 @@
 		availableAssets={data.availableAssets || []}
 		onSaved={handlePostSaved}
 		onCancel={handleEditCancel}
-		onDeleted={() => window.location.href = '/blog'}
+		onDeleted={handlePostDeleted}
 	/>
 {/if}

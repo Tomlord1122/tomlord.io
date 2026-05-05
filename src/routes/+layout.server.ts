@@ -46,10 +46,7 @@ async function loadImagesFromFilesystem(dir: string, urlPrefix: string) {
 	}
 }
 
-function loadImagesFromBuildManifest(
-	modules: Record<string, unknown>,
-	staticPrefix: string
-) {
+function loadImagesFromBuildManifest(modules: Record<string, unknown>, staticPrefix: string) {
 	return sortPhotoUrls(
 		Object.keys(modules)
 			.filter((filePath) => {

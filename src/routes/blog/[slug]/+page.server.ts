@@ -1,8 +1,11 @@
 import { dev } from '$app/environment';
 import type { PageServerLoad } from './$types.js';
+import type { Config } from '@sveltejs/adapter-vercel';
+import { BYPASS_TOKEN } from '$env/static/private';
 import { error } from '@sveltejs/kit';
 import type { Post } from '$lib/types/post.js';
-import { config, fetchWithTimeout } from '$lib/config.js';
+import { config as appConfig, fetchWithTimeout } from '$lib/config.js';
+import { preloadEmbedPreviews } from '$lib/util/embed-previews.server.js';
 
 function getDefaultPost(slug: string): Post {
 	return {
@@ -18,9 +21,9 @@ function getDefaultPost(slug: string): Post {
 }
 
 export const load: PageServerLoad = async ({ params, setHeaders }) => {
-	// Cache blog posts for 1 minute, stale for 1 minute
+	// Browser-side cache; ISR handles edge caching
 	setHeaders({
-		'cache-control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=60'
+		'cache-control': 'public, max-age=60'
 	});
 
 	const { slug } = params;
@@ -32,7 +35,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
 	try {
 		const response = await fetchWithTimeout(
-			`${config.API.BLOGS}/${slug}`,
+			`${appConfig.API.BLOGS}/${slug}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
 			5000 // 5 second timeout - faster fallback on slow connections
 		);
@@ -66,10 +69,18 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 		};
 
 		return {
-			post
+			post,
+			previews: await preloadEmbedPreviews(content)
 		};
 	} catch (err) {
 		console.error('Failed to load blog post:', err);
 		error(404, 'Post does not exist or cannot be loaded');
+	}
+};
+
+export const config: Config = {
+	isr: {
+		expiration: 3600, // 1 hour
+		bypassToken: BYPASS_TOKEN
 	}
 };

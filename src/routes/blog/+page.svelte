@@ -3,6 +3,7 @@
 	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
@@ -114,9 +115,10 @@
 	});
 
 	// Called when a post is successfully created in the modal
-	function handlePostCreationSuccess() {
+	async function handlePostCreationSuccess() {
 		console.log('Post created successfully.');
 		showCreatePostModal = false;
+		await revalidateISR('/blog');
 		// Reload to get updated data from server
 		window.location.reload();
 	}
@@ -309,44 +311,44 @@
 			<ul class="list-none">
 				{#each visiblePosts as post, index (post.slug)}
 					<li
-						class="mb-1 border-b border-l border-gray-300 pt-2 pl-2"
+						class="mb-1 border-b border-l border-gray-300 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
 						transition:slide={{ duration: 400, delay: (index * 20) % 100 }}
 					>
 						<a
 							href="/blog/{post.slug}"
-							class="inline-block underline underline-offset-4"
+							class="block pt-2 pl-2 pb-2"
 							data-sveltekit-preload-data="hover"
 						>
-							<h2 class="prose prose-sm sm:prose-lg text-gray-700 hover:text-gray-900">
+							<h2 class="prose prose-sm sm:prose-lg text-gray-700 underline underline-offset-4 group-hover:text-gray-900">
 								{post.title}
 							</h2>
-						</a>
-						<div class="text-sm text-gray-500">
-							<p>
-								{new Date(post.date).toLocaleDateString('en-US', {
-									year: 'numeric',
-									month: 'long',
-									day: 'numeric'
-								})}
-							</p>
-							{#if post.tags && post.tags.length > 0}
-								<div class="relative">
-									<div
-										id="post-tags-{index}"
-										class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth"
-										style="scrollbar-width: none; -ms-overflow-style: none;"
-									>
-										{#each post.tags as tag (tag)}
-											<span
-												class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
-											>
-												{tag}
-											</span>
-										{/each}
+							<div class="text-sm text-gray-500">
+								<p>
+									{new Date(post.date).toLocaleDateString('en-US', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})}
+								</p>
+								{#if post.tags && post.tags.length > 0}
+									<div class="relative">
+										<div
+											id="post-tags-{index}"
+											class="scrollbar-hide flex gap-1 overflow-x-auto scroll-smooth"
+											style="scrollbar-width: none; -ms-overflow-style: none;"
+										>
+											{#each post.tags as tag (tag)}
+												<span
+													class="flex-shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs whitespace-nowrap text-gray-700"
+												>
+													{tag}
+												</span>
+											{/each}
+										</div>
 									</div>
-								</div>
-							{/if}
-						</div>
+								{/if}
+							</div>
+						</a>
 					</li>
 				{/each}
 			</ul>

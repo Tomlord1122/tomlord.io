@@ -74,19 +74,27 @@
 	<!-- Backdrop -->
 	<div
 		class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-300"
-		onclick={() => { onCancel(); show = false; }}
+		onclick={() => {
+			onCancel();
+			show = false;
+		}}
 		role="button"
 		tabindex="-1"
 		onkeydown={(e) => e.key === 'Escape' && (show = false)}
 	></div>
 
 	<!-- Modal -->
-	<div class="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-4">
+	<div
+		class="fixed inset-2 z-50 flex flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 sm:inset-4"
+	>
 		<!-- Header -->
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
 			<h2 class="text-2xl font-semibold text-gray-800">Edit {pageTitle}</h2>
 			<button
-				onclick={() => { onCancel(); show = false; }}
+				onclick={() => {
+					onCancel();
+					show = false;
+				}}
 				class="rounded-full p-2 text-2xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
 			>
 				&times;
@@ -95,7 +103,6 @@
 
 		<!-- Scrollable body -->
 		<div class="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4">
-
 			<!-- Image picker -->
 			{#if availablePhotos.length > 0 || availableAssets.length > 0}
 				<div class="mb-4 border-b border-gray-200 pb-4">
@@ -108,8 +115,8 @@
 								onclick={() => (imagePickerCollection = 'content')}
 								class="px-3 py-1 text-xs font-medium transition-colors duration-150
 									{imagePickerCollection === 'content'
-										? 'bg-gray-800 text-white'
-										: 'bg-white text-gray-600 hover:bg-gray-50'}"
+									? 'bg-gray-800 text-white'
+									: 'bg-white text-gray-600 hover:bg-gray-50'}"
 							>
 								Content
 							</button>
@@ -118,8 +125,8 @@
 								onclick={() => (imagePickerCollection = 'photography')}
 								class="border-l border-gray-300 px-3 py-1 text-xs font-medium transition-colors duration-150
 									{imagePickerCollection === 'photography'
-										? 'bg-gray-800 text-white'
-										: 'bg-white text-gray-600 hover:bg-gray-50'}"
+									? 'bg-gray-800 text-white'
+									: 'bg-white text-gray-600 hover:bg-gray-50'}"
 							>
 								Photography
 							</button>
@@ -135,8 +142,8 @@
 							style="scrollbar-gutter: stable;"
 							class="grid max-h-64 grid-cols-3 gap-2 rounded-md border p-2 transition-colors sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8
 								{isImageSectionActive
-									? 'overflow-y-auto border-blue-300 bg-blue-50'
-									: 'overflow-hidden bg-gray-50'}"
+								? 'overflow-y-auto border-blue-300 bg-blue-50'
+								: 'overflow-hidden bg-gray-50'}"
 						>
 							{#each activeImages as imagePath (imagePath)}
 								<button
@@ -150,14 +157,17 @@
 										alt="Preview {imagePath.split('/').pop() ?? ''}"
 										class="h-full w-full rounded object-cover"
 									/>
-									<span class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+									<span
+										class="absolute inset-0 flex items-center justify-center rounded bg-black/50 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
+									>
 										Copy
 									</span>
 								</button>
 							{/each}
 						</div>
 						<p class="mt-1 text-xs text-gray-500">
-							{isImageSectionActive ? 'Scroll to browse. ' : 'Click to enable scrolling. '}Click an image to copy its Markdown.
+							{isImageSectionActive ? 'Scroll to browse. ' : 'Click to enable scrolling. '}Click an
+							image to copy its Markdown.
 						</p>
 					{:else}
 						<p class="rounded-md bg-gray-50 p-3 text-xs text-gray-500">
@@ -191,7 +201,10 @@
 		<div class="flex shrink-0 justify-end space-x-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
 			<button
 				type="button"
-				onclick={() => { onCancel(); show = false; }}
+				onclick={() => {
+					onCancel();
+					show = false;
+				}}
 				class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
 			>
 				Cancel

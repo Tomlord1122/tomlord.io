@@ -2,6 +2,9 @@
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/util/markdown.js';
 	import { debounce } from '$lib/util/debounce.js';
+	import { extractEmbedUrls } from '$lib/util/embed.js';
+	import { fetchLinkPreview } from '$lib/api/preview.js';
+	import type { LinkPreview } from '$lib/types/preview.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
@@ -13,7 +16,7 @@
 	let {
 		content,
 		onContentChange,
-		placeholder = "Type '/' for commands or start writing...",
+		placeholder = "Type '/' for commands or start writing..."
 	}: Props = $props();
 
 	let editorRef = $state<HTMLTextAreaElement>();
@@ -23,20 +26,39 @@
 	// Preview panel state
 	let showPreview = $state(true);
 	let renderedPreview = $state('');
+	let embedPreviews = $state<Record<string, LinkPreview>>({});
 
 	// Debounced markdown rendering (300ms delay)
-	const debouncedRender = debounce((text: string) => {
+	const debouncedRender = debounce((text: string, previews: Record<string, LinkPreview>) => {
 		if (text.trim()) {
-			renderedPreview = renderMarkdown(text);
+			renderedPreview = renderMarkdown(text, previews);
 		} else {
 			renderedPreview = '';
 		}
 	}, 300);
 
-	// Trigger debounced render when content changes
+	const debouncedFetchPreviews = debounce((text: string) => {
+		const urls = extractEmbedUrls(text);
+		const missing = urls.filter((u) => !embedPreviews[u]);
+		if (missing.length === 0) return;
+
+		Promise.all(
+			missing.map(async (url) => {
+				const preview = await fetchLinkPreview(url);
+				if (preview) {
+					embedPreviews[url] = preview;
+					// Re-render now that we have a real preview (replaces domain fallback).
+					debouncedRender(content, embedPreviews);
+				}
+			})
+		);
+	}, 500);
+
+	// Trigger debounced render and fetch embed previews when content changes
 	$effect(() => {
 		if (showPreview) {
-			debouncedRender(content);
+			debouncedRender(content, embedPreviews);
+			debouncedFetchPreviews(content);
 		}
 	});
 	let slashMenuPosition = $state({ x: 0, y: 0 });
@@ -120,6 +142,12 @@
 			keywords: ['rule', 'line', 'divider']
 		},
 		{
+			label: 'Link Embed',
+			action: () => insertText('[[embed|', ']]'),
+			icon: '🌐',
+			keywords: ['embed', 'link', 'url', 'card', 'preview']
+		},
+		{
 			label: 'Mermaid Diagram',
 			action: () => insertText('```mermaid\n', '\n```'),
 			icon: 'M',
@@ -160,6 +188,37 @@
 	function handleInput(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		onContentChange(target.value);
+	}
+
+	function handlePaste(event: ClipboardEvent) {
+		if (!editorRef) return;
+		const pastedText = event.clipboardData?.getData('text');
+		if (!pastedText) return;
+
+		const trimmed = pastedText.trim();
+		if (!/^https?:\/\/\S+$/.test(trimmed)) return;
+
+		const start = editorRef.selectionStart;
+		const beforeCursor = content.substring(0, start);
+		const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+		const currentLine = content.substring(lineStart, start);
+
+		if (currentLine.trim() !== '') return;
+
+		event.preventDefault();
+		const embedText = `[[embed|${trimmed}]]`;
+		const end = editorRef.selectionEnd;
+
+		const newContent = content.substring(0, start) + embedText + content.substring(end);
+		onContentChange(newContent);
+
+		setTimeout(() => {
+			if (editorRef) {
+				const newCursorPos = start + embedText.length;
+				editorRef.setSelectionRange(newCursorPos, newCursorPos);
+				editorRef.focus();
+			}
+		}, 0);
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
@@ -401,7 +460,7 @@
 </script>
 
 <!-- Notion-like Editor with Live Preview -->
-<div class="relative flex w-full flex-col h-full">
+<div class="relative flex h-full w-full flex-col">
 	<!-- Header with Preview Toggle -->
 	<div class="flex shrink-0 items-center justify-end border-b border-gray-100 px-2 py-1">
 		<button
@@ -417,12 +476,15 @@
 	<!-- Editor Content - Split View -->
 	<div class="flex h-full flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
 		<!-- Editor Pane -->
-		<div class="flex {showPreview ? 'w-1/2' : 'w-full'} h-full flex-col transition-all duration-200">
+		<div
+			class="flex {showPreview ? 'w-1/2' : 'w-full'} h-full flex-col transition-all duration-200"
+		>
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
 				value={content}
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
+				onPaste={handlePaste}
 				{placeholder}
 				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
 			/>
@@ -430,7 +492,7 @@
 
 		<!-- Live Preview Pane (conditional) -->
 		{#if showPreview}
-			<div class="flex w-1/2 h-full flex-col">
+			<div class="flex h-full w-1/2 flex-col">
 				<div
 					bind:this={previewRef}
 					class="scrollbar-stable markdown-content compact h-full overflow-y-auto p-4 text-wrap"

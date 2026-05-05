@@ -18,33 +18,55 @@
 	let statusIsError = $state(false);
 	let overallProgressMessage = $state<string | null>(null);
 	let selectedTarget = $state<UploadTarget>('photography');
+	let isDragging = $state(false);
 
 	// Sync with the prop value whenever it changes
 	$effect(() => {
 		selectedTarget = defaultTarget;
 	});
 
+	function setFiles(files: File[]) {
+		const oldUrls = [...previewUrls];
+		oldUrls.forEach((url) => URL.revokeObjectURL(url));
+
+		const imageFiles = files.filter((f) => f.type.startsWith('image/'));
+		selectedFiles = imageFiles;
+		previewUrls = imageFiles.map((file) => URL.createObjectURL(file));
+
+		statusMessage = null;
+		statusIsError = false;
+		overallProgressMessage = null;
+	}
+
 	function handleFileChange(event: Event) {
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
-			const oldUrls = [...previewUrls];
-			oldUrls.forEach((url) => URL.revokeObjectURL(url));
-
-			const newFiles = Array.from(input.files);
-			const newUrls = newFiles.map((file) => URL.createObjectURL(file));
-
-			selectedFiles = newFiles;
-			previewUrls = newUrls;
-
-			statusMessage = null;
-			statusIsError = false;
-			overallProgressMessage = null;
+			setFiles(Array.from(input.files));
 		} else {
 			const oldUrls = [...previewUrls];
 			oldUrls.forEach((url) => URL.revokeObjectURL(url));
-
 			selectedFiles = [];
 			previewUrls = [];
+		}
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		isDragging = true;
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node)) {
+			isDragging = false;
+		}
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		isDragging = false;
+		const files = event.dataTransfer?.files;
+		if (files && files.length > 0) {
+			setFiles(Array.from(files));
 		}
 	}
 
@@ -196,19 +218,53 @@
 		</div>
 
 		<div class="my-4">
-			<div class="mb-3">
-				<label for="imageUploadModalInput" class="mb-1 block text-sm font-medium text-gray-700"
-					>Select Image(s):</label
+			<!-- Drop zone -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				ondragover={handleDragOver}
+				ondragleave={handleDragLeave}
+				ondrop={handleDrop}
+				class="mb-3 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 py-8 transition-colors
+					{isDragging
+					? 'border-blue-400 bg-blue-50'
+					: 'border-gray-300 bg-gray-50 hover:border-gray-400'}"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-10 w-10 {isDragging ? 'text-blue-400' : 'text-gray-400'}"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					stroke-width="1.5"
 				>
-				<input
-					type="file"
-					id="imageUploadModalInput"
-					accept="image/*"
-					multiple
-					onchange={handleFileChange}
-					disabled={isLoading}
-					class="block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-1 focus:ring-gray-500 focus:outline-none"
-				/>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+					/>
+				</svg>
+				<p class="text-sm text-gray-600">
+					{isDragging ? 'Drop images here' : 'Drag & drop images here, or'}
+				</p>
+				{#if !isDragging}
+					<label
+						class="cursor-pointer rounded-md bg-white px-3 py-1.5 text-sm font-medium text-blue-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50
+							{isLoading ? 'pointer-events-none opacity-50' : ''}"
+					>
+						Browse files
+						<input
+							type="file"
+							accept="image/*"
+							multiple
+							onchange={handleFileChange}
+							disabled={isLoading}
+							class="sr-only"
+						/>
+					</label>
+				{/if}
+				{#if selectedFiles.length > 0}
+					<p class="text-xs text-gray-500">{selectedFiles.length} file(s) selected</p>
+				{/if}
 			</div>
 
 			{#if previewUrls.length > 0}
@@ -256,7 +312,10 @@
 						></path>
 					</svg>
 				{:else}
-					Upload {selectedFiles.length > 0 ? selectedFiles.length : ''} Image(s) to {selectedTarget === 'photography' ? 'Photography' : 'Content'}
+					Upload {selectedFiles.length > 0 ? selectedFiles.length : ''} Image(s) to {selectedTarget ===
+					'photography'
+						? 'Photography'
+						: 'Content'}
 				{/if}
 			</button>
 

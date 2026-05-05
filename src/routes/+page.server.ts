@@ -1,6 +1,9 @@
 import { dev } from '$app/environment';
 import type { PageServerLoad } from './$types.js';
-import { config, fetchWithTimeout } from '$lib/config.js';
+import type { Config } from '@sveltejs/adapter-vercel';
+import { BYPASS_TOKEN } from '$env/static/private';
+import { config as appConfig, fetchWithTimeout } from '$lib/config.js';
+import { preloadEmbedPreviews } from '$lib/util/embed-previews.server.js';
 
 function getDefaultHomeContent() {
 	return `<div class="flex gap-2 flex-wrap">
@@ -48,7 +51,7 @@ This website contains some of my blog posts about my learning journey and topics
 async function fetchPageFromAPI(name: string): Promise<string | null> {
 	try {
 		const response = await fetchWithTimeout(
-			`${config.API.PAGES}/${name}`,
+			`${appConfig.API.PAGES}/${name}`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
 			5000 // 5 second timeout
 		);
@@ -63,29 +66,37 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 }
 
 export const load: PageServerLoad = async ({ setHeaders }) => {
-	// Cache home page for 10 minutes, stale for 1 hour
+	// Browser-side cache; ISR handles edge caching
 	setHeaders({
-		'cache-control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=3600'
+		'cache-control': 'public, max-age=60'
 	});
 
 	// In development mode, skip API call and use default content for faster loading
 	if (dev) {
-		return { pageContent: getDefaultHomeContent() };
+		const pageContent = getDefaultHomeContent();
+		return { pageContent, previews: await preloadEmbedPreviews(pageContent) };
 	}
 
 	try {
 		const apiContent = await fetchPageFromAPI('home');
-		if (apiContent) {
-			return { pageContent: apiContent };
-		}
-		// Fallback to default content if API fails
+		const pageContent = apiContent ?? getDefaultHomeContent();
 		return {
-			pageContent: getDefaultHomeContent()
+			pageContent,
+			previews: await preloadEmbedPreviews(pageContent)
 		};
 	} catch (error) {
 		console.error('Error loading home page content:', error);
+		const pageContent = getDefaultHomeContent();
 		return {
-			pageContent: getDefaultHomeContent()
+			pageContent,
+			previews: await preloadEmbedPreviews(pageContent)
 		};
+	}
+};
+
+export const config: Config = {
+	isr: {
+		expiration: 600, // 10 minutes
+		bypassToken: BYPASS_TOKEN
 	}
 };

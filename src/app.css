@@ -2,17 +2,15 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-/* This is a base style import for Tailwind, 
+/* This is a base style import for Tailwind,
    ensure this or similar setup is at the top of your global CSS file
    if you are setting up Tailwind from scratch.
    If you already have Tailwind configured, you might already have these. */
 
 @layer base {
 	html {
-		/* 使用 TailwindCSS 的任意值語法 */
 		scrollbar-gutter: stable;
 	}
-	/* 或者回退方案 */
 	/* body {
       @apply overflow-y-scroll;
     } */
@@ -26,7 +24,7 @@
 
 	.main-content-area {
 		/* These are the common classes for your main tags */
-		/* We noticed 'gap-3' is used in project and photography, 
+		/* We noticed 'gap-3' is used in project and photography,
        and 'gap-4' in blog. We'll use 'gap-3' here as a common base.
        We can discuss how to handle variations later if needed! */
 		@apply flex flex-col gap-3 font-serif;
@@ -38,6 +36,46 @@
 		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105 lg:w-1/2;
 	}
 
+	/* Skeleton: pulse animation while image is loading */
+	img:not([data-loaded]) {
+		@apply animate-pulse bg-gray-200;
+		min-height: 200px;
+	}
+
+	/* Remove skeleton once loaded */
+	img[data-loaded] {
+		@apply animate-none bg-transparent;
+	}
+
+	/* Fade-in once loaded */
+	.photo-post[data-loaded] {
+		animation: none;
+		background: none;
+		transition: opacity 0.5s ease;
+	}
+
+	/* Generic skeleton for any img without data-loaded */
+	img:not([data-loaded]) {
+		background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+		background-size: 200% 100%;
+		animation: skeleton-shimmer 1.5s infinite;
+	}
+
+	img[data-loaded] {
+		animation: none;
+		background: none;
+		transition: opacity 0.5s ease;
+	}
+
+	@keyframes skeleton-shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
 	.nav-link {
 		@apply text-gray-700 transition-all duration-300 hover:scale-105 hover:text-gray-900;
 	}
@@ -46,7 +84,6 @@
 	.scrollbar-stable {
 		scrollbar-gutter: stable;
 	}
-
 
 	.markdown-content {
 		@apply prose prose-sm sm:prose-base max-w-none;
@@ -78,6 +115,40 @@
 
 	.mermaid-error {
 		@apply my-4 rounded bg-red-50 p-4 text-red-700;
+	}
+
+	/* Inline link embed — favicon + title, same line-height as body text. */
+	.inline-embed {
+		@apply inline-flex items-center text-inherit;
+		text-decoration: none !important;
+		max-width: 12rem;
+		overflow: hidden;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		padding: 0 0.35em;
+		line-height: 1.3;
+		vertical-align: middle;
+	}
+
+	.inline-embed:hover {
+		border-color: #bdbdbd;
+	}
+
+	.inline-embed-label {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.inline-embed-icon {
+		@apply inline-block object-contain align-middle;
+		width: 1em;
+		height: 1em;
+		vertical-align: -0.1em;
+		/* Override prose img margins so inline favicons don't blow up the line-height */
+		margin-top: 0em !important;
+		margin-bottom: 0 !important;
+		margin-right: 0.2em;
 	}
 }
 

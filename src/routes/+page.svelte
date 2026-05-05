@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import EditPageModal from '$lib/components/EditPageModal.svelte';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/util/markdown.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 
 	// Get data from the server load function
 	let { data } = $props();
@@ -13,12 +14,12 @@
 	let showEditModal = $state(false);
 	let pageContent = $derived(data.pageContent);
 
-	function handlePageSaved() {
+	async function handlePageSaved() {
 		console.log('Home page content saved successfully.');
-		// Instead of full page reload, use SvelteKit's invalidateAll
-		import('$app/navigation').then(({ invalidateAll }) => {
-			invalidateAll();
-		});
+		await revalidateISR('/');
+		// Soft refresh via SvelteKit navigation
+		const { invalidateAll } = await import('$app/navigation');
+		invalidateAll();
 	}
 
 	function handleEditCancel() {
@@ -29,7 +30,7 @@
 		showEditModal = true;
 	}
 
-	let htmlContent = $derived(marked(pageContent || ''));
+	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
 </script>
 
 <svelte:head>

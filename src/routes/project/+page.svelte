@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import EditPageModal from '$lib/components/EditPageModal.svelte';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/util/markdown.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 
 	// Get data from the server load function
 	let { data } = $props();
@@ -14,8 +15,9 @@
 	let pageContent = $derived(data.pageContent);
 
 	// Callback for successful save
-	function handlePageSaved() {
+	async function handlePageSaved() {
 		console.log('Project page content saved successfully.');
+		await revalidateISR('/project');
 		// Reload the page to get the updated content from the server
 		window.location.reload();
 	}
@@ -31,7 +33,7 @@
 	}
 
 	// Derived HTML content for rendering
-	let htmlContent = $derived(marked(pageContent || ''));
+	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
 </script>
 
 <svelte:head>
