@@ -4,6 +4,7 @@
 	import ImageUploadModal from '$lib/components/ImageUploadModal.svelte';
 	import ResponsiveImage from '$lib/components/ResponsiveImage.svelte';
 	import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
+	import LazyImage from '$lib/components/LazyImage.svelte';
 	import { invalidateAll } from '$app/navigation';
 
 	// Get data from both page and layout
@@ -558,12 +559,11 @@
 
 				<!-- Photo container -->
 				<div class="relative flex items-center justify-center bg-white">
-					<img
+					<LazyImage
 						src={currentFullSizeImage}
 						alt="Full size view"
 						class="max-h-[75vh] max-w-[90vw] object-contain sm:max-h-[80vh] sm:max-w-[85vw]"
-						loading="eager"
-						decoding="async"
+						placeholderClass="max-h-[75vh] max-w-[90vw] sm:max-h-[80vh] sm:max-w-[85vw] min-h-[40vh]"
 					/>
 				</div>
 			</div>

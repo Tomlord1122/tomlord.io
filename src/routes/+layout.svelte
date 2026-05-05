@@ -21,10 +21,10 @@
 		}
 	});
 
-	// Image skeleton loading: mark images as loaded when they finish downloading
+	// Skeleton loading for .photo-post images (raw HTML inside markdown {@html}).
+	// Adds `data-loaded` once the image finishes loading; CSS uses this to
+	// remove the shimmer placeholder.
 	onMount(() => {
-		if (!browser) return;
-
 		function markLoaded(img: HTMLImageElement) {
 			img.setAttribute('data-loaded', '');
 		}
@@ -32,26 +32,26 @@
 		function handleImage(img: HTMLImageElement) {
 			if (img.complete && img.naturalHeight !== 0) {
 				markLoaded(img);
-			} else {
-				img.addEventListener('load', () => markLoaded(img), { once: true });
-				img.addEventListener('error', () => markLoaded(img), { once: true });
+				return;
 			}
+			img.addEventListener('load', () => markLoaded(img), { once: true });
+			img.addEventListener('error', () => markLoaded(img), { once: true });
 		}
 
-		// Handle images already in the DOM
-		document.querySelectorAll('img').forEach(handleImage);
+		// Process images already in the DOM.
+		document.querySelectorAll<HTMLImageElement>('img.photo-post').forEach(handleImage);
 
-		// Watch for dynamically added images (e.g. route changes, markdown re-renders)
+		// Watch for images added later (route change, markdown re-render).
 		const observer = new MutationObserver((mutations) => {
-			mutations.forEach((mutation) => {
-				mutation.addedNodes.forEach((node) => {
-					if (node instanceof HTMLImageElement) {
+			for (const mutation of mutations) {
+				for (const node of mutation.addedNodes) {
+					if (node instanceof HTMLImageElement && node.classList.contains('photo-post')) {
 						handleImage(node);
 					} else if (node instanceof HTMLElement) {
-						node.querySelectorAll('img').forEach(handleImage);
+						node.querySelectorAll<HTMLImageElement>('img.photo-post').forEach(handleImage);
 					}
-				});
-			});
+				}
+			}
 		});
 
 		observer.observe(document.body, { childList: true, subtree: true });

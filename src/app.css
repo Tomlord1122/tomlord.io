@@ -36,38 +36,17 @@
 		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105 lg:w-1/2;
 	}
 
-	/* Skeleton: pulse animation while image is loading */
-	img:not([data-loaded]) {
-		@apply animate-pulse bg-gray-200;
-		min-height: 200px;
+	/* Skeleton shimmer while .photo-post is loading.
+	   Uses background on the img itself; cleared once `data-loaded` is set by JS. */
+	.photo-post:not([data-loaded]) {
+		min-height: 250px;
+		background: linear-gradient(135deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+		background-size: 200% 200%;
+		animation: photo-post-shimmer 1.5s ease-in-out infinite;
+		color: transparent;
 	}
 
-	/* Remove skeleton once loaded */
-	img[data-loaded] {
-		@apply animate-none bg-transparent;
-	}
-
-	/* Fade-in once loaded */
-	.photo-post[data-loaded] {
-		animation: none;
-		background: none;
-		transition: opacity 0.5s ease;
-	}
-
-	/* Generic skeleton for any img without data-loaded */
-	img:not([data-loaded]) {
-		background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-		background-size: 200% 100%;
-		animation: skeleton-shimmer 1.5s infinite;
-	}
-
-	img[data-loaded] {
-		animation: none;
-		background: none;
-		transition: opacity 0.5s ease;
-	}
-
-	@keyframes skeleton-shimmer {
+	@keyframes photo-post-shimmer {
 		0% {
 			background-position: 200% 0;
 		}
@@ -123,7 +102,7 @@
 		text-decoration: none !important;
 		max-width: 12rem;
 		overflow: hidden;
-		border: 1px solid #e0e0e0;
+		border: 1px solid #c2c2c2;
 		border-radius: 4px;
 		padding: 0 0.35em;
 		line-height: 1.3;
@@ -131,7 +110,7 @@
 	}
 
 	.inline-embed:hover {
-		border-color: #bdbdbd;
+		border-color: #b3b3b3;
 	}
 
 	.inline-embed-label {

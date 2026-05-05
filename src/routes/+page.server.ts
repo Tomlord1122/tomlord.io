@@ -35,6 +35,10 @@ function getDefaultHomeContent() {
 	</a>
  </div>
 
+ <div class="flex justify-center">
+ <img src="/content_assets/1.webp" alt="1.webp" class="photo-post">
+ </div>
+
 <!-- About me -->
 Hi, it's Tomlord here.
 
