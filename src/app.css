@@ -33,7 +33,7 @@
 		@apply h-full w-full object-cover;
 	}
 	.photo-post {
-		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105 lg:w-1/2;
+		@apply z-20 w-[400px] rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105;
 	}
 
 	/* Skeleton shimmer while .photo-post is loading.
