@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { uploadToStorage } from '$lib/supabase.js';
+	import { buildPhotoPostHTML, getImageDimensions } from '$lib/util/helper.js';
 
 	let {
 		show = $bindable(false),
@@ -71,7 +72,10 @@
 				return;
 			}
 
-			const imageMarkdown = `<div class="flex justify-center">\n<img src="${publicUrl}" alt="Storage image" class="photo-post">\n</div>`;
+			// Probe dimensions client-side so the snippet carries width/height,
+			// preventing layout shift when the post is rendered.
+			const dimensions = await getImageDimensions(publicUrl);
+			const imageMarkdown = buildPhotoPostHTML(publicUrl, dimensions);
 			onInsert?.(imageMarkdown);
 			handleClose();
 		} catch (err) {

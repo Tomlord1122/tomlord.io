@@ -14,11 +14,48 @@ export function calculateDuration(text: string, language: string): number {
 	return Math.max(1, calculatedDuration);
 }
 
+/**
+ * Load an image in the browser and return its natural dimensions.
+ * Falls back to null if the image cannot be loaded (e.g. CORS, 404).
+ */
+export function getImageDimensions(
+	src: string
+): Promise<{ width: number; height: number } | null> {
+	return new Promise((resolve) => {
+		if (typeof window === 'undefined') {
+			resolve(null);
+			return;
+		}
+		const img = new Image();
+		img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+		img.onerror = () => resolve(null);
+		img.src = src;
+	});
+}
+
+/**
+ * Build the standard `.photo-post` HTML snippet, optionally including
+ * width/height attributes so the browser can reserve space and prevent
+ * layout shift while the real image loads.
+ */
+export function buildPhotoPostHTML(
+	imagePath: string,
+	dimensions?: { width: number; height: number } | null
+): string {
+	const alt = imagePath.split('/').pop() ?? 'image';
+	const dimAttrs = dimensions
+		? ` width="${dimensions.width}" height="${dimensions.height}"`
+		: '';
+	return `<div class="flex justify-center">
+<img src="${imagePath}" alt="${alt}" class="photo-post"${dimAttrs}>
+</div>`;
+}
+
 export async function copyImageMarkdown(imagePath: string) {
 	const { showToast } = await import('$lib/stores/toast.svelte.js');
-	const markdown = `<div class="flex justify-center">
-<img src="${imagePath}" alt="${imagePath.split('/').pop()}" class="photo-post">
-</div>`;
+	// Probe the image first so the copied snippet carries width/height.
+	const dimensions = await getImageDimensions(imagePath);
+	const markdown = buildPhotoPostHTML(imagePath, dimensions);
 	try {
 		await navigator.clipboard.writeText(markdown);
 		showToast('Copied to clipboard!', 'success', 1000);

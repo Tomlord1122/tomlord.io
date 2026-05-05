@@ -37,9 +37,15 @@
 	}
 
 	/* Skeleton shimmer while .photo-post is loading.
-	   Uses background on the img itself; cleared once `data-loaded` is set by JS. */
+	   Uses background on the img itself; cleared once `data-loaded` is set by JS.
+
+	   Sizing strategy (priority order):
+	   1. If <img> has width/height attrs, browser auto-computes aspect-ratio (no shift)
+	   2. If inline `aspect-ratio` style, browser respects it
+	   3. Otherwise, falls back to aspect-ratio 3/2 (typical photo) — gives a sane skeleton
+	      size; once loaded, the real image dimensions take over. */
 	.photo-post:not([data-loaded]) {
-		min-height: 250px;
+		aspect-ratio: 3 / 2;
 		background: linear-gradient(135deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
 		background-size: 200% 200%;
 		animation: photo-post-shimmer 1.5s ease-in-out infinite;

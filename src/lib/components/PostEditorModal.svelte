@@ -2,7 +2,12 @@
 	import NotionLikeEditor from './NotionLikeEditor.svelte';
 	import S3Modal from './S3Modal.svelte';
 	import LazyImage from './LazyImage.svelte';
-	import { calculateDuration, copyImageMarkdown } from '$lib/util/helper.js';
+	import {
+		calculateDuration,
+		copyImageMarkdown,
+		buildPhotoPostHTML,
+		getImageDimensions
+	} from '$lib/util/helper.js';
 	import { listDrawings, deleteFromStorage, type StorageFile } from '$lib/supabase.js';
 	import type { PostData } from '$lib/types/post.js';
 	import type { PostEditorModalType } from '$lib/types/post.js';
@@ -64,8 +69,11 @@
 		s3Deleting = next;
 	}
 
-	function copyS3ImageMarkdown(publicUrl: string) {
-		const markdown = `<div class="flex justify-center">\n<img src="${publicUrl}" alt="Storage image" class="photo-post">\n</div>`;
+	async function copyS3ImageMarkdown(publicUrl: string) {
+		// Probe dimensions so the inserted snippet carries width/height attributes
+		// (prevents layout shift when the post is rendered).
+		const dimensions = await getImageDimensions(publicUrl);
+		const markdown = buildPhotoPostHTML(publicUrl, dimensions);
 		navigator.clipboard.writeText(markdown).catch(() => {
 			// fallback: insert into content
 			const separator = content.trim().length > 0 && !content.endsWith('\n\n') ? '\n\n' : '';
