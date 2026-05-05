@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+/*
+ * CMS/markdown emits `.photo-post w-[…px]` HTML that Tailwind’s file scanner never sees.
+ * Brace expansion yields w-[100px] … w-[900px] in steps of 100 (see detecting-classes docs).
+ */
+@source inline('w-[{100..900..100}px]');
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
