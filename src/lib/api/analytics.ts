@@ -13,6 +13,16 @@ export interface TrackVisitorResponse extends VisitorStats {
 	is_new_visit: boolean;
 }
 
+function getOrCreateVisitorKey(): string {
+	const storageKey = 'tomlord.visitor_key';
+	const existing = localStorage.getItem(storageKey);
+	if (existing) return existing;
+
+	const key = crypto.randomUUID();
+	localStorage.setItem(storageKey, key);
+	return key;
+}
+
 /**
  * Fetch current visitor stats from the backend
  */
@@ -35,12 +45,15 @@ export async function fetchVisitorStats(): Promise<VisitorStats> {
  * Record a visit and get updated stats
  */
 export async function trackVisitor(): Promise<TrackVisitorResponse> {
+	const visitorKey = getOrCreateVisitorKey();
+
 	const response = await fetchWithTimeout(
 		config.API.VISITORS_TRACK,
 		{
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-Visitor-Key': visitorKey
 			}
 		},
 		5000

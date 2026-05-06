@@ -52,6 +52,8 @@
 		showEditModal = true;
 	}
 
+	let previousDay = $derived(visitorStats?.recent?.[1]);
+
 	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
 </script>
 
@@ -83,7 +85,7 @@
 	</h1>
 
 	{#if visitorStats}
-		<div class="mb-6 space-y-1" in:fly={{ y: 20, duration: 600, delay: 400 }}>
+		<div class="mb-2 space-y-0.5" in:fly={{ y: 20, duration: 600, delay: 400 }}>
 			<!-- Total count line -->
 			<div class="flex items-center gap-2 text-sm">
 				<span class="text-gray-500">Welcome! You're visitor</span>
@@ -118,10 +120,10 @@
 			</div>
 
 			<!-- Recent days breakdown (hover to show) -->
-			{#if visitorStats.recent && visitorStats.recent.length > 1}
+			{#if previousDay}
 				<div class="group relative inline-block">
 					<button class="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-help">
-						{visitorStats.recent.length - 1} days ago: {visitorStats.recent[1]?.visit_count ?? 0} visits
+						Yesterday: {previousDay.visit_count} visits
 					</button>
 					<!-- Tooltip -->
 					<div class="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10">
@@ -141,7 +143,7 @@
 		</div>
 	{/if}
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area">
+	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area mt-2">
 		{#if pageContent}
 			<div class="prose prose-sm sm:prose-lg max-w-none">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
