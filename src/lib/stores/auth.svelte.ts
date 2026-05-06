@@ -79,7 +79,7 @@ function createAuthStore() {
 		if (!browser) return;
 
 		// Redirect to backend OAuth endpoint
-		window.location.href = `${config.API.AUTH_GOOGLE}`;
+		window.open(config.API.AUTH_GOOGLE, '_self');
 	}
 
 	function logout() {
