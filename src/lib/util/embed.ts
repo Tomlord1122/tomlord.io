@@ -23,16 +23,17 @@ export function extractEmbedUrls(text: string): string[] {
  *
  * Supports optional custom label: [[embed|url|My Label]]
  */
-export function buildEmbedHTML(url: string, preview?: LinkPreview | null, customLabel?: string): string {
+export function buildEmbedHTML(
+	url: string,
+	preview?: LinkPreview | null,
+	customLabel?: string
+): string {
 	const safeUrl = escapeHtml(url);
 	const domain = domainFromUrl(url);
 
 	// Custom label overrides everything; otherwise fall back to OG title -> site_name -> domain.
 	const rawLabel =
-		customLabel?.trim() ||
-		preview?.title?.trim() ||
-		preview?.site_name?.trim() ||
-		domain;
+		customLabel?.trim() || preview?.title?.trim() || preview?.site_name?.trim() || domain;
 
 	const label = escapeHtml(rawLabel);
 	const faviconSrc = pickFavicon(url, preview);

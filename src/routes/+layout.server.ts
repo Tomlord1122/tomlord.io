@@ -46,7 +46,7 @@ async function loadImagesFromFilesystem(dir: string, urlPrefix: string) {
 	}
 }
 
-function loadImagesFromBuildManifest(modules: Record<string, unknown>, staticPrefix: string) {
+function loadImagesFromBuildManifest(modules: Record<string, unknown>) {
 	return sortPhotoUrls(
 		Object.keys(modules)
 			.filter((filePath) => {
@@ -67,8 +67,8 @@ export const load: LayoutServerLoad = async () => {
 			loadImagesFromFilesystem(assetDir, 'content_assets')
 		]);
 	} else {
-		availablePhotos = loadImagesFromBuildManifest(productionPhotoModules, 'photography_assets');
-		availableAssets = loadImagesFromBuildManifest(productionAssetModules, 'content_assets');
+		availablePhotos = loadImagesFromBuildManifest(productionPhotoModules);
+		availableAssets = loadImagesFromBuildManifest(productionAssetModules);
 	}
 
 	return {

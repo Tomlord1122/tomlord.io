@@ -316,10 +316,12 @@
 					>
 						<a
 							href="/blog/{post.slug}"
-							class="block pt-2 pl-2 pb-2"
+							class="block pt-2 pb-2 pl-2"
 							data-sveltekit-preload-data="hover"
 						>
-							<h2 class="prose prose-sm sm:prose-lg text-gray-700 underline underline-offset-4 group-hover:text-gray-900">
+							<h2
+								class="prose prose-sm sm:prose-lg text-gray-700 underline underline-offset-4 group-hover:text-gray-900"
+							>
 								{post.title}
 							</h2>
 							<div class="text-sm text-gray-500">

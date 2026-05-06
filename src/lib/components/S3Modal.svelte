@@ -104,7 +104,9 @@
 		role="dialog"
 		aria-modal="true"
 	>
-		<div class="flex w-[500px] max-w-[95vw] flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
+		<div
+			class="flex w-[500px] max-w-[95vw] flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+		>
 			<!-- Header -->
 			<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
 				<h2 class="text-lg font-semibold text-gray-800">Upload Image</h2>
@@ -136,9 +138,7 @@
 					ondragleave={handleDragLeave}
 					ondrop={handleDrop}
 					class="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 py-8 transition-colors
-						{isDragging
-						? 'border-blue-400 bg-blue-50'
-						: 'border-gray-300 bg-gray-50 hover:border-gray-400'}"
+						{isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -162,12 +162,7 @@
 							class="cursor-pointer rounded-md bg-white px-3 py-1.5 text-sm font-medium text-blue-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50"
 						>
 							Browse file
-							<input
-								type="file"
-								accept="image/*"
-								onchange={handleFileChange}
-								class="sr-only"
-							/>
+							<input type="file" accept="image/*" onchange={handleFileChange} class="sr-only" />
 						</label>
 					{/if}
 					{#if selectedFile}

@@ -11,6 +11,7 @@
 	import { listDrawings, deleteFromStorage, type StorageFile } from '$lib/supabase.js';
 	import type { PostData } from '$lib/types/post.js';
 	import type { PostEditorModalType } from '$lib/types/post.js';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { createBlog, updateBlog, deleteBlog } from '$lib/api/blogs.js';
 
@@ -42,7 +43,7 @@
 	// S3 storage images
 	let s3Images = $state<StorageFile[]>([]);
 	let s3Loading = $state(false);
-	let s3Deleting = $state(new Set<string>());
+	let s3Deleting = new SvelteSet<string>();
 
 	async function loadS3Images() {
 		s3Loading = true;
@@ -57,16 +58,17 @@
 
 	async function deleteS3Image(name: string) {
 		if (!confirm(`Delete "${name}" from S3 storage? This cannot be undone.`)) return;
-		s3Deleting = new Set(s3Deleting).add(name);
-		const { error } = await deleteFromStorage(`drawings/${name}`);
-		if (error) {
-			alert(`Delete failed: ${error.message}`);
-		} else {
-			s3Images = s3Images.filter((img) => img.name !== name);
+		s3Deleting.add(name);
+		try {
+			const { error } = await deleteFromStorage(`drawings/${name}`);
+			if (error) {
+				alert(`Delete failed: ${error.message}`);
+			} else {
+				s3Images = s3Images.filter((img) => img.name !== name);
+			}
+		} finally {
+			s3Deleting.delete(name);
 		}
-		const next = new Set(s3Deleting);
-		next.delete(name);
-		s3Deleting = next;
 	}
 
 	async function copyS3ImageMarkdown(publicUrl: string) {
@@ -570,12 +572,33 @@ ${content}`;
 										>
 											{#if s3Deleting.has(image.name)}
 												<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
-													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+													<circle
+														class="opacity-25"
+														cx="12"
+														cy="12"
+														r="10"
+														stroke="currentColor"
+														stroke-width="4"
+													></circle>
+													<path
+														class="opacity-75"
+														fill="currentColor"
+														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+													></path>
 												</svg>
 											{:else}
-												<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-													<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+												<svg
+													class="h-3 w-3"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="3"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M6 18L18 6M6 6l12 12"
+													/>
 												</svg>
 											{/if}
 										</button>
@@ -624,13 +647,12 @@ ${content}`;
 							{/each}
 						</div>
 						<p class="mt-1 text-xs text-gray-500">
-							{isImageSectionActive ? 'Scroll to browse. ' : 'Click to enable scrolling. '}Click
-							an image to copy its Markdown.
+							{isImageSectionActive ? 'Scroll to browse. ' : 'Click to enable scrolling. '}Click an
+							image to copy its Markdown.
 						</p>
 					{:else}
 						<p class="rounded-md bg-gray-50 p-3 text-xs text-gray-500">
-							No {imagePickerCollection === 'content' ? 'content' : 'photography'} images available
-							yet.
+							No {imagePickerCollection === 'content' ? 'content' : 'photography'} images available yet.
 						</p>
 					{/if}
 				</div>
@@ -639,13 +661,13 @@ ${content}`;
 				<div class="mt-3">
 					<div class="mb-1 flex items-center justify-between">
 						<span class="block text-sm font-medium text-gray-700">Content (Markdown)</span>
-					<button
-						type="button"
-						onclick={resetForm}
-						class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-					>
-						Reset
-					</button>
+						<button
+							type="button"
+							onclick={resetForm}
+							class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+						>
+							Reset
+						</button>
 					</div>
 					<div class="h-[500px]">
 						<NotionLikeEditor

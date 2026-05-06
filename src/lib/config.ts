@@ -32,7 +32,7 @@ export const config = {
 			BLOGS: `${this.BACKEND_URL}/api/blogs`,
 			PAGES: `${this.BACKEND_URL}/api/pages`,
 			MESSAGES: `${this.BACKEND_URL}/api/messages`,
-		PREVIEW: `${this.BACKEND_URL}/api/preview`,
+			PREVIEW: `${this.BACKEND_URL}/api/preview`,
 			VISITORS: `${this.BACKEND_URL}/api/visitors`,
 			VISITORS_TRACK: `${this.BACKEND_URL}/api/visitors/track`,
 			WEBSOCKET: `${this.BACKEND_WS_URL}/ws`,

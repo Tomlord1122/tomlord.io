@@ -85,9 +85,12 @@ export function renderMarkdown(text: string, previews?: Record<string, LinkPrevi
 	try {
 		// Preprocess custom [[embed|url]] blocks before marked parsing.
 		// Embeds are inline chips, so they can appear anywhere in the text.
-		const processed = text.replace(/\[\[embed\|([^|\]]+)(?:\|([^\]]*))?\]\]/g, (_match, url, customLabel) => {
-			return buildEmbedHTML(url.trim(), previews?.[url.trim()], customLabel);
-		});
+		const processed = text.replace(
+			/\[\[embed\|([^|\]]+)(?:\|([^\]]*))?\]\]/g,
+			(_match, url, customLabel) => {
+				return buildEmbedHTML(url.trim(), previews?.[url.trim()], customLabel);
+			}
+		);
 
 		const html = marked(processed) as string;
 		return sanitize(html);

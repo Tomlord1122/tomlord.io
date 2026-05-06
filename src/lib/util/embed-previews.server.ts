@@ -11,9 +11,7 @@ import { extractEmbedUrls } from './embed.js';
  * path here returns an empty/partial map. Missing entries fall back to the
  * domain-only chip on render.
  */
-export async function preloadEmbedPreviews(
-	text: string
-): Promise<Record<string, LinkPreview>> {
+export async function preloadEmbedPreviews(text: string): Promise<Record<string, LinkPreview>> {
 	try {
 		if (!text) return {};
 
@@ -24,9 +22,7 @@ export async function preloadEmbedPreviews(
 		const backend = appConfig.BACKEND_URL;
 		if (!backend) return {};
 
-		const results = await Promise.allSettled(
-			urls.map((url) => fetchOne(backend, url))
-		);
+		const results = await Promise.allSettled(urls.map((url) => fetchOne(backend, url)));
 
 		const previews: Record<string, LinkPreview> = {};
 		results.forEach((result, index) => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import type { ImageUploadModalType, UploadTarget } from '../types/image.js';
+	import type { ImageUploadModalType } from '../types/image.js';
 
 	let {
 		show = $bindable(),
@@ -17,13 +17,9 @@
 	let statusMessage = $state<string | null>(null);
 	let statusIsError = $state(false);
 	let overallProgressMessage = $state<string | null>(null);
-	let selectedTarget = $state<UploadTarget>('photography');
+	/** Writable: tracks `defaultTarget` but can be overridden by the target toggle UI. */
+	let selectedTarget = $derived(defaultTarget);
 	let isDragging = $state(false);
-
-	// Sync with the prop value whenever it changes
-	$effect(() => {
-		selectedTarget = defaultTarget;
-	});
 
 	function setFiles(files: File[]) {
 		const oldUrls = [...previewUrls];
@@ -225,9 +221,7 @@
 				ondragleave={handleDragLeave}
 				ondrop={handleDrop}
 				class="mb-3 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-6 py-8 transition-colors
-					{isDragging
-					? 'border-blue-400 bg-blue-50'
-					: 'border-gray-300 bg-gray-50 hover:border-gray-400'}"
+					{isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

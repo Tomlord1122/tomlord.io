@@ -52,8 +52,6 @@
 		showEditModal = true;
 	}
 
-	let previousDay = $derived(visitorStats?.recent?.[1]);
-
 	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
 </script>
 
@@ -85,65 +83,69 @@
 	</h1>
 
 	{#if visitorStats}
-		<div class="mb-2 space-y-0.5" in:fly={{ y: 20, duration: 600, delay: 400 }}>
-			<!-- Total count line -->
-			<div class="flex items-center gap-2 text-sm">
+		<div
+			class="mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-tight"
+			in:fly={{ y: 16, duration: 500, delay: 250 }}
+		>
+			<!-- Total count -->
+			<div class="flex items-center gap-1.5">
 				<span class="text-gray-500">Welcome! You're visitor</span>
-				<span class="font-semibold text-gray-900" title="{visitorStats.total_count.toLocaleString()}">
+				<span class="font-semibold text-gray-900" title={visitorStats.total_count.toLocaleString()}>
 					#{formatCompactNumber(visitorStats.total_count)}
 				</span>
 			</div>
 
 			<!-- Today count + sparkline -->
-			<div class="flex items-center gap-2">
-				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span>
+			<div class="flex items-center gap-1.5">
+				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span
+				>
 				{#if visitorStats.recent && visitorStats.recent.length > 1}
 					{@const sparkPath = generateSparklinePath(
-						visitorStats.recent.map(d => d.visit_count).reverse(),
+						visitorStats.recent.map((d) => d.visit_count).reverse(),
 						48,
 						20
 					)}
-					<svg
-						class="text-emerald-500"
-						width="48"
-						height="20"
-						viewBox="0 0 48 20"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d={sparkPath} />
-					</svg>
+					<div class="group relative inline-flex cursor-help items-center">
+						<svg
+							class="text-emerald-500"
+							width="48"
+							height="20"
+							viewBox="0 0 48 20"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-label="Recent visitor trend"
+						>
+							<path d={sparkPath} />
+						</svg>
+						<!-- Tooltip -->
+						<div class="absolute bottom-full left-0 z-10 mb-2 hidden group-hover:block">
+							<div
+								class="rounded-lg bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg"
+							>
+								<div class="mb-1 font-medium">Recent visits</div>
+								{#each visitorStats.recent as day, i (day.date)}
+									<div
+										class="flex justify-between gap-4 {i === 0
+											? 'text-emerald-400'
+											: 'text-gray-300'}"
+									>
+										<span>{i === 0 ? 'Today' : `${i} days ago`}</span>
+										<span>{day.visit_count} visits</span>
+									</div>
+								{/each}
+							</div>
+							<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900"></div>
+						</div>
+					</div>
 				{/if}
 			</div>
-
-			<!-- Recent days breakdown (hover to show) -->
-			{#if previousDay}
-				<div class="group relative inline-block">
-					<button class="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-help">
-						Yesterday: {previousDay.visit_count} visits
-					</button>
-					<!-- Tooltip -->
-					<div class="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10">
-						<div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg whitespace-nowrap">
-							<div class="font-medium mb-1">Recent visits</div>
-							{#each visitorStats.recent as day, i}
-								<div class="flex justify-between gap-4 {i === 0 ? 'text-emerald-400' : 'text-gray-300'}">
-									<span>{i === 0 ? 'Today' : `${i} days ago`}</span>
-									<span>{day.visit_count} visits</span>
-								</div>
-							{/each}
-						</div>
-						<div class="w-2 h-2 bg-gray-900 rotate-45 absolute left-4 -bottom-1"></div>
-					</div>
-				</div>
-			{/if}
 		</div>
 	{/if}
 
-	<main in:fly={{ y: 100, duration: 1000, delay: 200 }} class="main-content-area mt-2">
+	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
 		{#if pageContent}
 			<div class="prose prose-sm sm:prose-lg max-w-none">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->

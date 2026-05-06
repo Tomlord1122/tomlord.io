@@ -136,18 +136,19 @@ trade-off works.
 // +page.server.ts
 import { preloadEmbedPreviews } from '$lib/util/embed-previews.server.js';
 export const load = async () => {
-  const content = await fetchSomeMarkdown();
-  return { content, previews: await preloadEmbedPreviews(content) };
+	const content = await fetchSomeMarkdown();
+	return { content, previews: await preloadEmbedPreviews(content) };
 };
 ```
 
 ```svelte
 <!-- +page.svelte -->
 <script lang="ts">
-  import { renderMarkdown } from '$lib/util/markdown.js';
-  let { data } = $props();
-  let html = $derived(renderMarkdown(data.content, data.previews));
+	import { renderMarkdown } from '$lib/util/markdown.js';
+	let { data } = $props();
+	let html = $derived(renderMarkdown(data.content, data.previews));
 </script>
+
 {@html html}
 ```
 

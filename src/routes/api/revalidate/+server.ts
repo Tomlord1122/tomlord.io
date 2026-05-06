@@ -30,13 +30,10 @@ export const POST: RequestHandler = async ({ url }) => {
 			}
 		});
 
-		return new Response(
-			JSON.stringify({ ok: res.ok, status: res.status, path }),
-			{
-				status: res.ok ? 200 : 502,
-				headers: { 'Content-Type': 'application/json' }
-			}
-		);
+		return new Response(JSON.stringify({ ok: res.ok, status: res.status, path }), {
+			status: res.ok ? 200 : 502,
+			headers: { 'Content-Type': 'application/json' }
+		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Unknown error';
 		return new Response(JSON.stringify({ error: message }), {

@@ -18,9 +18,7 @@ export function calculateDuration(text: string, language: string): number {
  * Load an image in the browser and return its natural dimensions.
  * Falls back to null if the image cannot be loaded (e.g. CORS, 404).
  */
-export function getImageDimensions(
-	src: string
-): Promise<{ width: number; height: number } | null> {
+export function getImageDimensions(src: string): Promise<{ width: number; height: number } | null> {
 	return new Promise((resolve) => {
 		if (typeof window === 'undefined') {
 			resolve(null);
@@ -43,9 +41,7 @@ export function buildPhotoPostHTML(
 	dimensions?: { width: number; height: number } | null
 ): string {
 	const alt = imagePath.split('/').pop() ?? 'image';
-	const dimAttrs = dimensions
-		? ` width="${dimensions.width}" height="${dimensions.height}"`
-		: '';
+	const dimAttrs = dimensions ? ` width="${dimensions.width}" height="${dimensions.height}"` : '';
 	return `<div class="flex justify-center">
 <img src="${imagePath}" alt="${alt}" class="photo-post"${dimAttrs}>
 </div>`;
