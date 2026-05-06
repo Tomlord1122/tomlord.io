@@ -33,6 +33,8 @@ export const config = {
 			PAGES: `${this.BACKEND_URL}/api/pages`,
 			MESSAGES: `${this.BACKEND_URL}/api/messages`,
 		PREVIEW: `${this.BACKEND_URL}/api/preview`,
+			VISITORS: `${this.BACKEND_URL}/api/visitors`,
+			VISITORS_TRACK: `${this.BACKEND_URL}/api/visitors/track`,
 			WEBSOCKET: `${this.BACKEND_WS_URL}/ws`,
 			HEALTH: `${this.BACKEND_URL}/health`
 		};

@@ -4,6 +4,7 @@ import type { Config } from '@sveltejs/adapter-vercel';
 import { BYPASS_TOKEN } from '$env/static/private';
 import { config as appConfig, fetchWithTimeout } from '$lib/config.js';
 import { preloadEmbedPreviews } from '$lib/util/embed-previews.server.js';
+import type { VisitorStats } from '$lib/api/analytics.js';
 
 function getDefaultHomeContent() {
 	return `<div class="flex gap-2 flex-wrap">
@@ -69,16 +70,34 @@ async function fetchPageFromAPI(name: string): Promise<string | null> {
 	}
 }
 
+async function fetchVisitorStatsFromAPI(): Promise<VisitorStats | null> {
+	try {
+		const response = await fetchWithTimeout(
+			appConfig.API.VISITORS,
+			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
+			3000
+		);
+		if (response.ok) {
+			return await response.json();
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
 export const load: PageServerLoad = async ({ setHeaders }) => {
 	// Browser-side cache; ISR handles edge caching
 	setHeaders({
 		'cache-control': 'public, max-age=60'
 	});
 
+	const visitorStats = await fetchVisitorStatsFromAPI();
+
 	// In development mode, skip API call and use default content for faster loading
 	if (dev) {
 		const pageContent = getDefaultHomeContent();
-		return { pageContent, previews: await preloadEmbedPreviews(pageContent) };
+		return { pageContent, previews: await preloadEmbedPreviews(pageContent), visitorStats };
 	}
 
 	try {
@@ -86,14 +105,16 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		const pageContent = apiContent ?? getDefaultHomeContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent)
+			previews: await preloadEmbedPreviews(pageContent),
+			visitorStats
 		};
 	} catch (error) {
 		console.error('Error loading home page content:', error);
 		const pageContent = getDefaultHomeContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent)
+			previews: await preloadEmbedPreviews(pageContent),
+			visitorStats
 		};
 	}
 };
