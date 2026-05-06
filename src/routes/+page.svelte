@@ -7,6 +7,7 @@
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
 	import { trackVisitor } from '$lib/api/analytics.js';
+	import { formatCompactNumber, generateSparklinePath } from '$lib/util/format.js';
 
 	// Get data from the server load function
 	let { data } = $props();
@@ -82,18 +83,61 @@
 	</h1>
 
 	{#if visitorStats}
-		<div class="mb-6 flex items-center gap-2 text-sm text-gray-600" in:fly={{ y: 20, duration: 600, delay: 400 }}>
-			<span>Welcome! You're visitor</span>
-			<span class="font-semibold text-gray-900">
-				#{visitorStats.total_count.toLocaleString()}
-			</span>
-			<span class="text-emerald-600 font-medium">
-				+{visitorStats.today_count.toLocaleString()} today
-			</span>
-			<svg class="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-				<polyline points="16 7 22 7 22 13"></polyline>
-			</svg>
+		<div class="mb-6 space-y-1" in:fly={{ y: 20, duration: 600, delay: 400 }}>
+			<!-- Total count line -->
+			<div class="flex items-center gap-2 text-sm">
+				<span class="text-gray-500">Welcome! You're visitor</span>
+				<span class="font-semibold text-gray-900" title="{visitorStats.total_count.toLocaleString()}">
+					#{formatCompactNumber(visitorStats.total_count)}
+				</span>
+			</div>
+
+			<!-- Today count + sparkline -->
+			<div class="flex items-center gap-2">
+				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span>
+				{#if visitorStats.recent && visitorStats.recent.length > 1}
+					{@const sparkPath = generateSparklinePath(
+						visitorStats.recent.map(d => d.visit_count).reverse(),
+						48,
+						20
+					)}
+					<svg
+						class="text-emerald-500"
+						width="48"
+						height="20"
+						viewBox="0 0 48 20"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d={sparkPath} />
+					</svg>
+				{/if}
+			</div>
+
+			<!-- Recent days breakdown (hover to show) -->
+			{#if visitorStats.recent && visitorStats.recent.length > 1}
+				<div class="group relative inline-block">
+					<button class="text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-help">
+						{visitorStats.recent.length - 1} days ago: {visitorStats.recent[1]?.visit_count ?? 0} visits
+					</button>
+					<!-- Tooltip -->
+					<div class="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10">
+						<div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg whitespace-nowrap">
+							<div class="font-medium mb-1">Recent visits</div>
+							{#each visitorStats.recent as day, i}
+								<div class="flex justify-between gap-4 {i === 0 ? 'text-emerald-400' : 'text-gray-300'}">
+									<span>{i === 0 ? 'Today' : `${i} days ago`}</span>
+									<span>{day.visit_count} visits</span>
+								</div>
+							{/each}
+						</div>
+						<div class="w-2 h-2 bg-gray-900 rotate-45 absolute left-4 -bottom-1"></div>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 
