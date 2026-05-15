@@ -13,7 +13,7 @@ import type { LinkPreview } from '$lib/types/preview.js';
 export type TocItem = {
 	id: string;
 	text: string;
-	level: 1 | 2 | 3;
+	level: 1 | 2 | 3 | 4;
 };
 
 // Import Prism languages
@@ -124,7 +124,7 @@ export function extractTableOfContents(text: string): TocItem[] {
 
 		if (inFence) continue;
 
-		const match = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+		const match = line.match(/^(#{1,4})\s+(.+?)\s*#*\s*$/);
 		if (!match) continue;
 
 		const level = match[1].length as TocItem['level'];

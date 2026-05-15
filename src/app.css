@@ -95,7 +95,7 @@
 		@apply text-base font-medium;
 	}
 
-	.blog-content :is(h1, h2, h3) {
+	.blog-content :is(h1, h2, h3, h4) {
 		scroll-margin-top: 3rem;
 	}
 

@@ -9,7 +9,8 @@
 	function itemClass(item: TocItem): string {
 		const base =
 			'group/toc-item relative flex w-fit items-center py-1 leading-none transition-colors';
-		const indent = item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-3' : 'ml-6';
+		const indent =
+			item.level === 1 ? 'ml-0' : item.level === 2 ? 'ml-3' : item.level === 3 ? 'ml-6' : 'ml-9';
 		const active = activeId === item.id ? 'text-gray-950' : 'text-gray-400 hover:text-gray-700';
 
 		return `${base} ${indent} ${active}`;

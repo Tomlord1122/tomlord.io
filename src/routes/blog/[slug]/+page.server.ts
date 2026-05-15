@@ -34,6 +34,10 @@ Scroll through this paragraph to see the TOC indicator move. The TOC should stay
 
 Nested headings should be indented under their parent section and still use the same dash-style indicator.
 
+#### First Sub Detail
+
+Fourth-level headings should appear as one more nested TOC level.
+
 ### Second Detail
 
 This repeated detail section helps verify the scroll spy chooses the heading currently nearest the top of the viewport.
