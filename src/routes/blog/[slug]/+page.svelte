@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
-	import { renderMarkdown } from '$lib/util/markdown.js';
+	import { extractTableOfContents, renderMarkdown } from '$lib/util/markdown.js';
 	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import CommentForm from '$lib/components/CommentForm.svelte';
 	import CommentList from '$lib/components/CommentList.svelte';
 	import ReadingProgressBar from '$lib/components/ReadingProgressBar.svelte';
+	import TableOfContents from '$lib/components/TableOfContents.svelte';
 	import type { PostData } from '$lib/types/post.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
@@ -21,15 +22,10 @@
 	let content = $derived(post.content);
 	let duration = $derived(post.duration);
 	let slug = $derived(post.slug);
+	let tocItems = $derived(extractTableOfContents(content));
 
 	// Convert markdown content to HTML (with pre-fetched embed previews)
-	let contentHtml = $state('');
-
-	$effect(() => {
-		if (content) {
-			contentHtml = renderMarkdown(content, data.previews);
-		}
-	});
+	let contentHtml = $derived(content ? renderMarkdown(content, data.previews) : '');
 
 	// Check if user can edit (super user only)
 	let canEdit = $derived(isSuperUser(auth.user));
@@ -170,7 +166,7 @@
 	</header>
 	<div
 		in:fly={{ y: 50, duration: 600, delay: 200 }}
-		class="prose prose-sm sm:prose-base img-center max-w-none font-serif"
+		class="prose prose-sm sm:prose-base blog-content img-center max-w-none font-serif"
 	>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html contentHtml}
@@ -186,6 +182,8 @@
 		<a href="/blog" class="text-sky-600 hover:text-sky-800">&larr; Go back to blog list</a>
 	</div>
 </article>
+
+<TableOfContents items={tocItems} />
 
 {#if canEdit}
 	<PostEditorModal

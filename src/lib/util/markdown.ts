@@ -10,6 +10,12 @@ import Prism from 'prismjs';
 import { buildEmbedHTML } from './embed.js';
 import type { LinkPreview } from '$lib/types/preview.js';
 
+export type TocItem = {
+	id: string;
+	text: string;
+	level: 1 | 2 | 3;
+};
+
 // Import Prism languages
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
@@ -73,6 +79,70 @@ function escapeHtml(text: string): string {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#039;');
+}
+
+function stripHeadingMarkdown(text: string): string {
+	return text
+		.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+		.replace(/[`*_~]/g, '')
+		.replace(/<[^>]+>/g, '')
+		.replace(/&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/g, (_match, entity) => {
+			const normalized = entity.toLowerCase();
+			if (normalized === 'colon') return ':';
+			if (normalized.startsWith('#x'))
+				return String.fromCharCode(parseInt(normalized.slice(2), 16));
+			if (normalized.startsWith('#')) return String.fromCharCode(Number(normalized.slice(1)));
+			return '';
+		})
+		.trim();
+}
+
+function slugifyHeading(text: string): string {
+	return text
+		.toLowerCase()
+		.replace(/[\0-\x1F!-\/:-@\[-\^`\{-~]/g, '')
+		.replace(/ /g, '-');
+}
+
+/**
+ * Extract a heading-based table of contents from markdown content.
+ * Mirrors the id generation used by marked-gfm-heading-id closely enough for
+ * article anchors while avoiding a second full markdown render.
+ */
+export function extractTableOfContents(text: string): TocItem[] {
+	if (!text) return [];
+
+	const toc: TocItem[] = [];
+	const slugs = new Map<string, number>();
+	let inFence = false;
+
+	for (const line of text.split('\n')) {
+		if (/^\s*(```|~~~)/.test(line)) {
+			inFence = !inFence;
+			continue;
+		}
+
+		if (inFence) continue;
+
+		const match = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+		if (!match) continue;
+
+		const level = match[1].length as TocItem['level'];
+		const headingText = stripHeadingMarkdown(match[2]);
+		if (!headingText) continue;
+
+		const baseSlug = slugifyHeading(headingText);
+		const count = slugs.get(baseSlug) ?? 0;
+		slugs.set(baseSlug, count + 1);
+
+		toc.push({
+			id: count === 0 ? baseSlug : `${baseSlug}-${count}`,
+			text: headingText,
+			level
+		});
+	}
+
+	return toc;
 }
 
 /**

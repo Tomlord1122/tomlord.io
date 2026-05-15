@@ -18,7 +18,7 @@
 		color: string;
 	}[] = [];
 
-	const NUM_DOTS = 100;
+	const NUM_DOTS = 175;
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.4;
 	const STAR_COLORS = ['rgb(215, 169, 215)', 'rgb(80, 80, 80)'];

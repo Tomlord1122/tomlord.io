@@ -12,7 +12,43 @@ function getDefaultPost(slug: string): Post {
 		title: 'Sample Post for Development',
 		date: '2024-01-01',
 		tags: ['sample', 'dev'],
-		content: `# Sample Post\n\nThis is a sample post for development mode.\n\nSlug: ${slug}`,
+		content: `# Sample Post
+
+This is a sample post for development mode.
+
+Slug: ${slug}
+
+## Overview
+
+This section introduces the article and gives the TOC enough content to observe the first active state.
+
+### Why This Exists
+
+The development fallback post includes nested headings so the right-side table of contents can be tested without backend content.
+
+## First Main Section
+
+Scroll through this paragraph to see the TOC indicator move. The TOC should stay fixed on the right side without pushing the article away from the center.
+
+### First Detail
+
+Nested headings should be indented under their parent section and still use the same dash-style indicator.
+
+### Second Detail
+
+This repeated detail section helps verify the scroll spy chooses the heading currently nearest the top of the viewport.
+
+## Second Main Section
+
+More body copy gives the page enough vertical height to test scrolling behavior. The active TOC item should update as this section approaches the top.
+
+### Implementation Notes
+
+The rendered markdown headings get HTML ids, and the TOC links point to those ids with hash anchors.
+
+## Final Section
+
+The final section verifies the last item remains active near the bottom of the page.`,
 		slug: slug,
 		duration: '5min',
 		lang: 'en',
