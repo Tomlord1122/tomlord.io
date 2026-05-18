@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 
 	// Mouse position (non-reactive)
 	let mouse = { x: 0, y: 0 };
@@ -18,7 +19,7 @@
 		color: string;
 	}[] = [];
 
-	const NUM_DOTS = 175;
+	const NUM_DOTS = 85;
 	const GLOW_RADIUS = 100;
 	const MAX_GLOW = 0.4;
 	const STAR_COLORS = ['rgb(215, 169, 215)', 'rgb(80, 80, 80)'];
@@ -62,7 +63,7 @@
 				y,
 				originalX: x,
 				originalY: y,
-				size: Math.random() * 1.5 + 0.5,
+				size: Math.random() * 1.5 + 0.7,
 				color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)]
 			});
 		}
@@ -106,38 +107,34 @@
 		// Clear canvas
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		dots = dots.map((dot) => {
-			const newDot = { ...dot };
-
+		for (const dot of dots) {
 			// Mouse pull force with easing
-			const distance = Math.sqrt(
-				(newDot.originalX - mouse.x) ** 2 + (newDot.originalY - mouse.y) ** 2
-			);
-			let targetX = newDot.originalX;
-			let targetY = newDot.originalY;
+			const distance = Math.sqrt((dot.originalX - mouse.x) ** 2 + (dot.originalY - mouse.y) ** 2);
+			let targetX = dot.originalX;
+			let targetY = dot.originalY;
 
 			if (distance < GLOW_RADIUS) {
 				const pull = (1 - distance / GLOW_RADIUS) * MOUSE_PULL_FACTOR;
-				const dx = mouse.x - newDot.originalX;
-				const dy = mouse.y - newDot.originalY;
-				targetX = newDot.originalX + dx * pull;
-				targetY = newDot.originalY + dy * pull;
+				const dx = mouse.x - dot.originalX;
+				const dy = mouse.y - dot.originalY;
+				targetX = dot.originalX + dx * pull;
+				targetY = dot.originalY + dy * pull;
 			}
 
 			// Use easing to update position
-			newDot.x = lerp(newDot.x, targetX, EASING_FACTOR);
-			newDot.y = lerp(newDot.y, targetY, EASING_FACTOR);
+			dot.x = lerp(dot.x, targetX, EASING_FACTOR);
+			dot.y = lerp(dot.y, targetY, EASING_FACTOR);
 
 			// Draw star with glow effect - Safari optimized
-			const glowIntensity = calculateGlow(newDot.x, newDot.y, mouse.x, mouse.y);
+			const glowIntensity = calculateGlow(dot.x, dot.y, mouse.x, mouse.y);
 			if (ctx) {
 				ctx.beginPath();
-				ctx.arc(newDot.x, newDot.y, newDot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
+				ctx.arc(dot.x, dot.y, dot.size * (1 + glowIntensity * 1.2), 0, Math.PI * 2);
 
-				ctx.fillStyle = newDot.color;
+				ctx.fillStyle = dot.color;
 				ctx.globalAlpha = 0.12 + glowIntensity * 0.35;
 				ctx.shadowBlur = 3 + glowIntensity * 12;
-				ctx.shadowColor = newDot.color;
+				ctx.shadowColor = dot.color;
 
 				ctx.fill();
 
@@ -145,9 +142,7 @@
 				ctx.globalAlpha = 1;
 				ctx.shadowBlur = 0;
 			}
-
-			return newDot;
-		});
+		}
 
 		animationFrameId = requestAnimationFrame(updateDots);
 	}
@@ -189,19 +184,10 @@
 		ctx = null;
 	}
 
-	// Initialize when canvas is available - with longer delay for better initial load
-	$effect(() => {
-		if (browser && canvas) {
-			// Longer delay to ensure page content loads first
-			const timeoutId = setTimeout(() => {
-				initializeCanvas();
-			}, 1000); // 1 second delay for better perceived performance
+	onMount(() => {
+		initializeCanvas();
 
-			return () => {
-				clearTimeout(timeoutId);
-				cleanup();
-			};
-		}
+		return cleanup;
 	});
 </script>
 

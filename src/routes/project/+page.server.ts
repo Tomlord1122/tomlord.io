@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 	// In development mode, skip API call and use default content for faster loading
 	if (dev) {
 		const pageContent = getDefaultProjectContent();
-		return { pageContent, previews: await preloadEmbedPreviews(pageContent) };
+		return { pageContent, previews: preloadEmbedPreviews(pageContent) };
 	}
 
 	try {
@@ -44,14 +44,14 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		const pageContent = apiContent ?? getDefaultProjectContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent)
+			previews: preloadEmbedPreviews(pageContent)
 		};
 	} catch (error) {
 		console.error('Error loading project page content:', error);
 		const pageContent = getDefaultProjectContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent)
+			previews: preloadEmbedPreviews(pageContent)
 		};
 	}
 };

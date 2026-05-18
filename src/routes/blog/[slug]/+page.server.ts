@@ -110,7 +110,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 
 		return {
 			post,
-			previews: await preloadEmbedPreviews(content)
+			previews: preloadEmbedPreviews(content)
 		};
 	} catch (err) {
 		console.error('Failed to load blog post:', err);

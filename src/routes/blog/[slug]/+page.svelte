@@ -11,6 +11,7 @@
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
+	import type { LinkPreview } from '$lib/types/preview.js';
 
 	let { data } = $props();
 
@@ -23,9 +24,24 @@
 	let duration = $derived(post.duration);
 	let slug = $derived(post.slug);
 	let tocItems = $derived(extractTableOfContents(content));
+	let resolvedPreviews = $state<Record<string, LinkPreview>>({});
+
+	$effect(() => {
+		let cancelled = false;
+
+		Promise.resolve(data.previews).then((previews) => {
+			if (!cancelled) {
+				resolvedPreviews = previews ?? {};
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	// Convert markdown content to HTML (with pre-fetched embed previews)
-	let contentHtml = $derived(content ? renderMarkdown(content, data.previews) : '');
+	let contentHtml = $derived(content ? renderMarkdown(content, resolvedPreviews) : '');
 
 	// Check if user can edit (super user only)
 	let canEdit = $derived(isSuperUser(auth.user));

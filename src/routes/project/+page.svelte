@@ -5,6 +5,7 @@
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
+	import type { LinkPreview } from '$lib/types/preview.js';
 
 	// Get data from the server load function
 	let { data } = $props();
@@ -13,6 +14,21 @@
 	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
 	let pageContent = $derived(data.pageContent);
+	let resolvedPreviews = $state<Record<string, LinkPreview>>({});
+
+	$effect(() => {
+		let cancelled = false;
+
+		Promise.resolve(data.previews).then((previews) => {
+			if (!cancelled) {
+				resolvedPreviews = previews ?? {};
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	// Callback for successful save
 	async function handlePageSaved() {
@@ -33,7 +49,7 @@
 	}
 
 	// Derived HTML content for rendering
-	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
+	let htmlContent = $derived(renderMarkdown(pageContent || '', resolvedPreviews));
 </script>
 
 <svelte:head>

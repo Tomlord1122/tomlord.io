@@ -7,6 +7,8 @@
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
 	import { trackVisitor } from '$lib/api/analytics.js';
+	import type { VisitorStats } from '$lib/api/analytics.js';
+	import type { LinkPreview } from '$lib/types/preview.js';
 	import { formatCompactNumber, generateSparklinePath } from '$lib/util/format.js';
 
 	// Get data from the server load function
@@ -18,9 +20,9 @@
 	let pageContent = $derived(data.pageContent);
 
 	// Visitor stats - initialized from SSR data, then updated client-side
-	// svelte-ignore state_referenced_locally
-	let visitorStats = $state(data.visitorStats);
+	let visitorStats = $state<VisitorStats | null>(null);
 	let visitorTracked = $state(false);
+	let resolvedPreviews = $state<Record<string, LinkPreview>>({});
 
 	// Track visit client-side on mount
 	$effect(() => {
@@ -34,6 +36,20 @@
 					console.error('Failed to track visitor:', err);
 				});
 		}
+	});
+
+	$effect(() => {
+		let cancelled = false;
+
+		Promise.resolve(data.previews).then((previews) => {
+			if (!cancelled) {
+				resolvedPreviews = previews ?? {};
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function handlePageSaved() {
@@ -52,7 +68,7 @@
 		showEditModal = true;
 	}
 
-	let htmlContent = $derived(renderMarkdown(pageContent || '', data.previews));
+	let htmlContent = $derived(renderMarkdown(pageContent || '', resolvedPreviews));
 </script>
 
 <svelte:head>
@@ -82,26 +98,23 @@
 		{/if}
 	</h1>
 
-	{#if visitorStats}
+	{#snippet visitorStatsPanel(stats: VisitorStats)}
 		<div
 			class="mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-tight"
 			in:fly={{ y: 16, duration: 500, delay: 250 }}
 		>
-			<!-- Total count -->
 			<div class="flex items-center gap-1.5">
 				<span class="text-gray-500">Welcome! You're visitor</span>
-				<span class="font-semibold text-gray-900" title={visitorStats.total_count.toLocaleString()}>
-					#{formatCompactNumber(visitorStats.total_count)}
+				<span class="font-semibold text-gray-900" title={stats.total_count.toLocaleString()}>
+					#{formatCompactNumber(stats.total_count)}
 				</span>
 			</div>
 
-			<!-- Today count + sparkline -->
 			<div class="flex items-center gap-1.5">
-				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span
-				>
-				{#if visitorStats.recent && visitorStats.recent.length > 1}
+				<span class="text-sm text-gray-500">+{stats.today_count.toLocaleString()} today</span>
+				{#if stats.recent && stats.recent.length > 1}
 					{@const sparkPath = generateSparklinePath(
-						visitorStats.recent.map((d) => d.visit_count).reverse(),
+						stats.recent.map((d) => d.visit_count).reverse(),
 						48,
 						20
 					)}
@@ -120,13 +133,12 @@
 						>
 							<path d={sparkPath} />
 						</svg>
-						<!-- Tooltip -->
 						<div class="absolute bottom-full left-0 z-10 mb-2 hidden group-hover:block">
 							<div
 								class="rounded-lg bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg"
 							>
 								<div class="mb-1 font-medium">Recent visits</div>
-								{#each visitorStats.recent as day, i (day.date)}
+								{#each stats.recent as day, i (day.date)}
 									<div
 										class="flex justify-between gap-4 {i === 0
 											? 'text-emerald-400'
@@ -143,6 +155,21 @@
 				{/if}
 			</div>
 		</div>
+	{/snippet}
+
+	{#if visitorStats}
+		{@render visitorStatsPanel(visitorStats)}
+	{:else}
+		{#await data.visitorStats}
+			<div class="mb-0 flex items-center gap-2 text-sm leading-tight" aria-label="Loading visitor stats">
+				<div class="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+				<div class="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
+			</div>
+		{:then initialVisitorStats}
+			{#if initialVisitorStats}
+				{@render visitorStatsPanel(initialVisitorStats)}
+			{/if}
+		{/await}
 	{/if}
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">

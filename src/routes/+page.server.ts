@@ -92,12 +92,12 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		'cache-control': 'public, max-age=60'
 	});
 
-	const visitorStats = await fetchVisitorStatsFromAPI();
+	const visitorStats = fetchVisitorStatsFromAPI();
 
 	// In development mode, skip API call and use default content for faster loading
 	if (dev) {
 		const pageContent = getDefaultHomeContent();
-		return { pageContent, previews: await preloadEmbedPreviews(pageContent), visitorStats };
+		return { pageContent, previews: preloadEmbedPreviews(pageContent), visitorStats };
 	}
 
 	try {
@@ -105,7 +105,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		const pageContent = apiContent ?? getDefaultHomeContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent),
+			previews: preloadEmbedPreviews(pageContent),
 			visitorStats
 		};
 	} catch (error) {
@@ -113,7 +113,7 @@ export const load: PageServerLoad = async ({ setHeaders }) => {
 		const pageContent = getDefaultHomeContent();
 		return {
 			pageContent,
-			previews: await preloadEmbedPreviews(pageContent),
+			previews: preloadEmbedPreviews(pageContent),
 			visitorStats
 		};
 	}
