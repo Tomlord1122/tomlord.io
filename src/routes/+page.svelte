@@ -32,8 +32,9 @@
 				.then((stats) => {
 					visitorStats = stats;
 				})
-				.catch((err) => {
+				.catch(async (err) => {
 					console.error('Failed to track visitor:', err);
+					visitorStats = await Promise.resolve(data.visitorStats).catch(() => null);
 				});
 		}
 	});
@@ -160,16 +161,10 @@
 	{#if visitorStats}
 		{@render visitorStatsPanel(visitorStats)}
 	{:else}
-		{#await data.visitorStats}
-			<div class="mb-0 flex items-center gap-2 text-sm leading-tight" aria-label="Loading visitor stats">
-				<div class="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
-				<div class="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
-			</div>
-		{:then initialVisitorStats}
-			{#if initialVisitorStats}
-				{@render visitorStatsPanel(initialVisitorStats)}
-			{/if}
-		{/await}
+		<div class="mb-0 flex items-center gap-2 text-sm leading-tight" aria-label="Loading visitor stats">
+			<div class="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+			<div class="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
+		</div>
 	{/if}
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
