@@ -101,29 +101,24 @@
 	<div class="mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-tight">
 		<div class="flex items-center gap-1.5">
 			<span class="text-gray-500">Welcome! You're visitor</span>
-			<span class="inline-block min-w-[4ch]">
-				{#if visitorStats}
-					<span
-						class="font-semibold text-gray-900"
-						title={visitorStats.total_count.toLocaleString()}
-						in:fade={{ duration: 250 }}
-					>
-						#{formatCompactNumber(visitorStats.total_count)}
-					</span>
-				{/if}
-			</span>
+			{#if visitorStats}
+				<span
+					class="font-semibold text-gray-900"
+					title={visitorStats.total_count.toLocaleString()}
+					in:fade={{ duration: 250 }}
+				>
+					#{formatCompactNumber(visitorStats.total_count)}
+				</span>
+			{/if}
 		</div>
 
-		<div class="inline-block min-w-[9ch]">
-			{#if visitorStats}
-				<div class="flex items-center gap-1.5" in:fade={{ duration: 250 }}>
-				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span>
-				{#if visitorStats.recent && visitorStats.recent.length > 1}
-					{@const sparkPath = generateSparklinePath(
-						visitorStats.recent.map((d) => d.visit_count).reverse(),
-						48,
-						20
-					)}
+		{#if visitorStats?.recent && visitorStats.recent.length > 1}
+			{@const sparkPath = generateSparklinePath(
+				visitorStats.recent.map((d) => d.visit_count).reverse(),
+				48,
+				20
+			)}
+			<div class="flex items-center gap-1.5" in:fade={{ duration: 250 }}>
 					<div class="group relative inline-flex cursor-help items-center">
 						<svg
 							class="text-emerald-500"
@@ -158,10 +153,8 @@
 							<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900"></div>
 						</div>
 					</div>
-				{/if}
-				</div>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
