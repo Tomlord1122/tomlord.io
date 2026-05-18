@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import EditPageModal from '$lib/components/EditPageModal.svelte';
 	import { renderMarkdown } from '$lib/util/markdown.js';
@@ -32,9 +32,8 @@
 				.then((stats) => {
 					visitorStats = stats;
 				})
-				.catch(async (err) => {
+				.catch((err) => {
 					console.error('Failed to track visitor:', err);
-					visitorStats = await Promise.resolve(data.visitorStats).catch(() => null);
 				});
 		}
 	});
@@ -99,23 +98,29 @@
 		{/if}
 	</h1>
 
-	{#snippet visitorStatsPanel(stats: VisitorStats)}
-		<div
-			class="mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-tight"
-			in:fly={{ y: 16, duration: 500, delay: 250 }}
-		>
-			<div class="flex items-center gap-1.5">
-				<span class="text-gray-500">Welcome! You're visitor</span>
-				<span class="font-semibold text-gray-900" title={stats.total_count.toLocaleString()}>
-					#{formatCompactNumber(stats.total_count)}
-				</span>
-			</div>
+	<div class="mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-tight">
+		<div class="flex items-center gap-1.5">
+			<span class="text-gray-500">Welcome! You're visitor</span>
+			<span class="inline-block min-w-[4ch]">
+				{#if visitorStats}
+					<span
+						class="font-semibold text-gray-900"
+						title={visitorStats.total_count.toLocaleString()}
+						in:fade={{ duration: 250 }}
+					>
+						#{formatCompactNumber(visitorStats.total_count)}
+					</span>
+				{/if}
+			</span>
+		</div>
 
-			<div class="flex items-center gap-1.5">
-				<span class="text-sm text-gray-500">+{stats.today_count.toLocaleString()} today</span>
-				{#if stats.recent && stats.recent.length > 1}
+		<div class="inline-block min-w-[9ch]">
+			{#if visitorStats}
+				<div class="flex items-center gap-1.5" in:fade={{ duration: 250 }}>
+				<span class="text-sm text-gray-500">+{visitorStats.today_count.toLocaleString()} today</span>
+				{#if visitorStats.recent && visitorStats.recent.length > 1}
 					{@const sparkPath = generateSparklinePath(
-						stats.recent.map((d) => d.visit_count).reverse(),
+						visitorStats.recent.map((d) => d.visit_count).reverse(),
 						48,
 						20
 					)}
@@ -139,7 +144,7 @@
 								class="rounded-lg bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg"
 							>
 								<div class="mb-1 font-medium">Recent visits</div>
-								{#each stats.recent as day, i (day.date)}
+								{#each visitorStats.recent as day, i (day.date)}
 									<div
 										class="flex justify-between gap-4 {i === 0
 											? 'text-emerald-400'
@@ -154,18 +159,10 @@
 						</div>
 					</div>
 				{/if}
-			</div>
+				</div>
+			{/if}
 		</div>
-	{/snippet}
-
-	{#if visitorStats}
-		{@render visitorStatsPanel(visitorStats)}
-	{:else}
-		<div class="mb-0 flex items-center gap-2 text-sm leading-tight" aria-label="Loading visitor stats">
-			<div class="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
-			<div class="h-4 w-16 animate-pulse rounded bg-gray-200"></div>
-		</div>
-	{/if}
+	</div>
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
 		{#if pageContent}
