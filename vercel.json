@@ -2,11 +2,5 @@
 	"buildCommand": "bun run build",
 	"outputDirectory": "build",
 	"installCommand": "bun install",
-	"framework": "sveltekit",
-	"crons": [
-		{
-			"path": "/api/warm-isr",
-			"schedule": "*/10 * * * *"
-		}
-	]
+	"framework": "sveltekit"
 }
