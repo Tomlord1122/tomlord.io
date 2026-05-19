@@ -1,4 +1,4 @@
-import { dev } from '$app/environment';
+import { browser, dev } from '$app/environment';
 
 /**
  * Trigger Vercel ISR revalidation for a given path.
@@ -11,8 +11,10 @@ export async function revalidateISR(path: string): Promise<void> {
 	}
 
 	try {
+		const token = browser ? localStorage.getItem('auth_token') : null;
 		const response = await fetch(`/api/revalidate?path=${encodeURIComponent(path)}`, {
-			method: 'POST'
+			method: 'POST',
+			headers: token ? { Authorization: `Bearer ${token}` } : undefined
 		});
 		if (!response.ok) {
 			console.error(`ISR revalidation failed for ${path}:`, await response.text());
