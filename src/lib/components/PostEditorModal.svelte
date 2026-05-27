@@ -244,6 +244,8 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 ${content}`;
 
 		isSaving = true;
+		isDismissedWhileSaving = true;
+		showToast('Updating...', 'info', 2500);
 		try {
 			const blog = await updateBlog(
 				postData.slug,
@@ -259,12 +261,18 @@ ${content}`;
 				},
 				auth.token
 			);
-			alert('Post updated successfully!');
+			showToast('Updated', 'success', 2000);
 			onSaved(blog);
 			show = false;
+			isDismissedWhileSaving = false;
 		} catch (error) {
 			console.error('Error updating post:', error);
-			alert(`Failed to update post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			showToast(
+				`Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				'error',
+				5000
+			);
+			isDismissedWhileSaving = false;
 		} finally {
 			isSaving = false;
 		}
