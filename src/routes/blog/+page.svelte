@@ -4,12 +4,18 @@
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
+	import type { PostEditorSavedPost, PostMetadata } from '$lib/types/post.js';
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
 
-	// Use $derived for reactive access to data.posts
-	let posts = $derived(data.posts);
+	let optimisticPosts = $state<PostMetadata[] | null>(null);
+	let posts = $derived(optimisticPosts ?? data.posts);
+
+	$effect(() => {
+		data.posts;
+		optimisticPosts = null;
+	});
 
 	let selectedTags = $state<string[]>([]);
 	let showCreatePostModal = $state(false);
@@ -114,13 +120,29 @@
 		return () => observer.disconnect();
 	});
 
+	function toPostMetadata(post: PostEditorSavedPost): PostMetadata {
+		return {
+			title: post.title,
+			date: post.date,
+			slug: post.slug,
+			description: post.description || '',
+			tags: post.tags || [],
+			lang: post.lang || 'en',
+			duration: post.duration || '5min'
+		};
+	}
+
 	// Called when a post is successfully created in the modal
-	async function handlePostCreationSuccess() {
+	function handlePostCreationSuccess(post?: PostEditorSavedPost) {
 		console.log('Post created successfully.');
 		showCreatePostModal = false;
-		await revalidateISR('/blog');
-		// Reload to get updated data from server
-		window.location.reload();
+		if (post) {
+			const createdPost = toPostMetadata(post);
+			optimisticPosts = [createdPost, ...posts.filter((item) => item.slug !== post.slug)].sort(
+				(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+			);
+		}
+		void revalidateISR('/blog');
 	}
 
 	// Called when the modal is closed without creating a post

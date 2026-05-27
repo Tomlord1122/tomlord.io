@@ -4,6 +4,7 @@
 	import type { EditPageModalType } from '../types/page.js';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { updatePage } from '$lib/api/pages.js';
+	import { showToast } from '$lib/stores/toast.svelte.js';
 	import { copyImageMarkdown } from '$lib/util/helper.js';
 
 	let {
@@ -18,6 +19,8 @@
 	}: EditPageModalType = $props();
 
 	let content = $state('');
+	let isSaving = $state(false);
+	let isDismissedWhileSaving = $state(false);
 
 	// Image picker state — default to Content collection
 	let imagePickerCollection = $state<'photography' | 'content'>('content');
@@ -29,11 +32,13 @@
 
 	$effect(() => {
 		if (show) {
+			isDismissedWhileSaving = false;
 			content = initialContent;
-			document.body.style.overflow = 'hidden';
-		} else {
-			document.body.style.overflow = '';
 		}
+	});
+
+	$effect(() => {
+		document.body.style.overflow = show && !isDismissedWhileSaving ? 'hidden' : '';
 		return () => {
 			document.body.style.overflow = '';
 		};
@@ -44,6 +49,7 @@
 	}
 
 	async function handleSavePage() {
+		if (isSaving) return;
 		if (!content.trim()) {
 			alert('Please add some content to save.');
 			return;
@@ -52,14 +58,26 @@
 			alert('You must be logged in to save page content.');
 			return;
 		}
+
+		const nextContent = content.trim();
+		isSaving = true;
+		isDismissedWhileSaving = true;
+		showToast('Saving page...', 'info', 2500);
 		try {
-			await updatePage(pageName, content.trim(), auth.token);
-			alert('Page content saved successfully!');
-			onSaved();
+			const page = await updatePage(pageName, nextContent, auth.token);
+			showToast('Page saved', 'success', 2000);
+			onSaved(page.content);
 			closeModal();
 		} catch (error) {
 			console.error('Error saving page:', error);
-			alert(`Failed to save page: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			showToast(
+				`Save failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				'error',
+				5000
+			);
+			isDismissedWhileSaving = false;
+		} finally {
+			isSaving = false;
 		}
 	}
 
@@ -70,7 +88,7 @@
 	}
 </script>
 
-{#if show}
+{#if show && !isDismissedWhileSaving}
 	<!-- Backdrop -->
 	<div
 		class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-300"
@@ -183,6 +201,7 @@
 				<button
 					type="button"
 					onclick={resetContent}
+					disabled={isSaving}
 					class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
 				>
 					Reset
@@ -212,9 +231,10 @@
 			<button
 				type="button"
 				onclick={handleSavePage}
-				class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+				disabled={isSaving}
+				class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-4 focus:ring-green-300 disabled:cursor-not-allowed disabled:bg-gray-400"
 			>
-				Save Changes
+				{isSaving ? 'Saving...' : 'Save Changes'}
 			</button>
 		</div>
 	</div>

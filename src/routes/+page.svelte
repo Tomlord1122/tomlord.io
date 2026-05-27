@@ -17,7 +17,8 @@
 	// Check if user can edit (super user only)
 	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
-	let pageContent = $derived(data.pageContent);
+	let optimisticPageContent = $state<string | null>(null);
+	let pageContent = $derived(optimisticPageContent ?? data.pageContent);
 
 	// Visitor stats - initialized from SSR data, then updated client-side
 	let visitorStats = $state<VisitorStats | null>(null);
@@ -52,12 +53,19 @@
 		};
 	});
 
-	async function handlePageSaved() {
+	$effect(() => {
+		data.pageContent;
+		optimisticPageContent = null;
+	});
+
+	function handlePageSaved(content?: string) {
 		console.log('Home page content saved successfully.');
-		await revalidateISR('/');
-		// Soft refresh via SvelteKit navigation
-		const { invalidateAll } = await import('$app/navigation');
-		invalidateAll();
+		if (content) optimisticPageContent = content;
+		void (async () => {
+			await revalidateISR('/');
+			const { invalidateAll } = await import('$app/navigation');
+			await invalidateAll();
+		})();
 	}
 
 	function handleEditCancel() {

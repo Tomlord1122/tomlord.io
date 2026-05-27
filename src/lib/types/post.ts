@@ -30,6 +30,21 @@ export interface PostData {
 	updated_at?: string;
 }
 
+export interface PostEditorSavedPost {
+	id?: string;
+	title: string;
+	slug: string;
+	date: string;
+	lang: string;
+	duration: string;
+	tags: string[];
+	description?: string;
+	content?: string;
+	is_published: boolean;
+	created_at?: string;
+	updated_at?: string;
+}
+
 export interface PostEditorModalType {
 	show: boolean;
 	mode: 'create' | 'edit';
@@ -37,7 +52,7 @@ export interface PostEditorModalType {
 	allCurrentTags: string[];
 	availablePhotos?: string[];
 	availableAssets?: string[];
-	onSaved: () => void;
+	onSaved: (post?: PostEditorSavedPost) => void;
 	onCancel: () => void;
 	onDeleted?: () => void; // only used in edit mode
 }

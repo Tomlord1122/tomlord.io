@@ -5,6 +5,6 @@ export interface EditPageModalType {
 	pageName: string;
 	availablePhotos?: string[];
 	availableAssets?: string[];
-	onSaved: () => void;
+	onSaved: (content?: string) => void;
 	onCancel: () => void;
 }

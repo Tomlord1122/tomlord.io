@@ -13,6 +13,7 @@
 	import type { PostEditorModalType } from '$lib/types/post.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { auth } from '$lib/stores/auth.svelte.js';
+	import { showToast } from '$lib/stores/toast.svelte.js';
 	import { createBlog, updateBlog, deleteBlog } from '$lib/api/blogs.js';
 
 	let {
@@ -34,6 +35,8 @@
 	let postTags = $state<string[]>([]);
 	let newTagInput = $state('');
 	let lang = $state('en');
+	let isSaving = $state(false);
+	let isDismissedWhileSaving = $state(false);
 
 	// Image picker state — default to Content collection
 	let imagePickerCollection = $state<'photography' | 'content' | 's3'>('content');
@@ -90,6 +93,7 @@
 	// Initialise form when modal opens and lock body scroll
 	$effect(() => {
 		if (show) {
+			isDismissedWhileSaving = false;
 			if (mode === 'edit' && postData) {
 				title = postData.title || '';
 				slug = postData.slug || '';
@@ -104,10 +108,11 @@
 				lang = 'en';
 			}
 			newTagInput = '';
-			document.body.style.overflow = 'hidden';
-		} else {
-			document.body.style.overflow = '';
 		}
+	});
+
+	$effect(() => {
+		document.body.style.overflow = show && !isDismissedWhileSaving ? 'hidden' : '';
 		return () => {
 			document.body.style.overflow = '';
 		};
@@ -115,6 +120,7 @@
 
 	// ── Create ────────────────────────────────────────────────────────────────
 	async function handleCreatePost() {
+		if (isSaving) return;
 		if (!title.trim()) {
 			alert('Please enter a title for your post.');
 			return;
@@ -151,8 +157,11 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 
 ${content}`;
 
+		isSaving = true;
+		isDismissedWhileSaving = true;
+		showToast('Publishing...', 'info', 2500);
 		try {
-			await createBlog(
+			const blog = await createBlog(
 				{
 					title,
 					slug: finalSlug,
@@ -166,22 +175,31 @@ ${content}`;
 				},
 				auth.token
 			);
-			alert('Post created successfully!');
-			onSaved();
+			showToast('Published', 'success', 2000);
+			onSaved(blog);
 			title = '';
 			slug = '';
 			content = '';
 			postTags = [];
 			newTagInput = '';
 			show = false;
+			isDismissedWhileSaving = false;
 		} catch (error) {
 			console.error('Error creating post:', error);
-			alert(`Failed to create post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			showToast(
+				`Publish failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				'error',
+				5000
+			);
+			isDismissedWhileSaving = false;
+		} finally {
+			isSaving = false;
 		}
 	}
 
 	// ── Update ────────────────────────────────────────────────────────────────
 	async function handleUpdatePost() {
+		if (isSaving) return;
 		if (!postData || typeof postData.slug !== 'string' || !postData.slug.trim()) {
 			alert('Developer Alert: Original slug is missing or invalid in postData.');
 			console.error(
@@ -225,8 +243,9 @@ tags: [${postTags.map((tag) => `'${tag}'`).join(', ')}]
 
 ${content}`;
 
+		isSaving = true;
 		try {
-			await updateBlog(
+			const blog = await updateBlog(
 				postData.slug,
 				{
 					title,
@@ -241,11 +260,13 @@ ${content}`;
 				auth.token
 			);
 			alert('Post updated successfully!');
-			onSaved();
+			onSaved(blog);
 			show = false;
 		} catch (error) {
 			console.error('Error updating post:', error);
 			alert(`Failed to update post: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		} finally {
+			isSaving = false;
 		}
 	}
 
@@ -310,6 +331,7 @@ ${content}`;
 	}
 
 	function handleSave() {
+		if (isSaving) return;
 		if (mode === 'create') handleCreatePost();
 		else handleUpdatePost();
 	}
@@ -327,7 +349,7 @@ ${content}`;
 	}
 </script>
 
-{#if show}
+{#if show && !isDismissedWhileSaving}
 	<!-- Backdrop -->
 	<div
 		class="fixed inset-0 z-50 bg-black/60 transition-opacity duration-300"
@@ -664,6 +686,7 @@ ${content}`;
 						<button
 							type="button"
 							onclick={resetForm}
+							disabled={isSaving}
 							class="rounded-md border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
 						>
 							Reset
@@ -689,6 +712,7 @@ ${content}`;
 				<button
 					type="button"
 					onclick={handleDeletePost}
+					disabled={isSaving}
 					class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:ring-4 focus:ring-red-300"
 				>
 					Delete Post
@@ -711,9 +735,14 @@ ${content}`;
 				<button
 					type="button"
 					onclick={handleSave}
-					class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-4 focus:ring-green-300"
+					disabled={isSaving}
+					class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-4 focus:ring-green-300 disabled:cursor-not-allowed disabled:bg-gray-400"
 				>
-					{mode === 'create' ? 'Create Post' : 'Update Post'}
+					{#if isSaving}
+						{mode === 'create' ? 'Publishing...' : 'Updating...'}
+					{:else}
+						{mode === 'create' ? 'Create Post' : 'Update Post'}
+					{/if}
 				</button>
 			</div>
 		</div>

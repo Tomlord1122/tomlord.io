@@ -13,8 +13,14 @@
 	// Check if user can edit (super user only)
 	let canEdit = $derived(isSuperUser(auth.user));
 	let showEditModal = $state(false);
-	let pageContent = $derived(data.pageContent);
+	let optimisticPageContent = $state<string | null>(null);
+	let pageContent = $derived(optimisticPageContent ?? data.pageContent);
 	let resolvedPreviews = $state<Record<string, LinkPreview>>({});
+
+	$effect(() => {
+		data.pageContent;
+		optimisticPageContent = null;
+	});
 
 	$effect(() => {
 		let cancelled = false;
@@ -31,11 +37,14 @@
 	});
 
 	// Callback for successful save
-	async function handlePageSaved() {
+	function handlePageSaved(content?: string) {
 		console.log('Project page content saved successfully.');
-		await revalidateISR('/project');
-		// Reload the page to get the updated content from the server
-		window.location.reload();
+		if (content) optimisticPageContent = content;
+		void (async () => {
+			await revalidateISR('/project');
+			const { invalidateAll } = await import('$app/navigation');
+			await invalidateAll();
+		})();
 	}
 
 	// Callback for modal cancellation
