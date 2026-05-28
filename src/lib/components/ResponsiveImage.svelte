@@ -2,7 +2,13 @@
 	import { browser } from '$app/environment';
 	import type { ResponsiveImageType } from '../types/image.js';
 
-	let { src, alt, loading = 'lazy', onclick = () => {} }: ResponsiveImageType = $props();
+	let {
+		src,
+		alt,
+		loading = 'lazy',
+		onclick = () => {},
+		onLoaded = () => {}
+	}: ResponsiveImageType = $props();
 
 	// Optimization: Use more specific state management
 	let isLoaded = $state(false);
@@ -42,6 +48,7 @@
 	function handleLoad() {
 		isLoaded = true;
 		hasError = false;
+		onLoaded();
 	}
 
 	function handleError() {
@@ -52,13 +59,6 @@
 	// Optimization: Use more efficient derived state
 	let shouldLoad = $derived(loading === 'eager' || isInView);
 	let actualSrc = $derived(shouldLoad ? src : '');
-
-	// Optimization: Calculate style state
-	let imageStyles = $derived(() => {
-		const opacity = isLoaded ? 1 : 0;
-		const transition = 'opacity 0.3s ease-in-out';
-		return `opacity: ${opacity}; transition: ${transition} duration-300;`;
-	});
 
 	// Optimization: More precise state reset
 	$effect(() => {
@@ -104,7 +104,6 @@
 		class="photo-grid"
 		onload={handleLoad}
 		onerror={handleError}
-		style={imageStyles()}
 		{loading}
 		decoding="async"
 	/>

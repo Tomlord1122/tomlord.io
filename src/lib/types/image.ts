@@ -3,6 +3,7 @@ export type ResponsiveImageType = {
 	alt: string;
 	loading?: 'lazy' | 'eager';
 	onclick?: () => void;
+	onLoaded?: () => void;
 };
 
 export type UploadTarget = 'photography' | 'content';

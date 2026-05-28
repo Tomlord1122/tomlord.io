@@ -34,6 +34,7 @@
 	let showImageUploadModal = $state(false);
 	let showFullSizeImage = $state(false);
 	let currentFullSizeImage = $state('');
+	let loadedPhotoIds = $state<Set<string>>(new Set());
 
 	// Edit order mode state
 	let isEditOrderMode = $state(false);
@@ -50,6 +51,19 @@
 	let visiblePhotosCount = $state(PHOTOS_TO_LOAD_AT_ONCE);
 	let isLoadingMore = $state(false);
 	let loadMoreRequestPending = $state(false);
+	let loadMoreSentinel = $state<HTMLDivElement>();
+	const LOAD_MORE_ROOT_MARGIN = 200;
+
+	function shouldLoadMorePhotos() {
+		return photos && displayedPhotos.length < photos.length && !isEditOrderMode;
+	}
+
+	function isLoadMoreSentinelNearViewport() {
+		if (!browser || !loadMoreSentinel) return false;
+
+		const rect = loadMoreSentinel.getBoundingClientRect();
+		return rect.top <= window.innerHeight + LOAD_MORE_ROOT_MARGIN && rect.bottom >= -LOAD_MORE_ROOT_MARGIN;
+	}
 
 	// Derived state for displayed photos with virtual scrolling optimization
 	let displayedPhotos = $derived(
@@ -116,6 +130,12 @@
 			} finally {
 				isLoadingMore = false;
 				loadMoreRequestPending = false;
+
+				setTimeout(() => {
+					if (shouldLoadMorePhotos() && isLoadMoreSentinelNearViewport()) {
+						throttledLoadMore();
+					}
+				}, throttleDelay);
 			}
 		};
 	}
@@ -212,6 +232,30 @@
 		}
 	});
 
+	// Infinite scroll: reveal the next photo batch when the end sentinel approaches the viewport.
+	$effect(() => {
+		if (!browser || !loadMoreSentinel || isEditOrderMode) return;
+		if (!shouldLoadMorePhotos()) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) {
+					throttledLoadMore();
+				}
+			},
+			{
+				rootMargin: `${LOAD_MORE_ROOT_MARGIN}px 0px`,
+				threshold: 0
+			}
+		);
+
+		observer.observe(loadMoreSentinel);
+
+		return () => {
+			observer.disconnect();
+		};
+	});
+
 	// Enhanced image modal functions with preloading
 	function openFullSizeImage(imageSrc: string) {
 		currentFullSizeImage = imageSrc;
@@ -226,6 +270,10 @@
 
 	function closeFullSizeImage() {
 		showFullSizeImage = false;
+	}
+
+	function markPhotoLoaded(photoId: string) {
+		loadedPhotoIds = new Set(loadedPhotoIds).add(photoId);
 	}
 
 	// Enhanced carousel functions with preloading
@@ -487,24 +535,33 @@
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.id)}
 				<div
-					in:fade|global={{
-						duration: 250,
-						delay: Math.min((i % PHOTOS_TO_LOAD_AT_ONCE) * 30, 400) + 150
-					}}
+					class="transition-opacity ease-out {loadedPhotoIds.has(photo.id)
+						? 'opacity-100'
+						: 'opacity-0'}"
+					style="transition-duration: 450ms; transition-delay: {Math.min(
+						(i % PHOTOS_TO_LOAD_AT_ONCE) * 50,
+						500
+					) + 100}ms;"
 				>
 					<ResponsiveImage
 						src={photo.src}
 						alt={photo.alt}
 						loading={i < 20 ? 'eager' : 'lazy'}
+						onLoaded={() => markPhotoLoaded(photo.id)}
 						onclick={() => openFullSizeImage(photo.src)}
 					/>
 				</div>
 			{/each}
 		</div>
 
-		<!-- Optimized "Load More" Button with throttling -->
+		<!-- Infinite-scroll sentinel keeps pagination automatic while images remain lazy-loaded. -->
 		{#if photos && photos.length > 0 && displayedPhotos.length < photos.length}
-			<div class="mt-8 mb-8 text-center" in:fly|global={{ y: 50, duration: 600, delay: 800 }}>
+			<div
+				bind:this={loadMoreSentinel}
+				class="mt-8 mb-8 flex min-h-12 items-center justify-center text-center"
+				aria-live="polite"
+				in:fly|global={{ y: 50, duration: 600, delay: 800 }}
+			>
 				{#if isLoadingMore}
 					<div class="flex items-center justify-center gap-2 px-6 py-3">
 						<div
@@ -513,13 +570,7 @@
 						<span>Loading...</span>
 					</div>
 				{:else}
-					<button
-						onclick={throttledLoadMore}
-						disabled={loadMoreRequestPending}
-						class="relative cursor-pointer overflow-hidden rounded-lg px-6 py-3 transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						Load More Photos ({displayedPhotos.length} / {photos.length})
-					</button>
+					<span class="sr-only">Scroll to load more photos</span>
 				{/if}
 			</div>
 		{/if}
