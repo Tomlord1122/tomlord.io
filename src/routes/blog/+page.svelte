@@ -22,7 +22,6 @@
 	let canEdit = $derived(isSuperUser(auth.user));
 	let language = $state<string>('');
 	let searchKeyword = $state<string>('');
-	let tagSearchKeyword = $state<string>('');
 
 	// Derive base tags from posts
 	let baseTags = $derived([...new Set(posts.flatMap((post) => post.tags || []))].sort());
@@ -57,13 +56,6 @@
 			selectedTags = [...selectedTags, tag];
 		}
 	}
-
-	let filteredTags = $derived(
-		allTags.filter(
-			(tag) =>
-				tagSearchKeyword.trim() === '' || tag.toLowerCase().includes(tagSearchKeyword.toLowerCase())
-		)
-	);
 
 	let filteredPosts = $derived(
 		posts.filter((post) => {
@@ -239,12 +231,6 @@
 				<div class="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row">
 					<input
 						type="text"
-						bind:value={tagSearchKeyword}
-						placeholder="Search tags"
-						class="rounded-lg border border-gray-300 px-4 py-2 text-sm transition-all duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-gray-400"
-					/>
-					<input
-						type="text"
 						bind:value={searchKeyword}
 						placeholder="Search by title"
 						class="rounded-lg border border-gray-300 px-4 py-2 text-sm transition-all duration-200 outline-none focus:border-transparent focus:ring-2 focus:ring-gray-400"
@@ -297,31 +283,22 @@
 						class="scrollbar-hide flex min-h-[40px] items-center gap-2 overflow-x-auto scroll-smooth px-4 py-2"
 						style="scrollbar-width: none; -ms-overflow-style: none;"
 					>
-						{#if filteredTags.length > 0}
-							{#each filteredTags as tag (tag)}
-								{@const isSelected = selectedTags.includes(tag)}
-								<button
-									transition:fade={{ duration: 300 }}
-									type="button"
-									onclick={() => toggleTag(tag)}
-									class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
+						{#each allTags as tag (tag)}
+							{@const isSelected = selectedTags.includes(tag)}
+							<button
+								transition:fade={{ duration: 300 }}
+								type="button"
+								onclick={() => toggleTag(tag)}
+								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
 										${
 											isSelected
 												? 'border-gray-400 bg-gray-300 '
 												: 'border-gray-300 bg-gray-100 hover:bg-gray-200'
 										} transition-colors duration-150`}
-								>
-									{tag}
-								</button>
-							{/each}
-						{:else}
-							<p
-								transition:fade={{ duration: 200 }}
-								class="flex-shrink-0 rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs whitespace-nowrap text-gray-500"
 							>
-								No tags found
-							</p>
-						{/if}
+								{tag}
+							</button>
+						{/each}
 					</div>
 				</div>
 			</div>
