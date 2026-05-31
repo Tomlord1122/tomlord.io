@@ -1,10 +1,24 @@
 <script lang="ts">
 	import { fade, fly, slide } from 'svelte/transition';
+	import { browser } from '$app/environment';
 	import PostEditorModal from '$lib/components/PostEditorModal.svelte';
 	import { auth } from '$lib/stores/auth.svelte.js';
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { revalidateISR } from '$lib/api/revalidate.js';
 	import type { PostEditorSavedPost, PostMetadata } from '$lib/types/post.js';
+
+	const suppressIntroTransitions =
+		browser && document.documentElement.dataset.suppressBlogListTransitions === 'true';
+	const filterTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 800, delay: 100 };
+	const listTransition = suppressIntroTransitions
+		? { y: 0, duration: 0 }
+		: { y: 100, duration: 800, delay: 100 };
+	const tagTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 300 };
+	const emptyTransition = suppressIntroTransitions ? { duration: 0 } : { duration: 300, delay: 300 };
+
+	function postTransition(index: number) {
+		return suppressIntroTransitions ? { duration: 0 } : { duration: 400, delay: (index * 20) % 100 };
+	}
 
 	// Props are now received using $props() in Svelte 5
 	let { data } = $props();
@@ -212,7 +226,7 @@
 		{/if}
 	</h1>
 
-	<animate in:fade={{ duration: 800, delay: 100 }}>
+	<animate in:fade={filterTransition}>
 		<div class="not-prose font-serif">
 			<div class="flex w-full flex-col justify-between sm:flex-row">
 				<div class="flex items-center">
@@ -286,7 +300,7 @@
 						{#each allTags as tag (tag)}
 							{@const isSelected = selectedTags.includes(tag)}
 							<button
-								transition:fade={{ duration: 300 }}
+								transition:fade={tagTransition}
 								type="button"
 								onclick={() => toggleTag(tag)}
 								class={`flex-shrink-0 rounded-full border px-3 py-1 text-xs whitespace-nowrap
@@ -305,13 +319,13 @@
 		{/if}
 	</animate>
 
-	<main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area not-prose">
+	<main in:fly={listTransition} class="main-content-area not-prose">
 		{#if filteredPosts && filteredPosts.length > 0}
 			<ul class="list-none">
 				{#each visiblePosts as post, index (post.slug)}
 					<li
 						class="mb-1 border-b border-l border-gray-300 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
-						transition:slide={{ duration: 400, delay: (index * 20) % 100 }}
+						transition:slide={postTransition(index)}
 					>
 						<a
 							href="/blog/{post.slug}"
@@ -371,7 +385,7 @@
 				{/if}
 			</div>
 		{:else}
-			<p class="text-gray-600" in:fade={{ duration: 300, delay: 300 }}>
+			<p class="text-gray-600" in:fade={emptyTransition}>
 				{#if selectedTags.length > 0 || searchKeyword.trim() !== ''}
 					No posts match the filter.
 				{:else}

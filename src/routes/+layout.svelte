@@ -12,19 +12,30 @@
 	injectAnalytics();
 	let { children } = $props();
 
-	onNavigate((navigation) => {
+		onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 
 		const fromPath = navigation.from?.url.pathname;
 		const toPath = navigation.to?.url.pathname;
 		const isBlogNavigation = fromPath?.startsWith('/blog') && toPath?.startsWith('/blog');
+		const isReturningToBlogList = fromPath?.startsWith('/blog/') && toPath === '/blog';
 
 		if (!isBlogNavigation) return;
 
+		if (isReturningToBlogList) {
+			document.documentElement.dataset.suppressBlogListTransitions = 'true';
+		}
+
 		return new Promise<void>((resolve) => {
-			document.startViewTransition(async () => {
+			const transition = document.startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
+			});
+
+			void transition.finished.finally(() => {
+				if (isReturningToBlogList) {
+					delete document.documentElement.dataset.suppressBlogListTransitions;
+				}
 			});
 		});
 	});
