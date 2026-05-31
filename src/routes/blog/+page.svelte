@@ -199,7 +199,7 @@
 		name="twitter:description"
 		content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development"
 	/>
-	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.png" />
+	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
 	<meta name="twitter:image:alt" content="Tomlord's Blog" />
 
 	<meta property="og:title" content="Blog | Tomlord's Blog" />
@@ -207,7 +207,7 @@
 		property="og:description"
 		content="Read my latest thoughts on tech, projects, and life - sharing insights about distributed systems and modern development"
 	/>
-	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.png" />
+	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://tomlord.fyi/blog" />
 </svelte:head>

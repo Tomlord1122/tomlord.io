@@ -65,12 +65,12 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Projects | Tomlord's Blog" />
 	<meta name="twitter:description" content="My learning journey" />
-	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.png" />
+	<meta name="twitter:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
 	<meta name="twitter:image:alt" content="Tomlord's Blog" />
 
 	<meta property="og:title" content="Projects | Tomlord's Blog" />
 	<meta property="og:description" content="My learning journey" />
-	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.png" />
+	<meta property="og:image" content="https://tomlord.fyi/socail-card-v2.jpg" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://tomlord.fyi/project" />
 </svelte:head>
