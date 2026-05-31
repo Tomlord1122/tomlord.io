@@ -80,12 +80,21 @@
 </script>
 
 <svelte:head>
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Home | Tomlord's Blog" />
+	<meta
+		name="twitter:description"
+		content="Personal blog by Tomlord, sharing tech, projects, and photography"
+	/>
+	<meta name="twitter:image" content="https://tomlord.fyi/social-card.png" />
+	<meta name="twitter:image:alt" content="Tomlord's Blog" />
+
 	<meta property="og:title" content="Home | Tomlord's Blog" />
 	<meta
 		property="og:description"
 		content="Personal blog by Tomlord, sharing tech, projects, and photography"
 	/>
-	<meta property="og:image" content="https://tomlord.fyi/app_icon.webp" />
+	<meta property="og:image" content="https://tomlord.fyi/social-card.png" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://tomlord.fyi" />
 </svelte:head>
