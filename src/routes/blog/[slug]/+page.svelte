@@ -118,12 +118,13 @@
 </script>
 
 <svelte:head>
+	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={title} />
 	<meta
 		name="twitter:description"
 		content={data.post.description || `Read ${title} on Tomlord's Blog`}
 	/>
-	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.png" />
+	<meta name="twitter:image" content="https://tomlord.fyi/app_icon.webp" />
 	<meta name="twitter:image:alt" content="Blog post: {title}" />
 
 	<!-- Open Graph tags for better social sharing -->
@@ -132,7 +133,7 @@
 		property="og:description"
 		content={data.post.description || `Read ${title} on Tomlord's Blog`}
 	/>
-	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
+	<meta property="og:image" content="https://tomlord.fyi/app_icon.webp" />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content="https://tomlord.fyi/blog/{slug}" />
 	<meta property="article:published_time" content={date} />

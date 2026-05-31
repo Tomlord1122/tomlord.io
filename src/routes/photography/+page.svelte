@@ -401,7 +401,7 @@
 		property="og:description"
 		content="Explore my photography collection - capturing moments through the lens"
 	/>
-	<meta property="og:image" content="https://tomlord.fyi/app_icon.png" />
+	<meta property="og:image" content="https://tomlord.fyi/app_icon.webp" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://tomlord.fyi/photography" />
 </svelte:head>
