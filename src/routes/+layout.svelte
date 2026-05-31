@@ -4,12 +4,30 @@
 	import Navigation from '$lib/components/Navigation.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { browser } from '$app/environment';
+	import { onNavigate } from '$app/navigation';
 	import { config } from '$lib/config.js';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { onMount } from 'svelte';
 
 	injectAnalytics();
 	let { children } = $props();
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		const fromPath = navigation.from?.url.pathname;
+		const toPath = navigation.to?.url.pathname;
+		const isBlogNavigation = fromPath?.startsWith('/blog') && toPath?.startsWith('/blog');
+
+		if (!isBlogNavigation) return;
+
+		return new Promise<void>((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
 	// Initialize performance optimizations only in development
 	$effect(() => {

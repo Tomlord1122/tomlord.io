@@ -145,7 +145,7 @@
 <article class="prose prose-sm sm:prose-base mx-auto lg:max-w-3xl">
 	<header class="page-title mb-8">
 		<div class="prose prose-sm sm:prose-base">
-			<h1>
+			<h1 style:view-transition-name={`blog-title-${slug}`}>
 				{#if canEdit}
 					<button
 						onclick={openEditModal}

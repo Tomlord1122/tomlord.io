@@ -320,6 +320,7 @@
 						>
 							<h2
 								class="prose prose-sm sm:prose-lg text-gray-700 underline underline-offset-4 group-hover:text-gray-900"
+								style:view-transition-name={`blog-title-${post.slug}`}
 							>
 								{post.title}
 							</h2>
