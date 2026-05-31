@@ -12,15 +12,18 @@
 	injectAnalytics();
 	let { children } = $props();
 
-		onNavigate((navigation) => {
+	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 
 		const fromPath = navigation.from?.url.pathname;
 		const toPath = navigation.to?.url.pathname;
 		const isBlogNavigation = fromPath?.startsWith('/blog') && toPath?.startsWith('/blog');
 		const isReturningToBlogList = fromPath?.startsWith('/blog/') && toPath === '/blog';
+		const isMobilePopstate =
+			navigation.type === 'popstate' &&
+			(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
 
-		if (!isBlogNavigation) return;
+		if (!isBlogNavigation || isMobilePopstate) return;
 
 		if (isReturningToBlogList) {
 			document.documentElement.dataset.suppressBlogListTransitions = 'true';
