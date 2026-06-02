@@ -495,7 +495,7 @@
 		<!-- Edit mode: show all photos with drag-and-drop -->
 		<div class="relative">
 			<div
-				class="grid grid-cols-2 gap-2 transition-opacity md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 {isSavingOrder
+				class="grid grid-cols-1 gap-2 transition-opacity md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 {isSavingOrder
 					? 'pointer-events-none opacity-50'
 					: ''}"
 			>
@@ -541,7 +541,7 @@
 		</div>
 	{:else if displayedPhotos && displayedPhotos.length > 0}
 		<!-- Optimized grid with stable keys and virtual scrolling -->
-		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+		<div class="grid grid-cols-1 gap-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each displayedPhotos as photo, i (photo.id)}
 				<div
 					class="transition-opacity ease-out {loadedPhotoIds.has(photo.id)
