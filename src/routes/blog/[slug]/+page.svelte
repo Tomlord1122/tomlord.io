@@ -183,7 +183,7 @@
 	</header>
 	<div
 		in:fly={{ y: 50, duration: 600, delay: 200 }}
-		class="prose prose-sm sm:prose-base blog-content img-center max-w-none font-serif"
+		class="prose prose-base sm:prose-base blog-content img-center max-w-none font-serif"
 	>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html contentHtml}

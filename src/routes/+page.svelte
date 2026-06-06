@@ -176,7 +176,7 @@
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
 		{#if pageContent}
-			<div class="prose prose-sm sm:prose-lg max-w-none">
+			<div class="prose prose-base sm:prose-lg max-w-none">
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html htmlContent}
 			</div>

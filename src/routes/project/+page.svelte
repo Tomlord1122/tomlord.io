@@ -93,7 +93,7 @@
 	</h1>
 
 	<main in:fly={{ y: 100, duration: 800, delay: 100 }} class="main-content-area">
-		<div class="prose prose-sm sm:prose-lg max-w-none">
+		<div class="prose prose-base sm:prose-lg max-w-none">
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html htmlContent}
 		</div>
