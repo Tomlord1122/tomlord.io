@@ -52,6 +52,25 @@ describe('PhotoBook', () => {
 		expect(screen.getByText('Photography collage, spread 2 of 4')).toBeTruthy();
 	});
 
+	it('moves the visible page-stack depth as the book advances', async () => {
+		const { container } = render(PhotoBook, {
+			props: { spreads, introSteps: 0, introTargetIndex: 0 }
+		});
+		const book = container.querySelector<HTMLElement>('.book');
+
+		expect(book?.style.getPropertyValue('--left-page-depth')).toBe('0');
+		expect(book?.style.getPropertyValue('--right-page-depth')).toBe('3');
+		expect(container.querySelectorAll('.page-layer.left:not(.depleted)')).toHaveLength(0);
+		expect(container.querySelectorAll('.page-layer.right:not(.depleted)')).toHaveLength(3);
+
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Next spread' })[0]);
+
+		expect(book?.style.getPropertyValue('--left-page-depth')).toBe('1');
+		expect(book?.style.getPropertyValue('--right-page-depth')).toBe('2');
+		expect(container.querySelectorAll('.page-layer.left:not(.depleted)')).toHaveLength(1);
+		expect(container.querySelectorAll('.page-layer.right:not(.depleted)')).toHaveLength(2);
+	});
+
 	it('ignores global arrow keys while keyboard navigation is disabled', async () => {
 		render(PhotoBook, {
 			props: { spreads, introSteps: 0, introTargetIndex: 0, keyboardEnabled: false }
@@ -62,7 +81,7 @@ describe('PhotoBook', () => {
 		expect(document.querySelector('.flap')).toBeNull();
 	});
 
-	it('shares a maximum 650ms animation budget across every intro turn', () => {
+	it('shares a maximum 1.4 second animation budget across every intro turn', () => {
 		const { container } = render(PhotoBook, {
 			props: { spreads, introSteps: spreads.length - 1, introTargetIndex: spreads.length - 1 }
 		});
@@ -72,7 +91,7 @@ describe('PhotoBook', () => {
 			10
 		);
 
-		expect(turnDuration * (spreads.length - 1)).toBeLessThanOrEqual(650);
+		expect(turnDuration * (spreads.length - 1)).toBeLessThanOrEqual(1400);
 	});
 
 	it('skips the intro and lands on its target when reduced motion is preferred', async () => {

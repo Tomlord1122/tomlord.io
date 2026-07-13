@@ -32,7 +32,8 @@
 	// svelte-ignore state_referenced_locally
 	const steps = Math.min(Math.max(introSteps, 0), Math.max(length - 1, 0));
 	const introStartIndex = (((targetIndex - steps) % length) + length) % length;
-	const introTurnDuration = steps > 0 ? Math.max(1, Math.floor(650 / steps)) : 0;
+	const introTurnDuration = steps > 0 ? Math.max(1, Math.floor(1400 / steps)) : 0;
+	const pageLayers = Array.from({ length: 7 }, (_, index) => index + 1);
 
 	let current = $state(introStartIndex);
 	let flip = $state<Flip | null>(null);
@@ -47,6 +48,8 @@
 
 	let activeIndex = $derived(flip?.to ?? current);
 	let activeSpread = $derived(spreads[activeIndex]);
+	let leftPageDepth = $derived(Math.min(activeIndex, 7));
+	let rightPageDepth = $derived(Math.min(Math.max(length - activeIndex - 1, 0), 7));
 
 	$effect(() => {
 		if (!browser) return;
@@ -91,7 +94,7 @@
 		).filter((_, index) => introIndices.includes(index));
 		const decodeIntro = Promise.allSettled(introImages.map((image) => image.decode?.()));
 		const timeout = new Promise<void>((resolve) => {
-			decodeTimeout = setTimeout(resolve, 250);
+			decodeTimeout = setTimeout(resolve, 500);
 		});
 
 		Promise.race([decodeIntro, timeout]).then(() => {
@@ -217,7 +220,26 @@
 			</svg>
 		</button>
 
-		<div class="book">
+		<div
+			class="book"
+			style:--left-page-depth={leftPageDepth}
+			style:--right-page-depth={rightPageDepth}
+		>
+			{#each pageLayers as layer (layer)}
+				<div
+					class="page-layer left"
+					class:depleted={layer > leftPageDepth}
+					style:--layer={layer}
+					aria-hidden="true"
+				></div>
+				<div
+					class="page-layer right"
+					class:depleted={layer > rightPageDepth}
+					style:--layer={layer}
+					aria-hidden="true"
+				></div>
+			{/each}
+
 			{#if mobile}
 				<div class="full stack">
 					{#each spreads as spread, index (spread.id)}
@@ -360,9 +382,43 @@
 		content: '';
 	}
 
+	.page-layer {
+		position: absolute;
+		z-index: calc(8 - var(--layer));
+		top: 3.7%;
+		bottom: 3.2%;
+		width: 44.3%;
+		border: 1px solid rgb(173 170 162 / 0.58);
+		background: linear-gradient(105deg, #f1f0ec, #deddd7);
+		box-shadow: 0 1px 2px rgb(45 43 38 / 0.12);
+		transition:
+			opacity 220ms ease,
+			visibility 220ms ease;
+	}
+
+	.page-layer.depleted {
+		opacity: 0;
+		visibility: hidden;
+	}
+
+	.page-layer.left {
+		left: 5.8%;
+		border-radius: 18px 2px 4px 18px;
+		transform: translate(calc(var(--layer) * -0.8px), calc(var(--layer) * 0.7px))
+			rotate(calc(var(--layer) * -0.035deg));
+	}
+
+	.page-layer.right {
+		right: 5.8%;
+		border-radius: 2px 18px 18px 4px;
+		transform: translate(calc(var(--layer) * 0.8px), calc(var(--layer) * 0.7px))
+			rotate(calc(var(--layer) * 0.035deg));
+	}
+
 	.full,
 	.stacked-spread {
 		position: absolute;
+		z-index: 10;
 		inset: 0;
 	}
 
@@ -376,6 +432,7 @@
 
 	.half {
 		position: absolute;
+		z-index: 10;
 		top: 0;
 		bottom: 0;
 		width: 50%;
@@ -404,7 +461,7 @@
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		z-index: 5;
+		z-index: 20;
 		width: 50%;
 		transform-style: preserve-3d;
 		animation: 850ms cubic-bezier(0.42, 0.05, 0.25, 1) forwards;

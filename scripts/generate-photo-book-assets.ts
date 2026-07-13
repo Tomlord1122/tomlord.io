@@ -54,25 +54,49 @@ const paper = Buffer.from(`
 	<svg width="${PHOTO_BOOK_WIDTH}" height="${PHOTO_BOOK_HEIGHT}" viewBox="0 0 ${PHOTO_BOOK_WIDTH} ${PHOTO_BOOK_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
 		<defs>
 			<linearGradient id="left-paper" x1="0" x2="1">
-				<stop offset="0" stop-color="#fbfaf6"/>
-				<stop offset="0.88" stop-color="#fffefb"/>
-				<stop offset="1" stop-color="#e7e3da"/>
+				<stop offset="0" stop-color="#d9d7d1"/>
+				<stop offset="0.18" stop-color="#ebeae5"/>
+				<stop offset="0.86" stop-color="#f1f0ec"/>
+				<stop offset="1" stop-color="#d4d2cc"/>
 			</linearGradient>
 			<linearGradient id="right-paper" x1="0" x2="1">
-				<stop offset="0" stop-color="#e7e3da"/>
-				<stop offset="0.12" stop-color="#fffefb"/>
-				<stop offset="1" stop-color="#fbfaf6"/>
+				<stop offset="0" stop-color="#d4d2cc"/>
+				<stop offset="0.14" stop-color="#f1f0ec"/>
+				<stop offset="0.82" stop-color="#ebeae5"/>
+				<stop offset="1" stop-color="#d9d7d1"/>
 			</linearGradient>
+			<filter id="paper-grain" x="0" y="0" width="100%" height="100%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="4" seed="17"/>
+				<feColorMatrix type="saturate" values="0"/>
+				<feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+			</filter>
 		</defs>
 		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" fill="url(#left-paper)"/>
 		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" fill="url(#right-paper)"/>
-		<path d="M960 40 V1040" stroke="#c9c3b8" stroke-width="3" opacity="0.72"/>
+		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" filter="url(#paper-grain)" opacity="0.62"/>
+		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" filter="url(#paper-grain)" opacity="0.62"/>
+		<path d="M960 40 V1040" stroke="#aaa8a2" stroke-width="4" opacity="0.58"/>
 	</svg>
 `);
 
 const flatPaper = Buffer.from(`
 	<svg width="${PHOTO_BOOK_WIDTH}" height="${PHOTO_BOOK_HEIGHT}" viewBox="0 0 ${PHOTO_BOOK_WIDTH} ${PHOTO_BOOK_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-		<rect x="110" y="35" width="1700" height="1010" rx="25" fill="#fffefb"/>
+		<defs>
+			<linearGradient id="flat-paper" x1="0" x2="1">
+				<stop offset="0" stop-color="#d9d7d1"/>
+				<stop offset="0.18" stop-color="#ebeae5"/>
+				<stop offset="0.5" stop-color="#f1f0ec"/>
+				<stop offset="0.82" stop-color="#ebeae5"/>
+				<stop offset="1" stop-color="#d9d7d1"/>
+			</linearGradient>
+			<filter id="flat-grain" x="0" y="0" width="100%" height="100%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="4" seed="17"/>
+				<feColorMatrix type="saturate" values="0"/>
+				<feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+			</filter>
+		</defs>
+		<rect x="110" y="35" width="1700" height="1010" rx="25" fill="url(#flat-paper)"/>
+		<rect x="110" y="35" width="1700" height="1010" rx="25" filter="url(#flat-grain)" opacity="0.62"/>
 	</svg>
 `);
 
@@ -88,7 +112,8 @@ async function renderSpread(template: PhotoBookTemplate, sources: string[]) {
 					.resize(slots[index].width, slots[index].height, {
 						fit: slots[index].fit ?? 'cover',
 						position: 'centre',
-						background: { r: 255, g: 254, b: 251, alpha: 1 }
+						// Transparent padding lets the generated paper texture show around contained photos.
+						background: { r: 0, g: 0, b: 0, alpha: 0 }
 					})
 					.webp({ quality: 84 })
 					.toBuffer(),
@@ -106,7 +131,10 @@ async function renderSpread(template: PhotoBookTemplate, sources: string[]) {
 			background: { r: 0, g: 0, b: 0, alpha: 0 }
 		}
 	})
-		.composite([{ input: template === 'final-portrait' ? flatPaper : paper, left: 0, top: 0 }, ...photos])
+		.composite([
+			{ input: template === 'final-portrait' ? flatPaper : paper, left: 0, top: 0 },
+			...photos
+		])
 		.webp({ quality: 82, alphaQuality: 90 })
 		.toBuffer();
 }
