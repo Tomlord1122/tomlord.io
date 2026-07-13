@@ -10,6 +10,8 @@
 	import type { VisitorStats } from '$lib/api/analytics.js';
 	import type { LinkPreview } from '$lib/types/preview.js';
 	import { formatCompactNumber, generateSparklinePath } from '$lib/util/format.js';
+	import PhotoBook from '$lib/components/PhotoBook.svelte';
+	import { photoBookSpreads, photoBookTargetIndex } from '$lib/data/photo-book.js';
 
 	// Get data from the server load function
 	let { data } = $props();
@@ -136,43 +138,52 @@
 				20
 			)}
 			<div class="flex items-center gap-1.5" in:fade={{ duration: 250 }}>
-					<div class="group relative inline-flex cursor-help items-center">
-						<svg
-							class="text-emerald-500"
-							width="48"
-							height="20"
-							viewBox="0 0 48 20"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-label="Recent visitor trend"
+				<div class="group relative inline-flex cursor-help items-center">
+					<svg
+						class="text-emerald-500"
+						width="48"
+						height="20"
+						viewBox="0 0 48 20"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-label="Recent visitor trend"
+					>
+						<path d={sparkPath} />
+					</svg>
+					<div class="absolute bottom-full left-0 z-10 mb-2 hidden group-hover:block">
+						<div
+							class="rounded-lg bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg"
 						>
-							<path d={sparkPath} />
-						</svg>
-						<div class="absolute bottom-full left-0 z-10 mb-2 hidden group-hover:block">
-							<div
-								class="rounded-lg bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white shadow-lg"
-							>
-								<div class="mb-1 font-medium">Recent visits</div>
-								{#each visitorStats.recent as day, i (day.date)}
-									<div
-										class="flex justify-between gap-4 {i === 0
-											? 'text-emerald-400'
-											: 'text-gray-300'}"
-									>
-										<span>{i === 0 ? 'Today' : `${i} days ago`}</span>
-										<span>{day.visit_count} visits</span>
-									</div>
-								{/each}
-							</div>
-							<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900"></div>
+							<div class="mb-1 font-medium">Recent visits</div>
+							{#each visitorStats.recent as day, i (day.date)}
+								<div
+									class="flex justify-between gap-4 {i === 0
+										? 'text-emerald-400'
+										: 'text-gray-300'}"
+								>
+									<span>{i === 0 ? 'Today' : `${i} days ago`}</span>
+									<span>{day.visit_count} visits</span>
+								</div>
+							{/each}
 						</div>
+						<div class="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-gray-900"></div>
 					</div>
+				</div>
 			</div>
 		{/if}
 	</div>
+
+	<section class="photo-book-section not-prose" aria-label="Photography book">
+		<PhotoBook
+			spreads={photoBookSpreads}
+			introSteps={Math.max(photoBookSpreads.length - 1, 0)}
+			introTargetIndex={photoBookTargetIndex}
+			keyboardEnabled={!showEditModal}
+		/>
+	</section>
 
 	<main in:fly={{ y: 60, duration: 800, delay: 150 }} class="main-content-area mt-1">
 		{#if pageContent}
@@ -198,3 +209,32 @@
 		onCancel={handleEditCancel}
 	/>
 {/if}
+
+<style>
+	.photo-book-section {
+		position: relative;
+		left: 50%;
+		width: min(900px, calc(100vw - 2rem));
+		margin-block: 0.5rem 0.75rem;
+		transform: translateX(-50%);
+		overflow-anchor: none;
+		animation: book-slide-in 650ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+	}
+
+	@keyframes book-slide-in {
+		from {
+			opacity: 0;
+			transform: translate(-50%, 28px);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, 0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.photo-book-section {
+			animation: none;
+		}
+	}
+</style>

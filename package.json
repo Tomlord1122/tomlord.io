@@ -2,8 +2,9 @@
 	"name": "tomlord.io",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build && npm run prepack",
+		"dev": "bun run book:assets && vite dev",
+		"book:assets": "bun run scripts/generate-photo-book-assets.ts",
+		"build": "bun run book:assets && vite build && npm run prepack",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package && publint",
