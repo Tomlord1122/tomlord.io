@@ -84,7 +84,7 @@
 		transition:fade={{ duration: 150 }}
 	></button>
 	<aside
-		class="absolute inset-y-0 right-0 z-20 flex w-80 flex-col border-l border-gray-200 bg-white shadow-xl"
+		class="absolute inset-y-0 right-0 z-20 flex w-80 flex-col border-l border-gray-200 bg-[#EDEDED] shadow-xl"
 		transition:fly={{ x: 320, duration: 220, opacity: 1 }}
 	>
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">

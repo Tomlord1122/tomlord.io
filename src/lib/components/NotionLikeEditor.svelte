@@ -650,7 +650,7 @@
 				onPaste={handlePaste}
 				onScroll={syncFromEditor}
 				{placeholder}
-				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-5 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none sm:p-6"
+				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 bg-transparent p-5 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none sm:p-6"
 			/>
 		</div>
 	{/if}
@@ -674,7 +674,7 @@
 							</div>
 						{/each}
 					{:else}
-						<p class="text-gray-400 italic">{placeholder}</p>
+						<p class="split-placeholder">{placeholder}</p>
 					{/if}
 				{:else if renderedPreview}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->

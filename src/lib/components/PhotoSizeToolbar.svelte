@@ -25,7 +25,7 @@
 </script>
 
 <div
-	class="flex flex-wrap items-center gap-2 border-t border-gray-200 bg-white/95 px-3 py-2 backdrop-blur"
+	class="flex flex-wrap items-center gap-2 border-t border-gray-200 bg-[#EDEDED] px-3 py-2"
 >
 	<p class="text-xs font-medium text-gray-600">Image size</p>
 	<div class="flex overflow-hidden rounded-md border border-gray-200 text-xs">

@@ -47,7 +47,7 @@
 
 {#if show}
 	<div
-		class="fixed inset-0 z-50 flex bg-white"
+		class="fixed inset-0 z-50 flex bg-[#EDEDED]"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby={labelledBy}
