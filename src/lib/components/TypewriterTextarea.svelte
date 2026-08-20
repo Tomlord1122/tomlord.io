@@ -16,6 +16,7 @@
 		onCompositionstart?: (e: CompositionEvent) => void;
 		onCompositionend?: (e: CompositionEvent) => void;
 		onPaste?: (e: ClipboardEvent) => void;
+		onScroll?: (e: Event) => void;
 	}
 
 	let {
@@ -34,7 +35,8 @@
 		onBlur,
 		onCompositionstart,
 		onCompositionend,
-		onPaste
+		onPaste,
+		onScroll
 	}: Props = $props();
 
 	let textareaElement = $state<HTMLTextAreaElement>();
@@ -75,6 +77,10 @@
 	const handlePaste = (e: ClipboardEvent) => {
 		onPaste?.(e);
 	};
+
+	const handleScroll = (e: Event) => {
+		onScroll?.(e);
+	};
 </script>
 
 <div class="typewriter-textarea-container">
@@ -99,6 +105,7 @@
 		oncompositionstart={handleCompositionStart}
 		oncompositionend={handleCompositionEnd}
 		onpaste={handlePaste}
+		onscroll={handleScroll}
 	></textarea>
 </div>
 

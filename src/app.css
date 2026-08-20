@@ -47,7 +47,17 @@
 		@apply h-full w-full object-cover;
 	}
 	.photo-post {
-		@apply z-20 rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105;
+		@apply z-20 h-auto max-w-full rounded-lg object-cover shadow-md transition-all duration-300 hover:scale-105;
+	}
+
+	.markdown-content img.photo-post {
+		cursor: pointer;
+	}
+
+	.markdown-content img.photo-post.is-selected {
+		outline: 2px solid #1f2937;
+		outline-offset: 3px;
+		transform: none;
 	}
 
 	/* Skeleton shimmer while .photo-post is loading.
@@ -102,6 +112,47 @@
 
 	.markdown-content.compact h3 {
 		@apply text-base font-medium;
+	}
+
+	.markdown-content.split-align {
+		@apply max-w-none text-sm;
+		line-height: 1.6;
+	}
+
+	.markdown-content.split-align .split-block {
+		overflow: hidden;
+	}
+
+	.markdown-content.split-align .split-block > * {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	.markdown-content.split-align .split-block :where(p, li, h1, h2, h3, h4, blockquote, pre) {
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		letter-spacing: 0.5px;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	.markdown-content.split-align .split-block .flex.justify-center {
+		display: flex;
+		height: 100%;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.markdown-content.split-align .split-block img,
+	.markdown-content.split-align .split-block .photo-post {
+		max-height: 100%;
+		max-width: 100%;
+		width: auto !important;
+		height: auto !important;
+		aspect-ratio: auto;
+		object-fit: contain;
+		transform: none !important;
 	}
 
 	.blog-content :is(h1, h2, h3, h4) {

@@ -92,7 +92,7 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
 	allowedAttributes: {
 		'*': ['class', 'id', 'style', 'title'],
 		a: ['href', 'name', 'target', 'rel'],
-		img: ['src', 'alt', 'width', 'height', 'loading', 'class'],
+		img: ['src', 'alt', 'width', 'height', 'loading', 'class', 'style'],
 		iframe: [
 			'src',
 			'width',

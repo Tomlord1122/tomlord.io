@@ -39,15 +39,63 @@ export function getImageDimensions(src: string): Promise<{ width: number; height
  * width/height attributes so the browser can reserve space and prevent
  * layout shift while the real image loads.
  */
-export function buildPhotoPostHTML(
-	imagePath: string,
-	dimensions?: { width: number; height: number } | null
+export const PHOTO_SIZE_PRESETS = {
+	s: 240,
+	m: 360,
+	l: 520
+} as const;
+
+export const PHOTO_SIZE_MAX = 720;
+
+const WIDTH_CLASS_RE = /\bw-\[(\d+)px\]/;
+const WIDTH_STYLE_RE = /width:\s*(\d+)px/;
+
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function imgTagRegex(src: string): RegExp {
+	return new RegExp(`<img\\b[\\s\\S]*?src="${escapeRegExp(src)}"[\\s\\S]*?>`, 'gi');
+}
+
+export function parsePhotoWidth(tag: string): number | null {
+	const fromStyle = tag.match(WIDTH_STYLE_RE);
+	if (fromStyle) return Number(fromStyle[1]);
+	const fromClass = tag.match(WIDTH_CLASS_RE);
+	if (fromClass) return Number(fromClass[1]);
+	return null;
+}
+
+export function applyPhotoWidthToTag(tag: string, widthPx: number | null): string {
+	let next = tag.replace(/\s*w-\[\d+px\]/g, '').replace(/\s*style="[^"]*"/g, '');
+	next = next.replace(/class="\s*([^"]*?)\s*"/, 'class="$1"');
+	if (widthPx == null) return next;
+	if (/class="/.test(next)) {
+		return next.replace(
+			/class="([^"]*)"/,
+			`class="$1" style="width: ${widthPx}px; max-width: 100%"`
+		);
+	}
+	return next.replace('<img', `<img style="width: ${widthPx}px; max-width: 100%"`);
+}
+
+export function getPhotoWidth(content: string, src: string, index: number): number | null {
+	const matches = [...content.matchAll(imgTagRegex(src))];
+	const tag = matches[index]?.[0];
+	return tag ? parsePhotoWidth(tag) : null;
+}
+
+export function setPhotoWidth(
+	content: string,
+	src: string,
+	index: number,
+	widthPx: number | null
 ): string {
-	const alt = imagePath.split('/').pop() ?? 'image';
-	const dimAttrs = dimensions ? ` width="${dimensions.width}" height="${dimensions.height}"` : '';
-	return `<div class="flex justify-center">
-<img src="${imagePath}" alt="${alt}" class="photo-post"${dimAttrs}>
-</div>`;
+	let current = 0;
+	return content.replace(imgTagRegex(src), (tag) => {
+		if (current++ === index) return applyPhotoWidthToTag(tag, widthPx);
+		return tag;
+	});
 }
 
 export async function copyImageMarkdown(imagePath: string) {

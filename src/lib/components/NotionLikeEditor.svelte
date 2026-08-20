@@ -6,7 +6,9 @@
 	import { fetchLinkPreview } from '$lib/api/preview.js';
 	import type { LinkPreview } from '$lib/types/preview.js';
 	import type { EditorViewMode } from '$lib/types/editor.js';
+	import { getPhotoWidth, setPhotoWidth } from '$lib/util/helper.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
+	import PhotoSizeToolbar from './PhotoSizeToolbar.svelte';
 
 	interface Props {
 		content: string;
@@ -22,23 +24,170 @@
 		viewMode = 'split'
 	}: Props = $props();
 
+	type SourceBlock = { source: string; blankLinesBefore: number };
+	type AlignedBlock = { html: string; height: number; gap: number };
+
 	let editorRef = $state<HTMLTextAreaElement>();
 	let previewRef = $state<HTMLDivElement>();
 	let showSlashMenu = $state(false);
 
 	let renderedPreview = $state('');
+	let alignedBlocks = $state<AlignedBlock[]>([]);
 	let embedPreviews = $state<Record<string, LinkPreview>>({});
 	let isWide = $state(true);
 	let effectiveViewMode = $derived(!isWide && viewMode === 'split' ? 'write' : viewMode);
+	let syncingScroll = false;
+	let selectedPhoto = $state<{ src: string; index: number } | null>(null);
+	let selectedPhotoWidth = $derived(
+		selectedPhoto ? getPhotoWidth(content, selectedPhoto.src, selectedPhoto.index) : null
+	);
 
-	// Debounced markdown rendering (300ms delay)
-	const debouncedRender = debounce((text: string, previews: Record<string, LinkPreview>) => {
-		if (text.trim()) {
-			renderedPreview = renderMarkdown(text, previews);
-		} else {
-			renderedPreview = '';
+	function splitMarkdownBlocks(text: string): SourceBlock[] {
+		const lines = text.split('\n');
+		const blocks: SourceBlock[] = [];
+		let current: string[] = [];
+		let blanks = 0;
+		let inFence = false;
+
+		const flush = () => {
+			if (current.length === 0) return;
+			blocks.push({ source: current.join('\n'), blankLinesBefore: blanks });
+			current = [];
+			blanks = 0;
+		};
+
+		for (const line of lines) {
+			if (line.trim().startsWith('```')) {
+				inFence = !inFence;
+				current.push(line);
+				continue;
+			}
+			if (!inFence && line.trim() === '') {
+				if (current.length) {
+					flush();
+					blanks = 1;
+				} else {
+					blanks += 1;
+				}
+				continue;
+			}
+			current.push(line);
 		}
+		flush();
+		return blocks;
+	}
+
+	function measureBlocks(
+		blocks: SourceBlock[],
+		textarea: HTMLTextAreaElement
+	): { heights: number[]; lineHeight: number } {
+		const computed = window.getComputedStyle(textarea);
+		const lineHeight = parseFloat(computed.lineHeight) || 22.4;
+		const padX = parseFloat(computed.paddingLeft) + parseFloat(computed.paddingRight);
+		const width = Math.max(0, textarea.clientWidth - padX);
+		const mirror = document.createElement('div');
+		mirror.style.position = 'absolute';
+		mirror.style.visibility = 'hidden';
+		mirror.style.whiteSpace = 'pre-wrap';
+		mirror.style.overflowWrap = 'break-word';
+		mirror.style.wordBreak = 'break-word';
+		mirror.style.width = `${width}px`;
+		mirror.style.font = computed.font;
+		mirror.style.letterSpacing = computed.letterSpacing;
+		mirror.style.lineHeight = computed.lineHeight;
+		document.body.appendChild(mirror);
+		const heights = blocks.map((block) => {
+			mirror.textContent = block.source.length > 0 ? block.source : ' ';
+			return mirror.scrollHeight;
+		});
+		document.body.removeChild(mirror);
+		return { heights, lineHeight };
+	}
+
+	function rebuildPreview(text: string, previews: Record<string, LinkPreview>) {
+		if (!text.trim()) {
+			renderedPreview = '';
+			alignedBlocks = [];
+			return;
+		}
+
+		if (effectiveViewMode === 'split' && editorRef) {
+			const blocks = splitMarkdownBlocks(text);
+			const { heights, lineHeight } = measureBlocks(blocks, editorRef);
+			alignedBlocks = blocks.map((block, index) => ({
+				html: renderMarkdown(block.source, previews),
+				height: heights[index] ?? lineHeight,
+				gap: block.blankLinesBefore * lineHeight
+			}));
+			renderedPreview = '';
+			return;
+		}
+
+		alignedBlocks = [];
+		renderedPreview = renderMarkdown(text, previews);
+	}
+
+	const debouncedRender = debounce((text: string, previews: Record<string, LinkPreview>) => {
+		rebuildPreview(text, previews);
 	}, 300);
+
+	function syncFromEditor() {
+		if (syncingScroll || !editorRef || !previewRef || effectiveViewMode !== 'split') return;
+		syncingScroll = true;
+		previewRef.scrollTop = editorRef.scrollTop;
+		requestAnimationFrame(() => {
+			syncingScroll = false;
+		});
+	}
+
+	function syncFromPreview() {
+		if (syncingScroll || !editorRef || !previewRef || effectiveViewMode !== 'split') return;
+		syncingScroll = true;
+		editorRef.scrollTop = previewRef.scrollTop;
+		requestAnimationFrame(() => {
+			syncingScroll = false;
+		});
+	}
+
+	function photoOccurrence(img: HTMLImageElement): number {
+		if (!previewRef) return 0;
+		const src = img.getAttribute('src') ?? '';
+		const same = [...previewRef.querySelectorAll<HTMLImageElement>('img.photo-post')].filter(
+			(el) => el.getAttribute('src') === src
+		);
+		return Math.max(0, same.indexOf(img));
+	}
+
+	function handlePreviewClick(event: MouseEvent) {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		const img = target.closest('img.photo-post');
+		if (!(img instanceof HTMLImageElement) || !previewRef?.contains(img)) {
+			selectedPhoto = null;
+			return;
+		}
+		selectedPhoto = {
+			src: img.getAttribute('src') ?? '',
+			index: photoOccurrence(img)
+		};
+	}
+
+	function applyPhotoSize(widthPx: number | null) {
+		if (!selectedPhoto) return;
+		onContentChange(setPhotoWidth(content, selectedPhoto.src, selectedPhoto.index, widthPx));
+	}
+
+	function markSelectedPhoto() {
+		if (!previewRef) return;
+		previewRef.querySelectorAll('img.photo-post').forEach((img) => {
+			img.classList.toggle(
+				'is-selected',
+				!!selectedPhoto &&
+					img.getAttribute('src') === selectedPhoto.src &&
+					photoOccurrence(img) === selectedPhoto.index
+			);
+		});
+	}
 
 	const debouncedFetchPreviews = debounce((text: string) => {
 		const urls = extractEmbedUrls(text);
@@ -62,6 +211,22 @@
 			debouncedRender(content, embedPreviews);
 			debouncedFetchPreviews(content);
 		}
+	});
+
+	$effect(() => {
+		if (!editorRef || effectiveViewMode !== 'split') return;
+		const observer = new ResizeObserver(() => {
+			rebuildPreview(content, embedPreviews);
+		});
+		observer.observe(editorRef);
+		return () => observer.disconnect();
+	});
+
+	$effect(() => {
+		void alignedBlocks;
+		void renderedPreview;
+		void selectedPhoto;
+		queueMicrotask(markSelectedPhoto);
 	});
 	let slashMenuPosition = $state({ x: 0, y: 0 });
 	let slashMenuItems = $state<Array<{ label: string; action: () => void; icon: string }>>([]);
@@ -483,6 +648,7 @@
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
 				onPaste={handlePaste}
+				onScroll={syncFromEditor}
 				{placeholder}
 				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-5 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none sm:p-6"
 			/>
@@ -493,15 +659,38 @@
 		<div class="flex h-full min-h-0 flex-col {effectiveViewMode === 'split' ? 'w-1/2' : 'w-full'}">
 			<div
 				bind:this={previewRef}
-				class="scrollbar-stable markdown-content h-full overflow-y-auto p-5 font-serif text-wrap sm:p-6"
+				class="scrollbar-stable markdown-content h-full overflow-y-auto p-5 text-wrap sm:p-6
+					{effectiveViewMode === 'split' ? 'split-align' : 'mx-auto max-w-3xl font-serif'}"
+				onclick={handlePreviewClick}
+				onscroll={syncFromPreview}
+				role="presentation"
 			>
-				{#if renderedPreview}
+				{#if effectiveViewMode === 'split'}
+					{#if alignedBlocks.length > 0}
+						{#each alignedBlocks as block, index (index)}
+							<div class="split-block" style="margin-top: {block.gap}px; height: {block.height}px;">
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+								{@html block.html}
+							</div>
+						{/each}
+					{:else}
+						<p class="text-gray-400 italic">{placeholder}</p>
+					{/if}
+				{:else if renderedPreview}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html renderedPreview}
 				{:else}
 					<p class="text-gray-400 italic">{placeholder}</p>
 				{/if}
 			</div>
+			{#if selectedPhoto}
+				<PhotoSizeToolbar
+					widthPx={selectedPhotoWidth}
+					onChange={applyPhotoSize}
+					onClose={() => (selectedPhoto = null)}
+					hint={effectiveViewMode === 'split' ? 'Switch to Preview to see the real post size.' : ''}
+				/>
+			{/if}
 		</div>
 	{/if}
 
