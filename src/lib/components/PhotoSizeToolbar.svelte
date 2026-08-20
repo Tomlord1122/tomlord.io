@@ -4,13 +4,11 @@
 	let {
 		widthPx,
 		onChange,
-		onClose,
-		hint = ''
+		onClose
 	}: {
 		widthPx: number | null;
 		onChange: (widthPx: number | null) => void;
 		onClose: () => void;
-		hint?: string;
 	} = $props();
 
 	const presets = [
@@ -62,7 +60,4 @@
 	>
 		&times;
 	</button>
-	{#if hint}
-		<p class="w-full text-[11px] text-gray-400">{hint}</p>
-	{/if}
 </div>

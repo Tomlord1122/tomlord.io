@@ -23,7 +23,7 @@
 	let content = $state('');
 	let isSaving = $state(false);
 	let isDismissedWhileSaving = $state(false);
-	let viewMode = $state<EditorViewMode>('split');
+	let viewMode = $state<EditorViewMode>('write');
 	let drawerOpen = $state(false);
 
 	let visible = $derived(show && !isDismissedWhileSaving);

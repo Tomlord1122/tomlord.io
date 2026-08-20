@@ -21,133 +21,27 @@
 		content,
 		onContentChange,
 		placeholder = "Type '/' for commands or start writing...",
-		viewMode = 'split'
+		viewMode = 'write'
 	}: Props = $props();
-
-	type SourceBlock = { source: string; blankLinesBefore: number };
-	type AlignedBlock = { html: string; height: number; gap: number };
 
 	let editorRef = $state<HTMLTextAreaElement>();
 	let previewRef = $state<HTMLDivElement>();
 	let showSlashMenu = $state(false);
 
 	let renderedPreview = $state('');
-	let alignedBlocks = $state<AlignedBlock[]>([]);
 	let embedPreviews = $state<Record<string, LinkPreview>>({});
-	let isWide = $state(true);
-	let effectiveViewMode = $derived(!isWide && viewMode === 'split' ? 'write' : viewMode);
-	let syncingScroll = false;
 	let selectedPhoto = $state<{ src: string; index: number } | null>(null);
 	let selectedPhotoWidth = $derived(
 		selectedPhoto ? getPhotoWidth(content, selectedPhoto.src, selectedPhoto.index) : null
 	);
 
-	function splitMarkdownBlocks(text: string): SourceBlock[] {
-		const lines = text.split('\n');
-		const blocks: SourceBlock[] = [];
-		let current: string[] = [];
-		let blanks = 0;
-		let inFence = false;
-
-		const flush = () => {
-			if (current.length === 0) return;
-			blocks.push({ source: current.join('\n'), blankLinesBefore: blanks });
-			current = [];
-			blanks = 0;
-		};
-
-		for (const line of lines) {
-			if (line.trim().startsWith('```')) {
-				inFence = !inFence;
-				current.push(line);
-				continue;
-			}
-			if (!inFence && line.trim() === '') {
-				if (current.length) {
-					flush();
-					blanks = 1;
-				} else {
-					blanks += 1;
-				}
-				continue;
-			}
-			current.push(line);
-		}
-		flush();
-		return blocks;
-	}
-
-	function measureBlocks(
-		blocks: SourceBlock[],
-		textarea: HTMLTextAreaElement
-	): { heights: number[]; lineHeight: number } {
-		const computed = window.getComputedStyle(textarea);
-		const lineHeight = parseFloat(computed.lineHeight) || 22.4;
-		const padX = parseFloat(computed.paddingLeft) + parseFloat(computed.paddingRight);
-		const width = Math.max(0, textarea.clientWidth - padX);
-		const mirror = document.createElement('div');
-		mirror.style.position = 'absolute';
-		mirror.style.visibility = 'hidden';
-		mirror.style.whiteSpace = 'pre-wrap';
-		mirror.style.overflowWrap = 'break-word';
-		mirror.style.wordBreak = 'break-word';
-		mirror.style.width = `${width}px`;
-		mirror.style.font = computed.font;
-		mirror.style.letterSpacing = computed.letterSpacing;
-		mirror.style.lineHeight = computed.lineHeight;
-		document.body.appendChild(mirror);
-		const heights = blocks.map((block) => {
-			mirror.textContent = block.source.length > 0 ? block.source : ' ';
-			return mirror.scrollHeight;
-		});
-		document.body.removeChild(mirror);
-		return { heights, lineHeight };
-	}
-
 	function rebuildPreview(text: string, previews: Record<string, LinkPreview>) {
-		if (!text.trim()) {
-			renderedPreview = '';
-			alignedBlocks = [];
-			return;
-		}
-
-		if (effectiveViewMode === 'split' && editorRef) {
-			const blocks = splitMarkdownBlocks(text);
-			const { heights, lineHeight } = measureBlocks(blocks, editorRef);
-			alignedBlocks = blocks.map((block, index) => ({
-				html: renderMarkdown(block.source, previews),
-				height: heights[index] ?? lineHeight,
-				gap: block.blankLinesBefore * lineHeight
-			}));
-			renderedPreview = '';
-			return;
-		}
-
-		alignedBlocks = [];
-		renderedPreview = renderMarkdown(text, previews);
+		renderedPreview = text.trim() ? renderMarkdown(text, previews) : '';
 	}
 
 	const debouncedRender = debounce((text: string, previews: Record<string, LinkPreview>) => {
 		rebuildPreview(text, previews);
 	}, 300);
-
-	function syncFromEditor() {
-		if (syncingScroll || !editorRef || !previewRef || effectiveViewMode !== 'split') return;
-		syncingScroll = true;
-		previewRef.scrollTop = editorRef.scrollTop;
-		requestAnimationFrame(() => {
-			syncingScroll = false;
-		});
-	}
-
-	function syncFromPreview() {
-		if (syncingScroll || !editorRef || !previewRef || effectiveViewMode !== 'split') return;
-		syncingScroll = true;
-		editorRef.scrollTop = previewRef.scrollTop;
-		requestAnimationFrame(() => {
-			syncingScroll = false;
-		});
-	}
 
 	function photoOccurrence(img: HTMLImageElement): number {
 		if (!previewRef) return 0;
@@ -179,7 +73,7 @@
 
 	function markSelectedPhoto() {
 		if (!previewRef) return;
-		previewRef.querySelectorAll('img.photo-post').forEach((img) => {
+		previewRef.querySelectorAll<HTMLImageElement>('img.photo-post').forEach((img) => {
 			img.classList.toggle(
 				'is-selected',
 				!!selectedPhoto &&
@@ -207,23 +101,13 @@
 	}, 500);
 
 	$effect(() => {
-		if (effectiveViewMode !== 'write') {
+		if (viewMode !== 'write') {
 			debouncedRender(content, embedPreviews);
 			debouncedFetchPreviews(content);
 		}
 	});
 
 	$effect(() => {
-		if (!editorRef || effectiveViewMode !== 'split') return;
-		const observer = new ResizeObserver(() => {
-			rebuildPreview(content, embedPreviews);
-		});
-		observer.observe(editorRef);
-		return () => observer.disconnect();
-	});
-
-	$effect(() => {
-		void alignedBlocks;
 		void renderedPreview;
 		void selectedPhoto;
 		queueMicrotask(markSelectedPhoto);
@@ -620,63 +504,37 @@
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
-		const media = window.matchMedia('(min-width: 1024px)');
-		const syncWidth = () => {
-			isWide = media.matches;
-		};
-		syncWidth();
-		media.addEventListener('change', syncWidth);
-
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
-			media.removeEventListener('change', syncWidth);
 			debouncedRender.cancel();
 		};
 	});
 </script>
 
 <div class="relative flex h-full min-h-0 w-full">
-	{#if effectiveViewMode !== 'preview'}
-		<div
-			class="flex h-full min-h-0 flex-col {effectiveViewMode === 'split'
-				? 'w-1/2 border-r border-gray-200'
-				: 'w-full'}"
-		>
+	{#if viewMode !== 'preview'}
+		<div class="flex h-full min-h-0 w-full flex-col">
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
 				value={content}
 				onInput={handleInput}
 				onKeydown={handleKeyDown}
 				onPaste={handlePaste}
-				onScroll={syncFromEditor}
 				{placeholder}
 				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 bg-transparent p-5 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none sm:p-6"
 			/>
 		</div>
 	{/if}
 
-	{#if effectiveViewMode !== 'write'}
-		<div class="flex h-full min-h-0 flex-col {effectiveViewMode === 'split' ? 'w-1/2' : 'w-full'}">
+	{#if viewMode !== 'write'}
+		<div class="flex h-full min-h-0 w-full flex-col">
 			<div
 				bind:this={previewRef}
-				class="scrollbar-stable markdown-content h-full overflow-y-auto p-5 text-wrap sm:p-6
-					{effectiveViewMode === 'split' ? 'split-align' : 'mx-auto max-w-3xl font-serif'}"
+				class="scrollbar-stable markdown-content mx-auto h-full max-w-3xl overflow-y-auto p-5 font-serif text-wrap sm:p-6"
 				onclick={handlePreviewClick}
-				onscroll={syncFromPreview}
 				role="presentation"
 			>
-				{#if effectiveViewMode === 'split'}
-					{#if alignedBlocks.length > 0}
-						{#each alignedBlocks as block, index (index)}
-							<div class="split-block" style="margin-top: {block.gap}px; height: {block.height}px;">
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-								{@html block.html}
-							</div>
-						{/each}
-					{:else}
-						<p class="split-placeholder">{placeholder}</p>
-					{/if}
-				{:else if renderedPreview}
+				{#if renderedPreview}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html renderedPreview}
 				{:else}
@@ -688,7 +546,6 @@
 					widthPx={selectedPhotoWidth}
 					onChange={applyPhotoSize}
 					onClose={() => (selectedPhoto = null)}
-					hint={effectiveViewMode === 'split' ? 'Switch to Preview to see the real post size.' : ''}
 				/>
 			{/if}
 		</div>

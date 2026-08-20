@@ -1,1 +1,1 @@
-export type EditorViewMode = 'write' | 'split' | 'preview';
+export type EditorViewMode = 'write' | 'preview';
