@@ -35,21 +35,25 @@ src/
       preview.ts                       # /api/preview wrapper (client-side, in-memory cached)
       revalidate.ts                    # Vercel ISR revalidation
     components/
-      NotionLikeEditor.svelte          # textarea-based markdown editor (slash menu, paste auto-embed)
+      NotionLikeEditor.svelte          # textarea-based markdown editor (slash menu, paste auto-embed, viewMode)
       TypewriterTextarea.svelte        # styled textarea + onPaste prop
-      PostEditorModal.svelte           # blog create/edit modal hosting NotionLikeEditor
+      WritingStudio.svelte             # fullscreen editor chrome (header/meta/canvas/footer + drawer)
+      EditorViewToggle.svelte          # write | split | preview
+      ImagePickerDrawer.svelte         # overlay image grid (copy markdown, optional S3)
+      PostEditorModal.svelte           # blog create/edit studio
       EditPageModal.svelte             # CMS page editor (home / project)
     config.ts                          # API endpoints + fetchWithTimeout
     stores/                            # Svelte 5 rune stores (auth, websocket, toast)
     types/
       preview.ts                       # LinkPreview interface (mirrors Go struct)
       post.ts
+      editor.ts                        # EditorViewMode (write | split | preview)
     util/
       markdown.ts                      # renderMarkdown(text, previews?) — single source of truth
       embed.ts                         # extractEmbedUrls + buildEmbedHTML (inline chip)
       embed-previews.server.ts         # SSR helper: preloadEmbedPreviews(text)
       debounce.ts
-      helper.ts                        # calculateDuration, copyImageMarkdown
+      helper.ts                        # countContentUnits, calculateDuration, copyImageMarkdown
   routes/
     +page.{svelte,server.ts}           # Home page (CMS-backed, ISR 10min)
     project/+page.{svelte,server.ts}   # Project page (CMS-backed, ISR 10min)
