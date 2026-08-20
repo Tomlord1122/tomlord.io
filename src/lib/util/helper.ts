@@ -39,6 +39,17 @@ export function getImageDimensions(src: string): Promise<{ width: number; height
  * width/height attributes so the browser can reserve space and prevent
  * layout shift while the real image loads.
  */
+export function buildPhotoPostHTML(
+	imagePath: string,
+	dimensions?: { width: number; height: number } | null
+): string {
+	const alt = imagePath.split('/').pop() ?? 'image';
+	const dimAttrs = dimensions ? ` width="${dimensions.width}" height="${dimensions.height}"` : '';
+	return `<div class="flex justify-center">
+<img src="${imagePath}" alt="${alt}" class="photo-post"${dimAttrs}>
+</div>`;
+}
+
 export const PHOTO_SIZE_PRESETS = {
 	s: 240,
 	m: 360,
