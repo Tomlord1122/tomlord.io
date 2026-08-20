@@ -103,6 +103,7 @@
 		class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
+		data-nested-dialog
 	>
 		<div
 			class="flex w-[500px] max-w-[95vw] flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
