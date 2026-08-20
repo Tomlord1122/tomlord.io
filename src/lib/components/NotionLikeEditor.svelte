@@ -5,28 +5,31 @@
 	import { extractEmbedUrls } from '$lib/util/embed.js';
 	import { fetchLinkPreview } from '$lib/api/preview.js';
 	import type { LinkPreview } from '$lib/types/preview.js';
+	import type { EditorViewMode } from '$lib/types/editor.js';
 	import TypewriterTextarea from './TypewriterTextarea.svelte';
 
 	interface Props {
 		content: string;
 		onContentChange: (value: string) => void;
 		placeholder?: string;
+		viewMode?: EditorViewMode;
 	}
 
 	let {
 		content,
 		onContentChange,
-		placeholder = "Type '/' for commands or start writing..."
+		placeholder = "Type '/' for commands or start writing...",
+		viewMode = 'split'
 	}: Props = $props();
 
 	let editorRef = $state<HTMLTextAreaElement>();
 	let previewRef = $state<HTMLDivElement>();
 	let showSlashMenu = $state(false);
 
-	// Preview panel state
-	let showPreview = $state(true);
 	let renderedPreview = $state('');
 	let embedPreviews = $state<Record<string, LinkPreview>>({});
+	let isWide = $state(true);
+	let effectiveViewMode = $derived(!isWide && viewMode === 'split' ? 'write' : viewMode);
 
 	// Debounced markdown rendering (300ms delay)
 	const debouncedRender = debounce((text: string, previews: Record<string, LinkPreview>) => {
@@ -54,9 +57,8 @@
 		);
 	}, 500);
 
-	// Trigger debounced render and fetch embed previews when content changes
 	$effect(() => {
-		if (showPreview) {
+		if (effectiveViewMode !== 'write') {
 			debouncedRender(content, embedPreviews);
 			debouncedFetchPreviews(content);
 		}
@@ -239,6 +241,7 @@
 			// Only handle Escape from editor when slash menu is open
 			if (event.key === 'Escape') {
 				event.preventDefault();
+				event.stopPropagation();
 				hideSlashMenu();
 				return;
 			}
@@ -452,32 +455,27 @@
 	onMount(() => {
 		document.addEventListener('click', handleClickOutside);
 
+		const media = window.matchMedia('(min-width: 1024px)');
+		const syncWidth = () => {
+			isWide = media.matches;
+		};
+		syncWidth();
+		media.addEventListener('change', syncWidth);
+
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
+			media.removeEventListener('change', syncWidth);
 			debouncedRender.cancel();
 		};
 	});
 </script>
 
-<!-- Notion-like Editor with Live Preview -->
-<div class="relative flex h-full w-full flex-col">
-	<!-- Header with Preview Toggle -->
-	<div class="flex shrink-0 items-center justify-end border-b border-gray-100 px-2 py-1">
-		<button
-			type="button"
-			onclick={() => (showPreview = !showPreview)}
-			class="rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-			title={showPreview ? 'Hide preview' : 'Show preview'}
-		>
-			{showPreview ? 'Hide Preview' : 'Show Preview'}
-		</button>
-	</div>
-
-	<!-- Editor Content - Split View -->
-	<div class="flex h-full flex-1 {showPreview ? 'divide-x divide-gray-200' : ''}">
-		<!-- Editor Pane -->
+<div class="relative flex h-full min-h-0 w-full">
+	{#if effectiveViewMode !== 'preview'}
 		<div
-			class="flex {showPreview ? 'w-1/2' : 'w-full'} h-full flex-col transition-all duration-200"
+			class="flex h-full min-h-0 flex-col {effectiveViewMode === 'split'
+				? 'w-1/2 border-r border-gray-200'
+				: 'w-full'}"
 		>
 			<TypewriterTextarea
 				bind:textareaRef={editorRef}
@@ -486,29 +484,26 @@
 				onKeydown={handleKeyDown}
 				onPaste={handlePaste}
 				{placeholder}
-				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-4 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none"
+				class="scrollbar-stable h-full w-full resize-none overflow-y-auto border-0 p-5 font-mono text-sm text-gray-900 focus:ring-0 focus:outline-none sm:p-6"
 			/>
 		</div>
+	{/if}
 
-		<!-- Live Preview Pane (conditional) -->
-		{#if showPreview}
-			<div class="flex h-full w-1/2 flex-col">
-				<div
-					bind:this={previewRef}
-					class="scrollbar-stable markdown-content compact h-full overflow-y-auto p-4 text-wrap"
-				>
-					{#if renderedPreview}
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html renderedPreview}
-					{:else}
-						<p class="text-gray-500 italic">
-							{placeholder}
-						</p>
-					{/if}
-				</div>
+	{#if effectiveViewMode !== 'write'}
+		<div class="flex h-full min-h-0 flex-col {effectiveViewMode === 'split' ? 'w-1/2' : 'w-full'}">
+			<div
+				bind:this={previewRef}
+				class="scrollbar-stable markdown-content h-full overflow-y-auto p-5 font-serif text-wrap sm:p-6"
+			>
+				{#if renderedPreview}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					{@html renderedPreview}
+				{:else}
+					<p class="text-gray-400 italic">{placeholder}</p>
+				{/if}
 			</div>
-		{/if}
-	</div>
+		</div>
+	{/if}
 
 	<!-- Enhanced Slash Command Menu -->
 	{#if showSlashMenu}
@@ -542,6 +537,7 @@
 								break;
 							case 'Escape':
 								e.preventDefault();
+								e.stopPropagation();
 								hideSlashMenu();
 								break;
 						}

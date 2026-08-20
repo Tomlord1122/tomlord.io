@@ -38,7 +38,6 @@
 	}: Props = $props();
 
 	let textareaElement = $state<HTMLTextAreaElement>();
-	let isFocused = $state(false);
 
 	// Sync internal textareaElement to the bindable textareaRef
 	$effect(() => {
@@ -58,12 +57,10 @@
 	};
 
 	const handleFocus = (e: FocusEvent) => {
-		isFocused = true;
 		onFocus?.(e);
 	};
 
 	const handleBlur = (e: FocusEvent) => {
-		isFocused = false;
 		onBlur?.(e);
 	};
 
@@ -80,7 +77,7 @@
 	};
 </script>
 
-<div class="typewriter-textarea-container h-full">
+<div class="typewriter-textarea-container">
 	<textarea
 		bind:this={textareaElement}
 		{placeholder}
@@ -93,7 +90,6 @@
 		class={`
 			typewriter-textarea
 			${className}
-			${isFocused ? 'typewriter-focused' : ''}
 			${disabled ? 'typewriter-disabled' : ''}
 		`}
 		onkeydown={handleKeydown}
@@ -109,22 +105,19 @@
 <style>
 	.typewriter-textarea-container {
 		position: relative;
-		display: block;
+		display: flex;
+		flex-direction: column;
 		width: 100%;
+		height: 100%;
+		min-height: 0;
 	}
 
 	.typewriter-textarea {
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		flex: 1;
+		min-height: 0;
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		letter-spacing: 0.5px;
 		line-height: 1.6;
-	}
-
-	.typewriter-focused {
-		box-shadow:
-			0 0 0 2px rgba(59, 130, 246, 0.3),
-			0 4px 12px rgba(0, 0, 0, 0.1);
-		transform: translateY(-1px);
 	}
 
 	.typewriter-disabled {

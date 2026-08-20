@@ -1,14 +1,17 @@
-export function calculateDuration(text: string, language: string): number {
+export function countContentUnits(text: string, language: string): number {
 	const trimmedContent = text.trim();
-	if (trimmedContent === '') return 1;
-	let words = 0;
+	if (trimmedContent === '') return 0;
 
 	if (language === 'zh-tw' || /[\u4e00-\u9fff]/.test(trimmedContent)) {
-		words = trimmedContent.replace(/[\s\p{P}]/gu, '').length;
-	} else {
-		words = trimmedContent.split(/\s+/).filter((word) => word.length > 0).length;
+		return trimmedContent.replace(/[\s\p{P}]/gu, '').length;
 	}
-	const wordsPerMinute = language === 'zh-tw' ? 300 : 180; // Adjusted WPM values
+	return trimmedContent.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+export function calculateDuration(text: string, language: string): number {
+	const words = countContentUnits(text, language);
+	if (words === 0) return 1;
+	const wordsPerMinute = language === 'zh-tw' ? 300 : 180;
 	const calculatedDuration = Math.ceil(words / wordsPerMinute);
 
 	return Math.max(1, calculatedDuration);
