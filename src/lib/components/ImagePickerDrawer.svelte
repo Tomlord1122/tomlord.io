@@ -5,6 +5,7 @@
 	import { listDrawings, deleteFromStorage, type StorageFile } from '$lib/supabase.js';
 	import { showToast } from '$lib/stores/toast.svelte.js';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { fade, fly } from 'svelte/transition';
 
 	let {
 		open = $bindable(false),
@@ -80,9 +81,11 @@
 		class="absolute inset-0 z-10 bg-black/20"
 		aria-label="Close image drawer"
 		onclick={() => (open = false)}
+		transition:fade={{ duration: 150 }}
 	></button>
 	<aside
 		class="absolute inset-y-0 right-0 z-20 flex w-80 flex-col border-l border-gray-200 bg-white shadow-xl"
+		transition:fly={{ x: 320, duration: 220, opacity: 1 }}
 	>
 		<div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">
 			<h3 class="text-sm font-medium text-gray-800">Images</h3>

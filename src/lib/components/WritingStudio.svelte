@@ -52,7 +52,7 @@
 		aria-modal="true"
 		aria-labelledby={labelledBy}
 	>
-		<div class="relative flex min-w-0 flex-1 flex-col">
+		<div class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
 			<header class="shrink-0 border-b border-gray-200">
 				{@render header()}
 			</header>

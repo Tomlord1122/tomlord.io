@@ -409,9 +409,9 @@ ${content}`;
 			<input
 				type="text"
 				bind:value={newTagInput}
-				placeholder="+ tag"
+				placeholder="Add tag"
 				list="post-tag-suggestions"
-				class="w-28 border-0 bg-transparent p-0 text-xs text-gray-700 placeholder:text-gray-400 focus:ring-0"
+				class="w-36 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 placeholder:text-gray-400 focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
 				onkeydown={(e) => {
 					if (e.key === 'Enter') {
 						e.preventDefault();
