@@ -95,8 +95,8 @@ async function mountPrint(photo: Buffer, photoWidth: number, photoHeight: number
 
 	const mat = svgBuffer(`
 		<svg width="${frameWidth}" height="${frameHeight}" xmlns="http://www.w3.org/2000/svg">
-			<rect width="${frameWidth}" height="${frameHeight}" rx="${frameRadius}" fill="#f7f2e6"/>
-			<rect x="0.75" y="0.75" width="${frameWidth - 1.5}" height="${frameHeight - 1.5}" rx="${frameRadius - 0.5}" fill="none" stroke="#e4d8c0" stroke-width="1.2"/>
+			<rect width="${frameWidth}" height="${frameHeight}" rx="${frameRadius}" fill="#f4f2ec"/>
+			<rect x="0.6" y="0.6" width="${frameWidth - 1.2}" height="${frameHeight - 1.2}" rx="${frameRadius - 0.4}" fill="none" stroke="#d4d0c8" stroke-width="1"/>
 		</svg>
 	`);
 
@@ -135,27 +135,45 @@ const paper = Buffer.from(`
 		<defs>
 			<linearGradient id="left-paper" x1="0" x2="1">
 				<stop offset="0" stop-color="#d9d7d1"/>
+				<stop offset="0.045" stop-color="#f3f1eb"/>
 				<stop offset="0.18" stop-color="#ebeae5"/>
 				<stop offset="0.86" stop-color="#f1f0ec"/>
-				<stop offset="1" stop-color="#d4d2cc"/>
+				<stop offset="1" stop-color="#cfcac0"/>
 			</linearGradient>
 			<linearGradient id="right-paper" x1="0" x2="1">
-				<stop offset="0" stop-color="#d4d2cc"/>
+				<stop offset="0" stop-color="#cfcac0"/>
 				<stop offset="0.14" stop-color="#f1f0ec"/>
 				<stop offset="0.82" stop-color="#ebeae5"/>
+				<stop offset="0.955" stop-color="#f3f1eb"/>
 				<stop offset="1" stop-color="#d9d7d1"/>
 			</linearGradient>
-			<filter id="paper-grain" x="0" y="0" width="100%" height="100%">
-				<feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="4" seed="17"/>
+			<filter id="paper-pulp" x="0" y="0" width="100%" height="100%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="4" seed="17"/>
 				<feColorMatrix type="saturate" values="0"/>
-				<feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+				<feComponentTransfer><feFuncA type="linear" slope="0.26"/></feComponentTransfer>
+			</filter>
+			<filter id="paper-fibers" x="0" y="0" width="100%" height="100%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.55 0.045" numOctaves="2" seed="8"/>
+				<feColorMatrix type="saturate" values="0"/>
+				<feComponentTransfer><feFuncA type="linear" slope="0.16"/></feComponentTransfer>
+			</filter>
+			<filter id="paper-flecks" x="0" y="0" width="100%" height="100%">
+				<feTurbulence type="turbulence" baseFrequency="0.28" numOctaves="1" seed="23"/>
+				<feColorMatrix type="saturate" values="0"/>
+				<feComponentTransfer><feFuncA type="linear" slope="0.07"/></feComponentTransfer>
 			</filter>
 		</defs>
 		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" fill="url(#left-paper)"/>
 		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" fill="url(#right-paper)"/>
-		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" filter="url(#paper-grain)" opacity="0.62"/>
-		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" filter="url(#paper-grain)" opacity="0.62"/>
-		<path d="M960 40 V1040" stroke="#aaa8a2" stroke-width="4" opacity="0.58"/>
+		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" filter="url(#paper-pulp)" opacity="0.7"/>
+		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" filter="url(#paper-pulp)" opacity="0.7"/>
+		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" filter="url(#paper-fibers)" opacity="0.55"/>
+		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" filter="url(#paper-fibers)" opacity="0.55"/>
+		<path d="M110 55 Q110 35 135 35 H960 V1045 H135 Q110 1045 110 1025 Z" filter="url(#paper-flecks)" opacity="0.35"/>
+		<path d="M960 35 H1785 Q1810 35 1810 55 V1025 Q1810 1045 1785 1045 H960 Z" filter="url(#paper-flecks)" opacity="0.35"/>
+		<path d="M960 40 V1040" stroke="#aaa8a2" stroke-width="4" opacity="0.5"/>
+		<path d="M953 52 V1028" stroke="#f7f6f2" stroke-width="1.1" opacity="0.28"/>
+		<path d="M967 52 V1028" stroke="#8d8980" stroke-width="1" opacity="0.16"/>
 	</svg>
 `);
 
