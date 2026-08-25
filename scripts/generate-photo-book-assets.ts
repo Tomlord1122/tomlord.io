@@ -29,13 +29,13 @@ const layouts: Record<PhotoBookTemplate, Slot[]> = {
 		{ left: 150, top: 100, width: 780, height: 880 },
 		{ left: 990, top: 100, width: 370, height: 430 },
 		{ left: 1400, top: 100, width: 370, height: 430 },
-		{ left: 990, top: 570, width: 780, height: 410 }
+		{ left: 990, top: 550, width: 780, height: 430 }
 	],
 	balanced: [
-		{ left: 150, top: 100, width: 780, height: 420 },
-		{ left: 150, top: 560, width: 780, height: 420 },
-		{ left: 990, top: 100, width: 780, height: 420 },
-		{ left: 990, top: 560, width: 780, height: 420 }
+		{ left: 150, top: 100, width: 780, height: 430 },
+		{ left: 150, top: 550, width: 780, height: 430 },
+		{ left: 990, top: 100, width: 780, height: 430 },
+		{ left: 990, top: 550, width: 780, height: 430 }
 	],
 	single: [{ left: 150, top: 100, width: 1620, height: 880, fit: 'contain' }],
 	pair: [
@@ -44,11 +44,91 @@ const layouts: Record<PhotoBookTemplate, Slot[]> = {
 	],
 	trio: [
 		{ left: 150, top: 100, width: 780, height: 880 },
-		{ left: 990, top: 100, width: 780, height: 420 },
-		{ left: 990, top: 560, width: 780, height: 420 }
+		{ left: 990, top: 100, width: 780, height: 430 },
+		{ left: 990, top: 550, width: 780, height: 430 }
 	],
 	'final-portrait': [{ left: 150, top: 100, width: 1620, height: 880, fit: 'contain' }]
 };
+
+// ~4px on the 700px homepage book (1920 canvas).
+const photoCornerRadius = 11;
+const photoBorder = 10;
+
+function containedSize(
+	sourceWidth: number,
+	sourceHeight: number,
+	slotWidth: number,
+	slotHeight: number
+) {
+	const scale = Math.min(slotWidth / sourceWidth, slotHeight / sourceHeight);
+	return {
+		width: Math.max(1, Math.round(sourceWidth * scale)),
+		height: Math.max(1, Math.round(sourceHeight * scale))
+	};
+}
+
+function svgBuffer(markup: string) {
+	return Buffer.from(markup);
+}
+
+function roundedRectMask(width: number, height: number, radius: number) {
+	const safeRadius = Math.min(radius, Math.floor(Math.min(width, height) / 2));
+	return svgBuffer(
+		`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" rx="${safeRadius}" ry="${safeRadius}"/></svg>`
+	);
+}
+
+async function renderPhotoBuffer(sourcePath: string, width: number, height: number) {
+	return sharp(sourcePath)
+		.rotate()
+		.resize(width, height, { fit: 'cover', position: 'centre' })
+		.ensureAlpha()
+		.composite([{ input: roundedRectMask(width, height, photoCornerRadius), blend: 'dest-in' }])
+		.png()
+		.toBuffer();
+}
+
+async function mountPrint(photo: Buffer, photoWidth: number, photoHeight: number) {
+	const frameWidth = photoWidth + photoBorder * 2;
+	const frameHeight = photoHeight + photoBorder * 2;
+	const frameRadius = photoCornerRadius + 3;
+
+	const mat = svgBuffer(`
+		<svg width="${frameWidth}" height="${frameHeight}" xmlns="http://www.w3.org/2000/svg">
+			<rect width="${frameWidth}" height="${frameHeight}" rx="${frameRadius}" fill="#f7f2e6"/>
+			<rect x="0.75" y="0.75" width="${frameWidth - 1.5}" height="${frameHeight - 1.5}" rx="${frameRadius - 0.5}" fill="none" stroke="#e4d8c0" stroke-width="1.2"/>
+		</svg>
+	`);
+
+	return sharp(mat)
+		.composite([{ input: photo, left: photoBorder, top: photoBorder }])
+		.png()
+		.toBuffer();
+}
+
+async function renderPhoto(source: string, slot: Slot) {
+	const sourcePath = path.join(staticDirectory, source.replace(/^\//, ''));
+	await fs.access(sourcePath);
+
+	const metadata = await sharp(sourcePath).rotate().metadata();
+	const fit = slot.fit ?? 'cover';
+	const maxWidth = slot.width - photoBorder * 2;
+	const maxHeight = slot.height - photoBorder * 2;
+	const sourceWidth = metadata.width ?? maxWidth;
+	const sourceHeight = metadata.height ?? maxHeight;
+	const size =
+		fit === 'contain'
+			? containedSize(sourceWidth, sourceHeight, maxWidth, maxHeight)
+			: { width: maxWidth, height: maxHeight };
+
+	const photo = await renderPhotoBuffer(sourcePath, size.width, size.height);
+	const print = await mountPrint(photo, size.width, size.height);
+	return {
+		input: print,
+		left: slot.left + Math.round((slot.width - size.width - photoBorder * 2) / 2),
+		top: slot.top + Math.round((slot.height - size.height - photoBorder * 2) / 2)
+	};
+}
 
 const paper = Buffer.from(`
 	<svg width="${PHOTO_BOOK_WIDTH}" height="${PHOTO_BOOK_HEIGHT}" viewBox="0 0 ${PHOTO_BOOK_WIDTH} ${PHOTO_BOOK_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
@@ -103,24 +183,7 @@ const flatPaper = Buffer.from(`
 async function renderSpread(template: PhotoBookTemplate, sources: string[]) {
 	const slots = layouts[template];
 	const photos = await Promise.all(
-		sources.map(async (source, index) => {
-			const sourcePath = path.join(staticDirectory, source.replace(/^\//, ''));
-			await fs.access(sourcePath);
-			return {
-				input: await sharp(sourcePath)
-					.rotate()
-					.resize(slots[index].width, slots[index].height, {
-						fit: slots[index].fit ?? 'cover',
-						position: 'centre',
-						// Transparent padding lets the generated paper texture show around contained photos.
-						background: { r: 0, g: 0, b: 0, alpha: 0 }
-					})
-					.webp({ quality: 84 })
-					.toBuffer(),
-				left: slots[index].left,
-				top: slots[index].top
-			};
-		})
+		sources.map((source, index) => renderPhoto(source, slots[index]))
 	);
 
 	return sharp({
