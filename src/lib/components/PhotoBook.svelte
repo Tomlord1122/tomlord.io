@@ -321,9 +321,10 @@
 		outline: none;
 	}
 
-	.photo-book:focus-within .book {
-		outline: 2px solid rgb(55 65 81 / 0.65);
-		outline-offset: 5px;
+	.photo-book .book,
+	.photo-book .zone,
+	.photo-book .arrow {
+		outline: none;
 	}
 
 	.motion-filters {
