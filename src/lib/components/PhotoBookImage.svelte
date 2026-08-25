@@ -17,7 +17,7 @@
 <img
 	src={spread.src}
 	srcset={spread.srcset}
-	sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 900px"
+	sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 700px"
 	width={spread.width}
 	height={spread.height}
 	{alt}

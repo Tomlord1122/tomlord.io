@@ -214,7 +214,7 @@
 	.photo-book-section {
 		position: relative;
 		left: 50%;
-		width: min(900px, calc(100vw - 2rem));
+		width: min(700px, calc(100vw - 2rem));
 		margin-block: 0.5rem 0.75rem;
 		transform: translateX(-50%);
 		overflow-anchor: none;

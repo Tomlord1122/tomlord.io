@@ -363,7 +363,7 @@
 	.book {
 		position: relative;
 		min-width: 0;
-		max-width: 900px;
+		max-width: 700px;
 		flex: 1 1 0;
 		aspect-ratio: 16 / 9;
 		perspective: 2600px;
