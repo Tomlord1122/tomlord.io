@@ -6,7 +6,7 @@
 			"srcset": "/photo-book/spread-01-960.webp 960w, /photo-book/spread-01-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 1 of 15"
+			"alt": "Photography collage, spread 1 of 16"
 		},
 		{
 			"id": "spread-02",
@@ -14,7 +14,7 @@
 			"srcset": "/photo-book/spread-02-960.webp 960w, /photo-book/spread-02-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 2 of 15"
+			"alt": "Photography collage, spread 2 of 16"
 		},
 		{
 			"id": "spread-03",
@@ -22,7 +22,7 @@
 			"srcset": "/photo-book/spread-03-960.webp 960w, /photo-book/spread-03-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 3 of 15"
+			"alt": "Photography collage, spread 3 of 16"
 		},
 		{
 			"id": "spread-04",
@@ -30,7 +30,7 @@
 			"srcset": "/photo-book/spread-04-960.webp 960w, /photo-book/spread-04-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 4 of 15"
+			"alt": "Photography collage, spread 4 of 16"
 		},
 		{
 			"id": "spread-05",
@@ -38,7 +38,7 @@
 			"srcset": "/photo-book/spread-05-960.webp 960w, /photo-book/spread-05-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 5 of 15"
+			"alt": "Photography collage, spread 5 of 16"
 		},
 		{
 			"id": "spread-06",
@@ -46,7 +46,7 @@
 			"srcset": "/photo-book/spread-06-960.webp 960w, /photo-book/spread-06-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 6 of 15"
+			"alt": "Photography collage, spread 6 of 16"
 		},
 		{
 			"id": "spread-07",
@@ -54,7 +54,7 @@
 			"srcset": "/photo-book/spread-07-960.webp 960w, /photo-book/spread-07-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 7 of 15"
+			"alt": "Photography collage, spread 7 of 16"
 		},
 		{
 			"id": "spread-08",
@@ -62,7 +62,7 @@
 			"srcset": "/photo-book/spread-08-960.webp 960w, /photo-book/spread-08-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 8 of 15"
+			"alt": "Photography collage, spread 8 of 16"
 		},
 		{
 			"id": "spread-09",
@@ -70,7 +70,7 @@
 			"srcset": "/photo-book/spread-09-960.webp 960w, /photo-book/spread-09-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 9 of 15"
+			"alt": "Photography collage, spread 9 of 16"
 		},
 		{
 			"id": "spread-10",
@@ -78,7 +78,7 @@
 			"srcset": "/photo-book/spread-10-960.webp 960w, /photo-book/spread-10-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 10 of 15"
+			"alt": "Photography collage, spread 10 of 16"
 		},
 		{
 			"id": "spread-11",
@@ -86,7 +86,7 @@
 			"srcset": "/photo-book/spread-11-960.webp 960w, /photo-book/spread-11-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 11 of 15"
+			"alt": "Photography collage, spread 11 of 16"
 		},
 		{
 			"id": "spread-12",
@@ -94,7 +94,7 @@
 			"srcset": "/photo-book/spread-12-960.webp 960w, /photo-book/spread-12-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 12 of 15"
+			"alt": "Photography collage, spread 12 of 16"
 		},
 		{
 			"id": "spread-13",
@@ -102,7 +102,7 @@
 			"srcset": "/photo-book/spread-13-960.webp 960w, /photo-book/spread-13-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 13 of 15"
+			"alt": "Photography collage, spread 13 of 16"
 		},
 		{
 			"id": "spread-14",
@@ -110,12 +110,20 @@
 			"srcset": "/photo-book/spread-14-960.webp 960w, /photo-book/spread-14-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
-			"alt": "Photography collage, spread 14 of 15"
+			"alt": "Photography collage, spread 14 of 16"
 		},
 		{
 			"id": "spread-15",
 			"src": "/photo-book/spread-15-960.webp",
 			"srcset": "/photo-book/spread-15-960.webp 960w, /photo-book/spread-15-1920.webp 1920w",
+			"width": 1920,
+			"height": 1080,
+			"alt": "Photography collage, spread 15 of 16"
+		},
+		{
+			"id": "spread-16",
+			"src": "/photo-book/spread-16-960.webp",
+			"srcset": "/photo-book/spread-16-960.webp 960w, /photo-book/spread-16-1920.webp 1920w",
 			"width": 1920,
 			"height": 1080,
 			"alt": "Full-page portrait"
