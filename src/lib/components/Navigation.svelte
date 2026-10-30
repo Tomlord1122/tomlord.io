@@ -12,7 +12,7 @@
 		{ href: '/thread', label: 'Thread' },
 		{ href: '/blog', label: 'Blog' },
 		{ href: '/project', label: 'Project' },
-		{ href: '/photography', label: 'Photography' }
+		{ href: '/photography', label: 'Photography', short: 'Photo' }
 	]);
 
 	// Check if a route is currently active
@@ -64,7 +64,7 @@
 
 			<!-- Navigation Links -->
 			<div
-				class="flex flex-wrap items-center justify-end gap-1.5 font-serif text-sm sm:gap-3 sm:text-lg"
+				class="flex flex-nowrap items-center justify-end gap-1.5 font-serif text-[13px] leading-none sm:gap-3 sm:text-lg"
 			>
 				{#each navItems as item (item.href)}
 					{@const active = isActive(item.href)}
@@ -76,7 +76,8 @@
 						data-sveltekit-preload-data="hover"
 						aria-current={active ? 'page' : undefined}
 					>
-						{item.label}
+						<span class="sm:hidden">{item.short ?? item.label}</span>
+						<span class="hidden sm:inline">{item.label}</span>
 						<!-- Active indicator -->
 						{#if active && !isNavigatingTo}
 							<span
@@ -89,7 +90,7 @@
 				{/each}
 
 				<!-- Auth Button -->
-				<span class="mx-0.5 text-gray-300 sm:mx-1">|</span>
+				<span class="text-gray-300 sm:mx-1">|</span>
 				{#if auth.isAuthenticated}
 					<button
 						onclick={handleSignOut}
