@@ -23,7 +23,6 @@
 	const FOLD_LINES = 8;
 
 	let html = $derived(renderMarkdown(thread.content, previews));
-	let edited = $derived(thread.updated_at !== thread.created_at);
 	let lineCount = $derived(thread.content.split('\n').length);
 	let foldable = $derived(collapsible && lineCount > FOLD_LINES);
 	let folded = $state(true);
@@ -73,9 +72,6 @@
 			<time datetime={thread.created_at} title={new Date(thread.created_at).toLocaleString()}>
 				{formatThreadTime(thread.created_at)}
 			</time>
-			{#if edited}
-				<span class="text-gray-400">· edited</span>
-			{/if}
 		</a>
 		{#if canEdit}
 			<div class="flex shrink-0 gap-2 text-xs">
