@@ -152,7 +152,7 @@
 	{#if threads.length === 0}
 		<p class="py-8 text-sm text-gray-500">Nothing here yet.</p>
 	{:else}
-		<div class="not-prose" in:fly={{ y: 24, duration: 500 }}>
+		<div class="not-prose mt-8 space-y-10" in:fly={{ y: 100, duration: 800, delay: 100 }}>
 			{#each threads as thread (thread.id)}
 				<ThreadCard {thread} {canEdit} {previews} onEdit={openEdit} onDelete={handleDelete} />
 			{/each}

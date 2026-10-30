@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
 	import ThreadCard from '$lib/components/ThreadCard.svelte';
 	import ThreadEditorModal from '$lib/components/ThreadEditorModal.svelte';
 	import { auth } from '$lib/stores/auth.svelte.js';
@@ -58,7 +59,7 @@
 	<meta property="og:url" content="https://tomlord.fyi/thread/{visible.id}" />
 </svelte:head>
 
-<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md">
+<div class="prose prose-sm sm:prose-base mx-auto lg:max-w-screen-md" in:fly={{ y: 50, duration: 600, delay: 200 }}>
 	<a href="/thread" class="not-prose text-sm text-gray-500 hover:text-gray-900">← Thread</a>
 	<div class="mt-3">
 		<ThreadCard
