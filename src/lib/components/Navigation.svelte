@@ -104,7 +104,7 @@
 								class="h-5 w-5 rounded-full sm:h-6 sm:w-6"
 							/>
 						{/if}
-						<span class="hidden sm:inline">Sign out</span>
+						<span>Sign out</span>
 					</button>
 				{:else}
 					<button
