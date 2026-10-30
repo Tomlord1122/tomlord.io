@@ -83,8 +83,7 @@
 				date: blog.date,
 				lang: blog.lang || 'en',
 				duration: blog.duration || '5min',
-				description: blog.description || '',
-				is_published: blog.is_published
+				description: blog.description || ''
 			};
 			showEditModal = true;
 		} catch (error) {

@@ -11,7 +11,6 @@ export interface BlogDetail {
 	tags: string[];
 	description?: string;
 	content?: string;
-	is_published: boolean;
 	created_at: string;
 	updated_at: string;
 	message_count?: number;
@@ -26,7 +25,6 @@ export interface CreateBlogRequest {
 	tags: string[];
 	description: string;
 	content: string;
-	is_published: boolean;
 }
 
 export interface UpdateBlogRequest {
@@ -37,7 +35,6 @@ export interface UpdateBlogRequest {
 	tags: string[];
 	description: string;
 	content: string;
-	is_published: boolean;
 }
 
 /**
@@ -197,7 +194,6 @@ export function blogToPostData(blog: BlogDetail): PostData {
 		lang: blog.lang,
 		duration: blog.duration,
 		tags: blog.tags,
-		description: blog.description || '',
-		is_published: blog.is_published
+		description: blog.description || ''
 	};
 }

@@ -135,8 +135,7 @@ ${content}`;
 					duration: `${duration}min`,
 					tags: postTags,
 					description: '',
-					content: fullContent,
-					is_published: true
+					content: fullContent
 				},
 				auth.token
 			);
@@ -216,8 +215,7 @@ ${content}`;
 					duration: `${durationValue}min`,
 					tags: postTags,
 					description: postData.description || '',
-					content: fullContent,
-					is_published: postData.is_published ?? true
+					content: fullContent
 				},
 				auth.token
 			);

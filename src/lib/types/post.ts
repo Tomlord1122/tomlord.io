@@ -25,7 +25,6 @@ export interface PostData {
 	duration: string;
 	tags: string[];
 	description: string;
-	is_published: boolean;
 	created_at?: string;
 	updated_at?: string;
 }
@@ -40,7 +39,6 @@ export interface PostEditorSavedPost {
 	tags: string[];
 	description?: string;
 	content?: string;
-	is_published: boolean;
 	created_at?: string;
 	updated_at?: string;
 }

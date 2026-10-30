@@ -9,6 +9,7 @@
 	// Navigation items configuration
 	const navItems = $state([
 		{ href: '/', label: 'Home' },
+		{ href: '/thread', label: 'Thread' },
 		{ href: '/blog', label: 'Blog' },
 		{ href: '/project', label: 'Project' },
 		{ href: '/photography', label: 'Photography' }

@@ -18,6 +18,12 @@ export const routes: Record<string, RouteMetadata> = {
 		breadcrumb: 'Home',
 		icon: '🏠'
 	},
+	'/thread': {
+		title: 'Thread - Tomlord',
+		description: 'Short notes',
+		breadcrumb: 'Thread',
+		icon: '🧵'
+	},
 	'/blog': {
 		title: 'Blog - Tomlord',
 		description: 'Thoughts, tutorials, and updates',

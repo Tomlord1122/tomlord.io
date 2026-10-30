@@ -22,7 +22,7 @@ function getDefaultPosts(): PostMetadata[] {
 async function fetchPostsFromAPI(): Promise<PostMetadata[]> {
 	try {
 		const response = await fetchWithTimeout(
-			`${appConfig.API.BLOGS}?limit=10000&published=true`,
+			`${appConfig.API.BLOGS}?limit=10000`,
 			{ method: 'GET', headers: { 'Content-Type': 'application/json' } },
 			5000
 		);

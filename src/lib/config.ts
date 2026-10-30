@@ -30,6 +30,7 @@ export const config = {
 			AUTH_GOOGLE: `${this.BACKEND_URL}/auth/google`,
 			AUTH_LOGOUT: `${this.BACKEND_URL}/auth/logout`,
 			BLOGS: `${this.BACKEND_URL}/api/blogs`,
+			THREADS: `${this.BACKEND_URL}/api/threads`,
 			PAGES: `${this.BACKEND_URL}/api/pages`,
 			MESSAGES: `${this.BACKEND_URL}/api/messages`,
 			PREVIEW: `${this.BACKEND_URL}/api/preview`,
