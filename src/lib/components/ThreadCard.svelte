@@ -79,14 +79,12 @@
 			data-sveltekit-preload-data="hover"
 		></a>
 	{/if}
-	<div class="relative z-10 mb-2 flex items-baseline justify-between gap-3 text-sm text-gray-500">
-		<a href="/thread/{thread.id}" class="hover:text-gray-900 hover:underline">
-			<time datetime={thread.created_at} title={new Date(thread.created_at).toLocaleString()}>
-				{formatThreadTime(thread.created_at)}
-			</time>
-		</a>
+	<div class="pointer-events-none relative z-10 mb-2 flex items-baseline justify-between gap-3 text-sm text-gray-500">
+		<time datetime={thread.created_at} title={new Date(thread.created_at).toLocaleString()}>
+			{formatThreadTime(thread.created_at)}
+		</time>
 		{#if canEdit}
-			<div class="flex shrink-0 gap-2 text-xs">
+			<div class="pointer-events-auto flex shrink-0 gap-2 text-xs">
 				<button type="button" class="hover:text-gray-900" onclick={() => onEdit(thread)}>Edit</button>
 				<button type="button" class="hover:text-red-700" onclick={() => onDelete(thread)}>
 					Delete
@@ -94,7 +92,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="relative z-10 border-l border-gray-300 pl-4">
+	<div class="pointer-events-none relative z-10 border-l border-gray-300 pl-4">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		<div
 			bind:this={bodyEl}
@@ -110,7 +108,7 @@
 			<button
 				type="button"
 				onclick={toggleFold}
-				class="mt-1 text-sm text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-900 hover:decoration-gray-900"
+				class="pointer-events-auto mt-1 text-sm text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-900 hover:decoration-gray-900"
 			>
 				{folded ? 'Show more' : 'Show less'}
 			</button>
@@ -122,6 +120,11 @@
 	.thread-body {
 		--thread-fold: 12rem;
 		transition: max-height 400ms ease;
+	}
+
+	.thread-body :global(a),
+	.thread-body :global(button) {
+		pointer-events: auto;
 	}
 
 	.thread-body.is-folded {
