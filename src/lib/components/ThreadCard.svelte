@@ -66,8 +66,20 @@
 	}
 </script>
 
-<article class="thread-card not-prose font-serif">
-	<div class="mb-2 flex items-baseline justify-between gap-3 text-sm text-gray-500">
+<article
+	class="thread-card not-prose relative font-serif transition-all duration-200 hover:scale-[1.01] {collapsible
+		? 'cursor-pointer'
+		: ''}"
+>
+	{#if collapsible}
+		<a
+			href="/thread/{thread.id}"
+			class="absolute inset-0 z-0"
+			aria-label="Open thread"
+			data-sveltekit-preload-data="hover"
+		></a>
+	{/if}
+	<div class="relative z-10 mb-2 flex items-baseline justify-between gap-3 text-sm text-gray-500">
 		<a href="/thread/{thread.id}" class="hover:text-gray-900 hover:underline">
 			<time datetime={thread.created_at} title={new Date(thread.created_at).toLocaleString()}>
 				{formatThreadTime(thread.created_at)}
@@ -82,7 +94,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="relative border-l border-gray-300 pl-4">
+	<div class="relative z-10 border-l border-gray-300 pl-4">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		<div
 			bind:this={bodyEl}
