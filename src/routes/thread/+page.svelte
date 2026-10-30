@@ -9,6 +9,7 @@
 	import { extractEmbedUrls } from '$lib/util/embed.js';
 	import { mockThreads } from '$lib/data/thread-mock.js';
 	import { showToast } from '$lib/stores/toast.svelte.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 	import type { ThreadPost } from '$lib/types/thread.js';
 	import type { LinkPreview } from '$lib/types/preview.js';
 
@@ -105,9 +106,11 @@
 		const index = threads.findIndex((thread) => thread.id === saved.id);
 		if (index === -1) {
 			threads = [saved, ...threads];
-			return;
+		} else {
+			threads = threads.map((thread) => (thread.id === saved.id ? saved : thread));
 		}
-		threads = threads.map((thread) => (thread.id === saved.id ? saved : thread));
+		void revalidateISR('/thread');
+		void revalidateISR(`/thread/${saved.id}`);
 	}
 
 	async function handleDelete(thread: ThreadPost) {
@@ -120,6 +123,8 @@
 		try {
 			await deleteThread(thread.id, auth.token);
 			threads = threads.filter((item) => item.id !== thread.id);
+			void revalidateISR('/thread');
+			void revalidateISR(`/thread/${thread.id}`);
 			showToast('Thread deleted', 'success', 1600);
 		} catch (error) {
 			showToast(error instanceof Error ? error.message : 'Delete failed', 'error', 3000);

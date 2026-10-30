@@ -6,6 +6,7 @@
 	import { isSuperUser } from '$lib/util/auth.js';
 	import { deleteThread } from '$lib/api/threads.js';
 	import { showToast } from '$lib/stores/toast.svelte.js';
+	import { revalidateISR } from '$lib/api/revalidate.js';
 	import { goto } from '$app/navigation';
 	import type { ThreadPost } from '$lib/types/thread.js';
 	import type { LinkPreview } from '$lib/types/preview.js';
@@ -44,6 +45,8 @@
 		if (!auth.token) return;
 		try {
 			await deleteThread(visible.id, auth.token);
+			void revalidateISR('/thread');
+			void revalidateISR(`/thread/${visible.id}`);
 			await goto('/thread');
 		} catch (error) {
 			showToast(error instanceof Error ? error.message : 'Delete failed', 'error', 3000);
@@ -77,6 +80,10 @@
 	<ThreadEditorModal
 		bind:show={showEditor}
 		thread={visible}
-		onSaved={(saved) => (override = saved)}
+		onSaved={(saved) => {
+			override = saved;
+			void revalidateISR('/thread');
+			void revalidateISR(`/thread/${saved.id}`);
+		}}
 	/>
 {/if}

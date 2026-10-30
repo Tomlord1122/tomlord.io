@@ -1,4 +1,6 @@
 import type { PageServerLoad } from './$types.js';
+import type { Config } from '@sveltejs/adapter-vercel';
+import { BYPASS_TOKEN } from '$env/static/private';
 import { dev } from '$app/environment';
 import { error } from '@sveltejs/kit';
 import { fetchThread } from '$lib/api/threads.js';
@@ -11,7 +13,10 @@ function mockThread(id: string) {
 	return { thread, mock: true, previews: preloadEmbedPreviews(thread.content) };
 }
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
+	setHeaders({
+		'cache-control': 'public, max-age=60'
+	});
 	if (dev && url.searchParams.get('mock') === '1') return mockThread(params.id);
 
 	try {
@@ -21,5 +26,12 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		if (dev && mockThreads.some((item) => item.id === params.id)) return mockThread(params.id);
 		console.error('Failed to load thread:', cause);
 		error(404, 'Thread not found');
+	}
+};
+
+export const config: Config = {
+	isr: {
+		expiration: 3600,
+		bypassToken: BYPASS_TOKEN
 	}
 };
